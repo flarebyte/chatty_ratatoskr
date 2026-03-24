@@ -1,3 +1,17 @@
+type KindOfTextNode =
+  | "note"
+  | "comment"
+  | "label"
+  | "like"
+  | "avatar"
+  | "emoticon"
+  | "style"
+  | "table"
+  | "image/jpeg"
+  | "altText"
+  | "thumbnail"
+  | "url";
+
 type KeyValueParams = {
   keyId: string;
   secureKeyId: string;
