@@ -6,3 +6,4 @@ TextNode,flags,Flags,"Optional metadata flags (e.g., 'pinned', 'archived', 'sens
 TextNode,kind,Kind,"Logical type of the message (e.g., 'note'), set by the client.",string,string,String,true,core
 TextNode,language,Language,Optional ISO language code for the value content.,string,*string,String?,false,core
 TextNode,value,Value,The message content or a reference to external data.,string,string,String,true,core
+TextNode,version,Version,"Server-generated version (e.g., UUID)",string,string,String,true,core

@@ -1,4 +1,4 @@
-import { KindOfTextNode } from "./common";
+import { KindOfTextNode, OperationStatus } from "./common";
 
 type ChildParam = {
   localKeyId: string;

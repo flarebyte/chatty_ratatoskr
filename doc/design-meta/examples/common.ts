@@ -21,4 +21,5 @@ export type KeyValueParams = {
   kind: KindOfTextNode;
   flags?: string[];
   language?: string;
+  version?: string;
 };

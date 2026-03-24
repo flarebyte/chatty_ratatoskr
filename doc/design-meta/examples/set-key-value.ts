@@ -6,6 +6,7 @@ type SetKeyValueRequest = {
 
 type KeyStatus = {
   keyId: string;
+  version: string;
   status: OperationStatus;
 };
 
