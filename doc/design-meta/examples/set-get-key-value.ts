@@ -1,4 +1,4 @@
-type SetKeyValueParams = {
+type KeyValueParams = {
   keyId: string;
   secureKeyId: string;
   value: string;
@@ -9,15 +9,25 @@ type SetKeyValueParams = {
 
 type SetStatus = "ok" | "invalid" | "unauthorised";
 
-type SetKeyValueParamsState = {
-  keyValue: SetKeyValueParams;
+type KeyValueParamsState = {
+  keyValue: KeyValueParams;
   status: SetStatus;
 };
 
 type SetKeyValueListRequest = {
-  keyValueList: SetKeyValueParams[];
+  keyValueList: KeyValueParams[];
 };
 
-type SetKeyValueListRequestResponse = {
-  keyValueList: SetKeyValueParamsState[];
+type GetKeyParams = {
+  keyId: string;
+  secureKeyId: string;
+  kind: KindOfTextNode;
+};
+
+type GetKeyValueListRequest = {
+  keyList: GetKeyParams[];
+};
+
+type KeyValueListRequestResponse = {
+  keyValueList: KeyValueParamsState[];
 };
