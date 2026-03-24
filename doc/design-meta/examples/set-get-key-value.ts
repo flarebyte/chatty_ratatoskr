@@ -18,16 +18,25 @@ type SetKeyValueListRequest = {
   keyValueList: KeyValueParams[];
 };
 
-type GetKeyParams = {
+type SetKeyValueListRequestResponse = {
+  keyList: KeyParamsState[];
+};
+
+type KeyParams = {
   keyId: string;
   secureKeyId: string;
   kind: KindOfTextNode;
 };
 
-type GetKeyValueListRequest = {
-  keyList: GetKeyParams[];
+type KeyParamsState = {
+  key: KeyParams;
+  status: SetStatus;
 };
 
-type KeyValueListRequestResponse = {
+type GetKeyValueListRequest = {
+  keyList: KeyParams[];
+};
+
+type GetKeyValueListRequestResponse = {
   keyValueList: KeyValueParamsState[];
 };
