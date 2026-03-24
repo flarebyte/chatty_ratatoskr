@@ -17,14 +17,14 @@ type KindOfTextNode =
 type SuggestionStatus = "ok" | "invalid" | "unauthorised";
 
 type ChildParam = {
-  localId: string;
+  localKeyId: string;
   kind: KindOfTextNode;
   flags?: string[];
   language?: string;
 };
 
 type NewKeyParams = {
-  localId: string;
+  localKeyId: string;
   parentKeyId: string;
   secureParentKeyId: string;
 
@@ -35,7 +35,7 @@ type NewKeyParams = {
 };
 
 type SuggestedChildParam = {
-  localId: string;
+  localKeyId: string;
   keyId: string;
   secureKeyId: string;
 
@@ -46,7 +46,7 @@ type SuggestedChildParam = {
 };
 
 type SuggestedNewKeyParams = {
-  localId: string;
+  localKeyId: string;
   keyId: string;
   secureKeyId: string;
   kind: KindOfTextNode;
