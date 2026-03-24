@@ -1,20 +1,4 @@
-type NewKeyType = "";
-
-type KindOfTextNode =
-  | "note"
-  | "comment"
-  | "label"
-  | "like"
-  | "avatar"
-  | "emoticon"
-  | "style"
-  | "table"
-  | "image/jpeg"
-  | "altText"
-  | "thumbnail"
-  | "url";
-
-type SuggestionStatus = "ok" | "invalid" | "unauthorised";
+import { KindOfTextNode } from "./common";
 
 type ChildParam = {
   localKeyId: string;
@@ -42,7 +26,7 @@ type SuggestedChildParam = {
   kind: KindOfTextNode;
   flags?: string[];
   language?: string;
-  status: SuggestionStatus;
+  status: OperationStatus;
 };
 
 type SuggestedNewKeyParams = {
@@ -52,7 +36,7 @@ type SuggestedNewKeyParams = {
   kind: KindOfTextNode;
   flags?: string[];
   language?: string;
-  status: SuggestionStatus;
+  status: OperationStatus;
   children: SuggestedChildParam[];
 };
 
@@ -60,6 +44,7 @@ type NewKeysRequest = {
   newkeys: NewKeyParams[];
 };
 
-type NewkeysResponse = {
+type NewKeysResponse = {
+  id: string;
   newKeys: SuggestedNewKeyParams[];
 };
