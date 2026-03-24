@@ -21,36 +21,26 @@ type KeyValueParams = {
   language?: string;
 };
 
-type SetStatus = "ok" | "invalid" | "unauthorised";
-
-type KeyValueParamsState = {
-  keyValue: KeyValueParams;
-  status: SetStatus;
-};
-
-type SetKeyValueListRequest = {
-  keyValueList: KeyValueParams[];
-};
-
-type SetKeyValueListRequestResponse = {
-  keyList: KeyParamsState[];
-};
-
 type KeyParams = {
   keyId: string;
   secureKeyId: string;
-  kind: KindOfTextNode;
 };
 
-type KeyParamsState = {
-  key: KeyParams;
-  status: SetStatus;
+type OperationStatus = "ok" | "invalid" | "unauthorised";
+
+type SetKeyValueRequest = {
+  keyValueList: KeyValueParams[];
 };
 
 type GetKeyValueListRequest = {
   keyList: KeyParams[];
 };
 
-type GetKeyValueListRequestResponse = {
-  keyValueList: KeyValueParamsState[];
+type KeyStatus = {
+  keyId: string;
+  status: OperationStatus;
+};
+
+type KeyValueResponse = {
+  keyList: KeyStatus[];
 };
