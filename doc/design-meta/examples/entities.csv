@@ -1,0 +1,2 @@
+entity_name,entity_note_name,title,description,labels
+TextNode,entity.text-node,Text node,"Text node that is a tree.","data,design,entity"
