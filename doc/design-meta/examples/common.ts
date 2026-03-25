@@ -14,11 +14,22 @@ export type KindOfTextNode =
 
 export type OperationStatus = "ok" | "invalid" | "unauthorised";
 
-export type KeyValueParams = {
+export type KeyParams = {
   keyId: string;
   secureKeyId: string;
+  localKeyId?: string;
+  kind?: KindOfTextNode;
+} 
+
+export type KeyVersionParams = {
+  key: KeyParams;
+  version: string;
+  updated: string;
+};
+
+export type KeyValueParams = {
+  key: KeyParams;
   value: string;
-  kind: KindOfTextNode;
   flags?: string[];
   language?: string;
   version?: string;

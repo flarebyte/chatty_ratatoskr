@@ -1,11 +1,11 @@
-import { KeyValueParams, OperationStatus } from "./common";
+import { KeyParams, KeyValueParams, OperationStatus } from "./common";
 
 type SetKeyValueRequest = {
   keyValueList: KeyValueParams[];
 };
 
 type KeyStatus = {
-  keyId: string;
+  key: KeyParams;
   version: string;
   status: OperationStatus;
 };

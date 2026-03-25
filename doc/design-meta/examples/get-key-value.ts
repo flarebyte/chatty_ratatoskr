@@ -1,9 +1,4 @@
-import { KeyValueParams, OperationStatus } from "./common";
-
-type KeyParams = {
-  keyId: string;
-  secureKeyId: string;
-};
+import { KeyParams, KeyValueParams, OperationStatus } from "./common";
 
 type GetKeyValueRequest = {
   keyList: KeyParams[];
