@@ -1,16 +1,16 @@
 export type KindOfTextNode =
   | "note"
-  | "comment"
-  | "label"
-  | "like"
-  | "avatar"
-  | "emoticon"
-  | "style"
-  | "table"
-  | "image/jpeg"
-  | "altText"
-  | "thumbnail"
-  | "url";
+  | "note/comment"
+  | "note/label"
+  | "note/like/user"
+  | "note/avatar"
+  | "note/emoticon"
+  | "note/style"
+  | "note/table"
+  | "note/image"
+  | "note/image/text"
+  | "note/thumbnail"
+  | "note/url";
 
 export type OperationStatus = "ok" | "invalid" | "unauthorised";
 
@@ -22,4 +22,5 @@ export type KeyValueParams = {
   flags?: string[];
   language?: string;
   version?: string;
+  updated?: string;
 };

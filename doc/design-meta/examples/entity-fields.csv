@@ -3,7 +3,8 @@ TextNode,localKeyId,Local Key ID,"Client side logical stream/grouping identifier
 TextNode,keyId,Key ID,"Logical stream/grouping identifier (e.g., project/topic path).",string,string,String,true,core
 TextNode,secureKeyId,Secure Key ID,Encrypted keyId.,string,string,String,true,core
 TextNode,flags,Flags,"Optional metadata flags (e.g., 'pinned', 'archived', 'sensitive').",string[],[]string,List<String>?,false,core
-TextNode,kind,Kind,"Logical type of the message (e.g., 'note'), set by the client.",string,string,String,true,core
+TextNode,kind,Kind,"Logical type of the message (e.g., 'note'), set by the client.",string,string,String,false,core
 TextNode,language,Language,Optional ISO language code for the value content.,string,*string,String?,false,core
 TextNode,value,Value,The message content or a reference to external data.,string,string,String,true,core
 TextNode,version,Version,"Server-generated version (e.g., UUID)",string,string,String,true,core
+TextNode,updated,Updated,UTC timestamp when the message was updated (server clock).,Date,time.Time,DateTime,true,core
