@@ -1,6 +1,7 @@
 import { KeyParams, KeyValueParams, OperationStatus } from "./common";
 
 type GetKeyValueRequest = {
+  rootKey: KeyParams;
   keyList: KeyParams[];
 };
 
@@ -12,5 +13,6 @@ type KeyValueStatus = {
 
 type GetKeyValueResponse = {
   id: string;
+  rootKey: KeyParams;
   keyValueList: KeyValueStatus[];
 };
