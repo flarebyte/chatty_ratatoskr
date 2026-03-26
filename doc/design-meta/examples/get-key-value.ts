@@ -5,14 +5,8 @@ type GetKeyValueRequest = {
   keyList: KeyParams[];
 };
 
-type KeyValueStatus = {
-  keyId: string;
-  status: OperationStatus;
-  keyValue?: KeyValueParams;
-};
-
 type GetKeyValueResponse = {
   id: string;
   rootKey: KeyParams;
-  keyValueList: KeyValueStatus[];
+  keyValueList: [KeyValueParams, OperationStatus][];
 };

@@ -1,12 +1,6 @@
-import { KeyParams, KeyVersionParams, OperationStatus } from "./common";
-
-type UpdateEvent = {
-  key: KeyParams;
-  status: OperationStatus;
-  keyValue?: KeyVersionParams;
-};
+import { KeyParams, OperationStatus } from "./common";
 
 type OnUpdateEvent = {
   id: string;
-  eventList: UpdateEvent[];
+  eventList: [KeyParams, OperationStatus][];
 };

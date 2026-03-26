@@ -16,20 +16,16 @@ export type OperationStatus = "ok" | "invalid" | "unauthorised";
 
 export type KeyParams = {
   keyId: string;
-  secureKeyId: string;
+  secureKeyId?: string;
   localKeyId?: string;
   kind?: KindOfTextNode;
+  version?: string;
+  updated?: string;
 } 
-
-export type KeyVersionParams = {
-  key: KeyParams;
-  version: string;
-  updated: string;
-};
 
 export type KeyValueParams = {
   key: KeyParams;
-  value: string;
+  value?: string;
   flags?: string[];
   language?: string;
   version?: string;
