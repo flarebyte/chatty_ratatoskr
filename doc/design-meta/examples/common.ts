@@ -12,7 +12,7 @@ export type NodeKind =
   | "thumbnail"
   | "url";
 
-export type OperationStatus = "ok" | "invalid" | "unauthorised";
+export type OperationStatus = "ok" | "invalid" | "unauthorised" | 'outdated';
 
 export type KeyKind = {
   hierarchy: NodeKind[];

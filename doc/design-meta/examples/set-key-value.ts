@@ -1,12 +1,12 @@
 import { KeyParams, KeyValueParams, OperationStatus } from "./common";
 
 type SetKeyValueRequest = {
-  rootKey: KeyParams;
-  keyValueList: KeyValueParams[];
+  rootKey: KeyParams; //required: keyId, secureKeyId
+  keyValueList: KeyValueParams[]; //required: keyId, secureKeyId
 };
- 
+
 type SetKeyValueResponse = {
   id: string;
-  rootKey: KeyParams;
-  keyList: [KeyParams, OperationStatus][];
+  rootKey: KeyParams; //required: keyId
+  keyList: [KeyParams, OperationStatus][]; //required: keyId
 };

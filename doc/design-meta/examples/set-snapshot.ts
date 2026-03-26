@@ -1,8 +1,8 @@
 import { KeyParams, KeyValueParams, OperationStatus } from "./common";
 
 type SetSnapshotRequest = {
-  key: KeyParams;
-  keyValueList: KeyValueParams[];
+  key: KeyParams; //required: keyId, secureKeyId
+  keyValueList: KeyValueParams[]; //required: keyId, secureKeyId
 };
  
 type SetKeyValueResponse = {

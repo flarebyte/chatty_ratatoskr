@@ -1,7 +1,7 @@
 import { KeyParams, KeyValueParams } from "./common";
 
 type GetSnapshotRequest = {
-  key: KeyParams;
+  key: KeyParams; //required: keyId, secureKeyId
 };
 
 type GetSnapshotResponse = {
