@@ -1,0 +1,9 @@
+action,role,protocol,description,
+create-new-keys,client,http,,
+set-key-value-list,client,http,,
+get-key-value-list,client,http
+get-snapshot,client,http
+set-snapshot,admin,http
+update-events,server,websockets
+set-admin-commands,admin,http
+get-admin-command,admin,http
