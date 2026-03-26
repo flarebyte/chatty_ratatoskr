@@ -1,39 +1,29 @@
-import { KeyParams, KindOfTextNode, OperationStatus } from "./common";
+import { KeyParams, NodeKind, OperationStatus } from "./common";
 
 type ChildParam = {
   localKeyId: string;
-  kind: KindOfTextNode;
-  flags?: string[];
-  language?: string;
+  expectedKind: NodeKind;
 };
 
 type NewKeyParams = {
   key: KeyParams;
-  flags?: string[];
-  language?: string;
+  expectedKind: NodeKind;
   children: ChildParam[];
-};
-
-type SuggestedChildParam = {
-  key: KeyParams;
-  flags?: string[];
-  language?: string;
-  status: OperationStatus;
 };
 
 type SuggestedNewKeyParams = {
   key: KeyParams;
-  flags?: string[];
-  language?: string;
   status: OperationStatus;
-  children: SuggestedChildParam[];
+  children: [KeyParams,OperationStatus ][];
 };
 
 type NewKeysRequest = {
+  rootKey: KeyParams;
   newkeys: NewKeyParams[];
 };
 
 type NewKeysResponse = {
   id: string;
+  rootKey: KeyParams;
   newKeys: SuggestedNewKeyParams[];
 };

@@ -1,33 +1,35 @@
-export type KindOfTextNode =
+export type NodeKind =
   | "note"
-  | "note/comment"
-  | "note/label"
-  | "note/like/user"
-  | "note/avatar"
-  | "note/emoticon"
-  | "note/style"
-  | "note/table"
-  | "note/image"
-  | "note/image/text"
-  | "note/thumbnail"
-  | "note/url";
+  | "comment"
+  | "label"
+  | "like"
+  | "user"
+  | "avatar"
+  | "emoticon"
+  | "style"
+  | "table"
+  | "image"
+  | "thumbnail"
+  | "url";
 
 export type OperationStatus = "ok" | "invalid" | "unauthorised";
 
+export type KeyKind = {
+  hierarchy: NodeKind[];
+  language?: string;
+};
+
 export type KeyParams = {
-  keyId: string;
+  keyId?: string;
   secureKeyId?: string;
   localKeyId?: string;
-  kind?: KindOfTextNode;
+  kind?: KeyKind;
   version?: string;
   updated?: string;
-} 
+};
 
 export type KeyValueParams = {
   key: KeyParams;
   value?: string;
   flags?: string[];
-  language?: string;
-  version?: string;
-  updated?: string;
 };
