@@ -33,3 +33,9 @@ export type KeyValueParams = {
   value?: string;
   flags?: string[];
 };
+
+export type Command = {
+  id: string;
+  comment: string;
+  arguments: string[];
+}

@@ -1,4 +1,4 @@
-import { KeyParams, KeyValueParams, OperationStatus } from "./common";
+import { KeyParams, KeyValueParams } from "./common";
 
 type GetSnapshotRequest = {
   key: KeyParams;
