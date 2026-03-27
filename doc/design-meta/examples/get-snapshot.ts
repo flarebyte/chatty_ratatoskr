@@ -6,6 +6,6 @@ type GetSnapshotRequest = {
 
 type GetSnapshotResponse = {
   id: string;
-  key: KeyParams;
-  keyValueList: KeyValueParams[];
+  key: KeyParams; //required: keyId, and the rest may be depend on success/failure.
+  keyValueList: KeyValueParams[]; //required: keyId, and the rest may be depend on success/failure.
 };

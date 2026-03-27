@@ -8,5 +8,5 @@ type SetKeyValueRequest = {
 type SetKeyValueResponse = {
   id: string;
   rootKey: KeyParams; //required: keyId
-  keyList: [KeyParams, OperationStatus][]; //required: keyId
+  keyList: [KeyParams, OperationStatus][]; //required: keyId, and the rest may be depend on success/failure.
 };

@@ -1,3 +1,7 @@
+/**
+ * NodeKind should be extendible and likely be a string internally
+ * but it should be validated against a supported list.
+ */
 export type NodeKind =
   | "note"
   | "comment"
