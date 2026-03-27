@@ -7,4 +7,5 @@ TextNode,kind,Kind,"Logical type of the message (e.g., 'note'), set by the clien
 TextNode,language,Language,Optional ISO language code for the value content.,string,*string,String?,false,core
 TextNode,value,Value,The message content or a reference to external data.,string,string,String,true,core
 TextNode,version,Version,"Server-generated version (e.g., UUID)",string,string,String,true,core
+TextNode,created,Created,UTC timestamp when the message was created (server clock).,Date,time.Time,DateTime,true,core
 TextNode,updated,Updated,UTC timestamp when the message was updated (server clock).,Date,time.Time,DateTime,true,core

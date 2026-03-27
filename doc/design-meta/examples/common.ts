@@ -31,6 +31,7 @@ export type KeyParams = {
   localKeyId?: string;
   kind?: KeyKind;
   version?: string;
+  created?: string;
   updated?: string;
 };
 
@@ -46,6 +47,7 @@ export type Command = {
   arguments: string[];
 };
 
+//Redis key compatible
 export const keyIdExamples = [
   'dashboard:52ffe570:note:c401c269:text',
   'dashboard:52ffe570:note:c401c269:comment:e0ee7775',
