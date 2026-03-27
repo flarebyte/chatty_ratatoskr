@@ -15,3 +15,11 @@ type GetCommandResponse = {
 export interface CommandReadApi {
   getCommand(request: GetCommandRequest): GetCommandResponse;
 }
+
+export const readCommands: Command[] = [
+  {
+    id: 'read-logs',
+    comment: 'Read the logs',
+    arguments: ['logs'],
+  },
+];

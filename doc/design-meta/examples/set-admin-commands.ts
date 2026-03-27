@@ -18,3 +18,11 @@ type SetCommandsResponse = {
 export interface CommandWriteApi {
   setCommands(request: SetCommandsRequest): SetCommandsResponse;
 }
+
+export const writeCommands: Command[] = [
+  {
+    id: 'clear',
+    comment: 'Clear all the stores',
+    arguments: ['clear'],
+  },
+];
