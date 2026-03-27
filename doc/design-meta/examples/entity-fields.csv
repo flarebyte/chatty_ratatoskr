@@ -2,7 +2,7 @@ entity_name,field_name,field_title,field_description,ts_kind,go_kind,dart_kind,r
 TextNode,localKeyId,Local Key ID,"Client side logical stream/grouping identifier (e.g., project/topic path).",string,string,String,false,core
 TextNode,keyId,Key ID,"Logical stream/grouping identifier (e.g., project/topic path).",string,string,String,true,core
 TextNode,secureKeyId,Secure Key ID,Encrypted keyId.,string,string,String,true,core
-TextNode,flags,Flags,"Optional metadata flags (e.g., 'pinned', 'archived', 'sensitive').",string[],[]string,List<String>?,false,core
+TextNode,options,Options,"Optional metadata flags options (e.g., '--pinned', '--archived', '--sensitive').",string[],[]string,List<String>?,false,core
 TextNode,kind,Kind,"Logical type of the message (e.g., 'note'), set by the client.",string,string,String,false,core
 TextNode,language,Language,Optional ISO language code for the value content.,string,*string,String?,false,core
 TextNode,value,Value,The message content or a reference to external data.,string,string,String,true,core

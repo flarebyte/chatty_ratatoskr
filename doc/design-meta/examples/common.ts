@@ -2,7 +2,7 @@
  * NodeKind should be extendible and likely be a string internally
  * but it should be validated against a supported list.
  */
-export type NodeKind =
+export type NodeKindExample =
   | 'avatar'
   | 'comment'
   | 'emoticon'
@@ -18,10 +18,11 @@ export type NodeKind =
   | 'url'
   | 'user';
 
+export type OptionExample = '--pinned' | '--archived' | '--sensitive';
 export type OperationStatus = 'ok' | 'invalid' | 'unauthorised' | 'outdated';
 
 export type KeyKind = {
-  hierarchy: NodeKind[];
+  hierarchy: NodeKindExample[];
   language?: string;
 };
 
@@ -38,7 +39,7 @@ export type KeyParams = {
 export type KeyValueParams = {
   key: KeyParams;
   value?: string;
-  flags?: string[];
+  options?: OptionExample[];
 };
 
 export type Command = {

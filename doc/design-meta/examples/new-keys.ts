@@ -1,13 +1,13 @@
-import type { KeyParams, NodeKind, OperationStatus } from './common';
+import type { KeyParams, NodeKindExample, OperationStatus } from './common';
 
 type ChildParam = {
   localKeyId: string;
-  expectedKind: NodeKind;
+  expectedKind: NodeKindExample;
 };
 
 type NewKeyParams = {
   key: KeyParams;
-  expectedKind: NodeKind;
+  expectedKind: NodeKindExample;
   children: ChildParam[];
 };
 
