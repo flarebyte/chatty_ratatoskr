@@ -1,4 +1,4 @@
-import { Command, OperationStatus } from "./common";
+import type { Command, OperationStatus } from './common';
 
 type GetCommandRequest = {
   command: Command;
@@ -11,3 +11,7 @@ type GetCommandResponse = {
   message?: string;
   content: string;
 };
+
+export interface CommandReadApi {
+  getCommand(request: GetCommandRequest): GetCommandResponse;
+}

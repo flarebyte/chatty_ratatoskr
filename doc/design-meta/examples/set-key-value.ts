@@ -1,4 +1,4 @@
-import { KeyParams, KeyValueParams, OperationStatus } from "./common";
+import type { KeyParams, KeyValueParams, OperationStatus } from './common';
 
 type SetKeyValueRequest = {
   rootKey: KeyParams; //required: keyId, secureKeyId
@@ -10,3 +10,7 @@ type SetKeyValueResponse = {
   rootKey: KeyParams; //required: keyId
   keyList: [KeyParams, OperationStatus][]; //required: keyId, and the rest may be depend on success/failure.
 };
+
+export interface KeyValueWriteApi {
+  setKeyValueList(request: SetKeyValueRequest): SetKeyValueResponse;
+}

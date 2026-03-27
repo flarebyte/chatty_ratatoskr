@@ -1,4 +1,4 @@
-import { KeyParams, NodeKind, OperationStatus } from "./common";
+import type { KeyParams, NodeKind, OperationStatus } from './common';
 
 type ChildParam = {
   localKeyId: string;
@@ -14,7 +14,7 @@ type NewKeyParams = {
 type SuggestedNewKeyParams = {
   key: KeyParams;
   status: OperationStatus;
-  children: [KeyParams,OperationStatus ][];
+  children: [KeyParams, OperationStatus][];
 };
 
 type NewKeysRequest = {
@@ -27,3 +27,7 @@ type NewKeysResponse = {
   rootKey: KeyParams;
   newKeys: SuggestedNewKeyParams[];
 };
+
+export interface NewKeysApi {
+  createNewKeys(request: NewKeysRequest): NewKeysResponse;
+}

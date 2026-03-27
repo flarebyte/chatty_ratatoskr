@@ -1,14 +1,17 @@
-import { KeyParams, KeyValueParams, OperationStatus } from "./common";
+import type { KeyParams, KeyValueParams } from './common';
+
+type Snapshot = {
+  key: KeyParams; //required: keyId, secureKeyId
+  keyValueList: KeyValueParams[];
+};
 
 type SnapshotEvent = {
   snapshot: Snapshot;
-  status: OperationStatus;
 };
 
-interface SnapshotEventStoreApi {
+export interface SnapshotEventStoreApi {
   addEvent(event: SnapshotEvent): void;
   getAllEvents(): SnapshotEvent[];
-  getLastSuccessfulEventByKey(key: KeyParams): SnapshotEvent | undefined;
   getLastEventByKey(key: KeyParams): SnapshotEvent | undefined;
   clear(): void;
 }

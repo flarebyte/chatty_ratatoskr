@@ -1,11 +1,11 @@
-import { KeyParams, KeyValueParams, OperationStatus } from "./common";
+import type { KeyParams, KeyValueParams, OperationStatus } from './common';
 
 type KeyValueEvent = {
   keyValue: KeyValueParams;
   status: OperationStatus;
 };
 
-interface KeyValueEventStoreApi {
+export interface KeyValueEventStoreApi {
   addEvent(event: KeyValueEvent): void;
   getAllEvents(): KeyValueEvent[];
   getLastSuccessfulEventByKey(key: KeyParams): KeyValueEvent | undefined;

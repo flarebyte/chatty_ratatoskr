@@ -3,20 +3,20 @@
  * but it should be validated against a supported list.
  */
 export type NodeKind =
-  | "note"
-  | "comment"
-  | "label"
-  | "like"
-  | "user"
-  | "avatar"
-  | "emoticon"
-  | "style"
-  | "table"
-  | "image"
-  | "thumbnail"
-  | "url";
+  | 'note'
+  | 'comment'
+  | 'label'
+  | 'like'
+  | 'user'
+  | 'avatar'
+  | 'emoticon'
+  | 'style'
+  | 'table'
+  | 'image'
+  | 'thumbnail'
+  | 'url';
 
-export type OperationStatus = "ok" | "invalid" | "unauthorised" | 'outdated';
+export type OperationStatus = 'ok' | 'invalid' | 'unauthorised' | 'outdated';
 
 export type KeyKind = {
   hierarchy: NodeKind[];
@@ -42,4 +42,4 @@ export type Command = {
   id: string;
   comment: string;
   arguments: string[];
-}
+};
