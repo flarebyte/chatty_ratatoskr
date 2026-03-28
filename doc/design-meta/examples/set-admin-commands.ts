@@ -25,4 +25,14 @@ export const writeCommands: Command[] = [
     comment: 'Clear all the stores',
     arguments: ['clear'],
   },
+  {
+    id: 'delay-response',
+    comment: 'Delay the response for testing purpose',
+    arguments: ['delay', '--seconds=10'],
+  },
+  {
+    id: 'reset',
+    comment: 'Reset to default settings',
+    arguments: ['reset'],
+  },
 ];

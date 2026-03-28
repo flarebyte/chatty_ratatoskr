@@ -6,5 +6,6 @@ type OnUpdateEvent = {
 };
 
 export interface OnUpdateEventApi {
+  send(key: KeyParams): void;
   onUpdate(): OnUpdateEvent;
 }
