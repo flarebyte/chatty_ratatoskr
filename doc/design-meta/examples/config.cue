@@ -1,14 +1,35 @@
 endpoints: {
 
-	postCreate: {
+	create: {
 		path: "/create"
         verb: "POST"
 	}
 
-    putNode: {
+    setKeyValueList: {
         path: "/node"
         verb: "PUT"
     }
+
+    getKeyValueList: {
+        path: "/node"
+        verb: "GET"
+    }
+
+    getSnapshot: {
+        path: "/snapshot"
+        verb: "GET"
+    }
+
+    setSnapshot: {
+        path: "/snapshot"
+        verb: "PUT"
+    }
+
+    receiveEvent: {
+        path: "/event"
+        verb: "GET"
+    }
+
 }
 
 schema: {
@@ -32,4 +53,7 @@ schema: {
         boolean: ["ok", "invalid", "unauthorised", "outdated"]
     }
 
+    secureKeyId: {
+        statusAsKey: true
+    }
 }
