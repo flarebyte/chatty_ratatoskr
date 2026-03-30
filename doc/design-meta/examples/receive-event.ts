@@ -1,11 +1,19 @@
-import type { KeyParams, OperationStatus } from './common';
+import type { KeyParams, OperationStatus, UserParams } from "./common";
+type Subscription = {
+  id: string;
+  eventList: KeyParams[];
+};
 
-type OnUpdateEvent = {
+type EventResponse = {
   id: string;
   eventList: [KeyParams, OperationStatus][];
 };
 
-export interface OnUpdateEventApi {
+export interface EventApi {
+  registerUser(user: UserParams): [UserParams, OperationStatus];
+  unregisterUser(user: UserParams): [UserParams, OperationStatus];
+  subscribe(subscription: Subscription): EventResponse;
+  unsubscribe(subscription: Subscription): EventResponse;
   send(key: KeyParams): void;
-  onUpdate(): OnUpdateEvent;
+  receiveUserUpdate(user: UserParams): EventResponse;
 }

@@ -1,3 +1,5 @@
+port: 8080
+
 endpoints: {
 
 	create: {
@@ -55,5 +57,10 @@ schema: {
 
     secureKeyId: {
         statusAsKey: true
+    }
+
+    text: {
+        maxCharLength: 1000
+        checkVersion: true
     }
 }

@@ -1,0 +1,6 @@
+usecase,description
+a,simulate backend store server
+b,hierarchical tree text store
+c,store text node in multiple formats
+d,write conflict managed by checking the version
+e,

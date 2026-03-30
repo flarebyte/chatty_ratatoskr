@@ -48,6 +48,10 @@ export type KeyValueParams = {
   options?: OptionExample[];
 };
 
+export type UserParams = {
+   key: KeyParams;
+}
+
 export type Command = {
   id: string;
   comment: string;
