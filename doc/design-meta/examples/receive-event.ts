@@ -1,11 +1,13 @@
 import type { KeyParams, OperationStatus, UserParams } from "./common";
 type Subscription = {
   id: string;
+  user: UserParams;
   eventList: KeyParams[];
 };
 
 type EventResponse = {
   id: string;
+  user: UserParams;
   eventList: [KeyParams, OperationStatus][];
 };
 
