@@ -43,7 +43,7 @@ The protocol is primarily HTTP with optional WebSocket support.
 
 #### HTTP Is The Primary Transport
 
-The draft examples place most interactions on a small HTTP surface: creating keys, reading and writing key/value data, snapshot operations, event submission, and admin commands.
+The draft examples place most Yggdrasil interactions on a small HTTP surface: creating keys, reading and writing key/value data, and snapshot operations.
 
 This aligns with the goal of a simple mock server that is easy to run locally and in CI.
 
@@ -170,20 +170,21 @@ endpoints: {
 		path: "/snapshot"
 		verb: "PUT"
 	}
+}
 
-	deleteSnapshot: {
-		path: "/snapshot"
-		verb: "DELETE"
-	}
+events: {
+	connectionPath: "/events"
+	source:         "server-generated-after-state-change"
+}
 
-	sendEvent: {
-		path: "/event"
-		verb: "POST"
-	}
+admin: {
+	scope: "mock-server-only"
 
-	adminCommands: {
-		path: "/admin/commands"
-		verb: "PUT|GET"
+	endpoints: {
+		commands: {
+			path: "/admin/commands"
+			verb: "PUT|GET"
+		}
 	}
 }
 
@@ -249,22 +250,13 @@ HTTP and WebSocket actions currently envisaged by the examples.
 | set-key-value-list | Write one or more key/value entries under a root key. | /node | http | client | PUT |
 | get-key-value-list | Read one or more key/value entries under a root key. | /node | http | client | GET |
 | get-snapshot | Read the latest snapshot for a key. | /snapshot | http | client | GET |
-| set-snapshot | Replace the current snapshot for a key. | /snapshot | http | admin | PUT |
-| delete-snapshot | Delete the snapshot currently stored for a key. | /snapshot | http | admin | DELETE |
+| set-snapshot | Replace the current snapshot for a key. | /snapshot | http | client | PUT |
 | receive-events | Open an event stream for subscriptions and server push updates. | /events | websocket | client | CONNECT |
-| send-event | Inject an event into the mock server for connected clients. | /event | http | admin | POST |
-| set-admin-commands | Register or replace the supported administrative commands. | /admin/commands | http | admin | PUT |
-| get-admin-command | Read the currently registered administrative commands. | /admin/commands | http | admin | GET |
+| send-event | Emit a sync event to subscribed clients after a state change. | event-bus | internal | server | EMIT |
 
 ### 03 Entity Model
 
 Current entity and field definitions used by the draft protocol.
-
-#### Admin Commands
-
-| description | name |
-| --- | --- |
-| Reset all in-memory stores to their default state. | reset |
 
 #### Entities
 
@@ -324,12 +316,106 @@ Known draft mismatches that should be resolved before implementation hardens.
 The draft material is now closer to a coherent protocol, but a few design questions remain open:
 
 - The project intent is now clear: Yggdrasil is a hierarchical key/value and snapshot protocol. The remaining question is whether the current names such as `TextNode` are specific enough or should be generalized to a broader Yggdrasil node vocabulary.
-- `adminCommands` is currently represented as one config entry with `PUT|GET` in `config.cue`. That keeps the draft concise, but it is not as precise as two separate operations and may need to be split later.
 - The WebSocket draft now defines `/events` as the connection path, but the exact message envelope for subscribe, unsubscribe, heartbeat, and event delivery is still only implied by the TypeScript examples rather than defined as a strict protocol contract.
-- The examples describe both snapshots and event stores, but retention, overwrite semantics, reset behaviour, and snapshot rehydration rules are still under-specified.
-- Security is only sketched through `secureKeyId`, well-known WebSocket identifiers, and admin commands. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
+- The examples describe both snapshots and event stores, but retention, overwrite semantics, archive behaviour, and snapshot rehydration rules are still under-specified.
+- Security is only sketched through `secureKeyId` and constrained event identifiers. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 
-## 04 TypeScript Examples
+## 04 Mock Server Administration
+
+Test-only controls that are intentionally kept outside the Yggdrasil protocol.
+
+### 01 Admin Surface
+
+Operational controls for the mock server test harness.
+
+#### Administration Is Outside The Protocol
+
+Mock-server control operations such as clearing state, delaying responses, and reading logs are useful for testing, but they are not part of the Yggdrasil protocol itself.
+
+These controls should remain on a separate administration surface so production clients do not depend on test-only capabilities such as `reset`-style actions. This reduces the risk of accidental exposure and keeps the protocol focused on domain data and synchronisation.
+
+#### Admin Commands
+
+| description | name |
+| --- | --- |
+| Clear all in-memory stores used by the mock server. | clear-state |
+| Delay responses for timeout and retry testing. | delay-response |
+| Read mock-server logs for debugging. | read-logs |
+
+#### Get Admin Command Example
+
+```ts
+import type { Command, OperationStatus } from './common';
+
+type GetCommandRequest = {
+  command: Command;
+};
+
+type GetCommandResponse = {
+  id: string;
+  command: Command;
+  status: OperationStatus;
+  message?: string;
+  content: string;
+};
+
+export interface CommandReadApi {
+  getCommand(request: GetCommandRequest): GetCommandResponse;
+}
+
+export const readCommands: Command[] = [
+  {
+    id: 'read-logs',
+    comment: 'Read the logs',
+    arguments: ['logs'],
+  },
+];
+```
+
+#### Set Admin Commands Example
+
+```ts
+import type { Command, OperationStatus } from './common';
+
+type CommandStatus = {
+  command: Command;
+  status: OperationStatus;
+  message?: string;
+};
+
+type SetCommandsRequest = {
+  commands: Command[];
+};
+
+type SetCommandsResponse = {
+  id: string;
+  results: CommandStatus[];
+};
+
+export interface CommandWriteApi {
+  setCommands(request: SetCommandsRequest): SetCommandsResponse;
+}
+
+export const writeCommands: Command[] = [
+  {
+    id: 'clear-state',
+    comment: 'Clear all mock-server in-memory stores',
+    arguments: ['clear-state'],
+  },
+  {
+    id: 'delay-response',
+    comment: 'Delay the response for testing purposes',
+    arguments: ['delay', '--seconds=10'],
+  },
+  {
+    id: 'read-logs',
+    comment: 'Read mock-server logs for debugging',
+    arguments: ['logs'],
+  },
+];
+```
+
+## 05 TypeScript Examples
 
 Reference examples that should be treated as protocol design inputs, not final implementation code.
 
@@ -415,36 +501,6 @@ export const keyIdExamples = [
 
 REST-style request and response shapes.
 
-#### Get Admin Command Example
-
-```ts
-import type { Command, OperationStatus } from './common';
-
-type GetCommandRequest = {
-  command: Command;
-};
-
-type GetCommandResponse = {
-  id: string;
-  command: Command;
-  status: OperationStatus;
-  message?: string;
-  content: string;
-};
-
-export interface CommandReadApi {
-  getCommand(request: GetCommandRequest): GetCommandResponse;
-}
-
-export const readCommands: Command[] = [
-  {
-    id: 'read-logs',
-    comment: 'Read the logs',
-    arguments: ['logs'],
-  },
-];
-```
-
 #### Get Key Value Example
 
 ```ts
@@ -522,49 +578,6 @@ type NewKeysResponse = {
 export interface NewKeysApi {
   createNewKeys(request: NewKeysRequest): NewKeysResponse;
 }
-```
-
-#### Set Admin Commands Example
-
-```ts
-import type { Command, OperationStatus } from './common';
-
-type CommandStatus = {
-  command: Command;
-  status: OperationStatus;
-  message?: string;
-};
-
-type SetCommandsRequest = {
-  commands: Command[];
-};
-
-type SetCommandsResponse = {
-  id: string;
-  results: CommandStatus[];
-};
-
-export interface CommandWriteApi {
-  setCommands(request: SetCommandsRequest): SetCommandsResponse;
-}
-
-export const writeCommands: Command[] = [
-  {
-    id: 'clear',
-    comment: 'Clear all the stores',
-    arguments: ['clear'],
-  },
-  {
-    id: 'delay-response',
-    comment: 'Delay the response for testing purposes',
-    arguments: ['delay', '--seconds=10'],
-  },
-  {
-    id: 'reset',
-    comment: 'Reset to default settings',
-    arguments: ['reset'],
-  },
-];
 ```
 
 #### Set Key Value Example

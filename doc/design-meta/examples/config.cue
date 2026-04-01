@@ -55,20 +55,21 @@ endpoints: {
 		path: "/snapshot"
 		verb: "PUT"
 	}
+}
 
-	deleteSnapshot: {
-		path: "/snapshot"
-		verb: "DELETE"
-	}
+events: {
+	connectionPath: "/events"
+	source:         "server-generated-after-state-change"
+}
 
-	sendEvent: {
-		path: "/event"
-		verb: "POST"
-	}
+admin: {
+	scope: "mock-server-only"
 
-	adminCommands: {
-		path: "/admin/commands"
-		verb: "PUT|GET"
+	endpoints: {
+		commands: {
+			path: "/admin/commands"
+			verb: "PUT|GET"
+		}
 	}
 }
 

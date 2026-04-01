@@ -21,9 +21,9 @@ export interface CommandWriteApi {
 
 export const writeCommands: Command[] = [
   {
-    id: 'clear',
-    comment: 'Clear all the stores',
-    arguments: ['clear'],
+    id: 'clear-state',
+    comment: 'Clear all mock-server in-memory stores',
+    arguments: ['clear-state'],
   },
   {
     id: 'delay-response',
@@ -31,8 +31,8 @@ export const writeCommands: Command[] = [
     arguments: ['delay', '--seconds=10'],
   },
   {
-    id: 'reset',
-    comment: 'Reset to default settings',
-    arguments: ['reset'],
+    id: 'read-logs',
+    comment: 'Read mock-server logs for debugging',
+    arguments: ['logs'],
   },
 ];

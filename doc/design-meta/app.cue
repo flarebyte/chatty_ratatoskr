@@ -46,7 +46,7 @@ reports: [{
 		}, {
 			title:       "03 Entity Model"
 			description: "Current entity and field definitions used by the draft protocol."
-			notes: ["yggdrasil.entities", "yggdrasil.entity-fields", "yggdrasil.admin-commands"]
+			notes: ["yggdrasil.entities", "yggdrasil.entity-fields"]
 		}, {
 			title:       "04 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
@@ -57,7 +57,15 @@ reports: [{
 			notes: ["yggdrasil.inconsistencies"]
 		}]
 	}, {
-		title:       "04 TypeScript Examples"
+		title:       "04 Mock Server Administration"
+		description: "Test-only controls that are intentionally kept outside the Yggdrasil protocol."
+		sections: [{
+			title:       "01 Admin Surface"
+			description: "Operational controls for the mock server test harness."
+			notes: ["yggdrasil.admin-boundary", "yggdrasil.admin-commands", "yggdrasil.ts.set-admin-commands", "yggdrasil.ts.get-admin-command"]
+		}]
+	}, {
+		title:       "05 TypeScript Examples"
 		description: "Reference examples that should be treated as protocol design inputs, not final implementation code."
 		sections: [{
 			title:       "01 Shared Types"
@@ -72,8 +80,6 @@ reports: [{
 				"yggdrasil.ts.get-key-value",
 				"yggdrasil.ts.set-snapshot",
 				"yggdrasil.ts.get-snapshot",
-				"yggdrasil.ts.set-admin-commands",
-				"yggdrasil.ts.get-admin-command",
 			]
 		}, {
 			title:       "03 Event APIs"
@@ -131,7 +137,7 @@ The protocol should not require a single serialized key format across products. 
 		name:  "yggdrasil.transport.http"
 		title: "HTTP Is The Primary Transport"
 		markdown: """
-The draft examples place most interactions on a small HTTP surface: creating keys, reading and writing key/value data, snapshot operations, event submission, and admin commands.
+The draft examples place most Yggdrasil interactions on a small HTTP surface: creating keys, reading and writing key/value data, and snapshot operations.
 
 This aligns with the goal of a simple mock server that is easy to run locally and in CI.
 """
@@ -175,6 +181,16 @@ Current notes suggest a constrained event model with heartbeat support, bounded 
 		labels: ["protocol", "actions", "csv"]
 	},
 	{
+		name:  "yggdrasil.admin-boundary"
+		title: "Administration Is Outside The Protocol"
+		markdown: """
+Mock-server control operations such as clearing state, delaying responses, and reading logs are useful for testing, but they are not part of the Yggdrasil protocol itself.
+
+These controls should remain on a separate administration surface so production clients do not depend on test-only capabilities such as `reset`-style actions. This reduces the risk of accidental exposure and keeps the protocol focused on domain data and synchronisation.
+"""
+		labels: ["admin", "security", "boundary"]
+	},
+	{
 		name:  "yggdrasil.admin-commands"
 		title: "Admin Commands"
 		filepath: "examples/admin-commands.csv"
@@ -202,10 +218,9 @@ Current notes suggest a constrained event model with heartbeat support, bounded 
 The draft material is now closer to a coherent protocol, but a few design questions remain open:
 
 - The project intent is now clear: Yggdrasil is a hierarchical key/value and snapshot protocol. The remaining question is whether the current names such as `TextNode` are specific enough or should be generalized to a broader Yggdrasil node vocabulary.
-- `adminCommands` is currently represented as one config entry with `PUT|GET` in `config.cue`. That keeps the draft concise, but it is not as precise as two separate operations and may need to be split later.
 - The WebSocket draft now defines `/events` as the connection path, but the exact message envelope for subscribe, unsubscribe, heartbeat, and event delivery is still only implied by the TypeScript examples rather than defined as a strict protocol contract.
-- The examples describe both snapshots and event stores, but retention, overwrite semantics, reset behaviour, and snapshot rehydration rules are still under-specified.
-- Security is only sketched through `secureKeyId`, well-known WebSocket identifiers, and admin commands. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
+- The examples describe both snapshots and event stores, but retention, overwrite semantics, archive behaviour, and snapshot rehydration rules are still under-specified.
+- Security is only sketched through `secureKeyId` and constrained event identifiers. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 """
 		labels: ["design", "inconsistency", "open-questions"]
 	},
