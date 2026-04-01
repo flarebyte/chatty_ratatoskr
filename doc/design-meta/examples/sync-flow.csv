@@ -1,0 +1,8 @@
+step,actor,transport,description
+fetch-snapshot,client,http,Fetch the latest authoritative snapshot for a root key.
+store-snapshot,client,local-store,Store the snapshot in the local key-value store as the current baseline.
+open-event-stream,client,websocket,Open the optional event stream for incremental updates.
+apply-set-event,client,websocket,Apply `set` events as local upserts and treat `--archived` as record state rather than deletion.
+emit-snapshot-replaced,server,websocket,Emit `snapshot-replaced` after `setSnapshot` updates the authoritative snapshot for a root key.
+handle-snapshot-replaced,client,websocket,"When `snapshot-replaced` is received, discard the previous baseline for the root key and refetch the snapshot."
+reject-stale-write,server,http,Reject writes whose submitted version is not based on the latest server version.

@@ -1,0 +1,6 @@
+scenario,operation_status,http_status,description
+success,ok,200,"Request completed successfully and returned the expected response payload."
+invalid-key-or-payload,invalid,400,"The request payload or key structure is invalid and the server rejects it."
+unauthorised-access,unauthorised,401,"The client is not authorised to perform the requested operation."
+stale-write,outdated,409,"The submitted version is older than the latest stored version and the write is rejected."
+payload-too-large,invalid,413,"The payload exceeds the configured HTTP request size limit."

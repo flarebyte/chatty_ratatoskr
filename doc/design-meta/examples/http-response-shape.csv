@@ -1,0 +1,7 @@
+rule,scope,description
+top-level-id,response,"HTTP responses should include a top-level `id` for request tracing and correlation."
+top-level-status,response,"HTTP responses should include a top-level `status` when the operation has a single authoritative outcome."
+top-level-data,response,"HTTP responses should carry the domain payload under a shallow top-level `data` field."
+optional-message,response,"`message` is optional and should be used when human-readable context helps explain failures or unusual outcomes."
+item-status-for-collections,response,"Collection operations may return per-item statuses in addition to top-level fields."
+structured-over-freeform,response,"Structured fields should carry protocol meaning first; `message` is supplementary rather than the primary machine-readable contract."

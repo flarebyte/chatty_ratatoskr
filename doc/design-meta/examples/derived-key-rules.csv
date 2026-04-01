@@ -1,0 +1,10 @@
+rule,scope,description
+current-principal-placeholder,key,"`principal:_` or a product-specific alias such as `user:_` is a reserved placeholder meaning the current authenticated principal."
+server-resolves-placeholder,key,"The server should resolve the current-principal placeholder to the authenticated principal identity before applying access checks and storage rules."
+placeholder-requires-authentication,key,"If a request uses the current-principal placeholder without an authenticated principal context, the request should return `unauthorised`."
+derived-count-leaf,key,"`count` is a reserved derived leaf representing aggregate server-managed state such as like totals."
+derived-leaf-read-only,key,"Derived aggregate leaves such as `count` are readable by normal clients but are not directly writable by them."
+principal-action-updates-aggregate,key,"Server logic should update derived aggregate leaves as a consequence of principal-scoped actions such as like and unlike."
+like-is-branch,key,"`like` should be treated as a branch label that leads to either a principal-scoped like record such as `user:_` or a derived aggregate leaf such as `count`."
+language-is-branch,key,"`language` should be treated as a branch label when it leads to another token such as `_` or a language code."
+private-principal-actions,key,"Principal-scoped action records such as likes should remain isolated to the acting principal and should not expose other principals' identities to ordinary readers."

@@ -1,0 +1,6 @@
+rule,scope,description
+command-id-optional,websocket,"Client WebSocket commands may include an optional shallow `id` for correlation."
+ack-echoes-command-id,websocket,"When a client command includes `id`, the matching `subscribed`, `unsubscribed`, `pong`, or `status` response should echo the same `id`."
+server-may-omit-id-for-push,websocket,"Server-pushed `event` messages do not need a command-correlation `id` because they are not direct replies to a client command."
+no-extra-command-envelope,websocket,"WebSocket command correlation should not require an additional wrapper; `id` remains a shallow optional field on command messages."
+consistent-with-http,implementation,"WebSocket command correlation should follow the same echo-or-generate intent as HTTP request correlation where practical."

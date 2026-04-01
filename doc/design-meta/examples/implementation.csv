@@ -1,0 +1,19 @@
+usecase,description
+go-cli,Write the CLI in Go.
+cobra-cli,Use Cobra for CLI commands and argument parsing.
+cue-source-of-truth,Use CUE as the configuration source of truth.
+guard-clauses,Prefer early returns and guard clauses for errors.
+small-functions,Keep functions small and single-purpose.
+separate-io,Separate I/O from core logic.
+tiny-structs,Use small structs to avoid long parameter lists.
+named-predicates,Replace boolean soup with named predicates.
+deterministic-output,Guarantee deterministic ordering in generated outputs.
+json-payloads,Use JSON for request and response payloads.
+portable-formats,"Prefer formats that are well supported across languages, especially Go, TypeScript, and Dart."
+safe-option-flags,"Keep `options` as lightweight representations of argument parsing, limited to a safe format."
+target-platforms,Build the CLI for at least Linux and macOS.
+coder-websocket,Use `coder/websocket` for WebSocket support.
+net-http,Use `net/http` for the HTTP server.
+single-binary,Prefer a lightweight single-binary server suitable for local development and CI.
+in-memory-mock-state,Use in-memory state for the mock server rather than production-grade persistence.
+separate-admin-surface,Keep mock-server administration outside the protocol-facing Yggdrasil surface.

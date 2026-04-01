@@ -1,0 +1,6 @@
+rule,scope,description
+best-effort-processing,collection-write,"`createNewKeys` and `setKeyValueList` should process items independently rather than failing the entire request when one item fails."
+per-item-status-required,collection-write,"Batch write responses should return an item-level status for every requested item so clients can distinguish successful and unsuccessful writes."
+request-order-preserved,collection-write,"Batch write responses should preserve the request order of items to keep client-side correlation simple."
+top-level-status-is-transport-level,collection-write,"The top-level response `status` should describe whether the batch request was accepted and processed, not whether every item succeeded."
+no-implicit-rollback,collection-write,"The protocol should not imply transactional rollback across items; successful item writes remain valid even if other items in the same request fail."

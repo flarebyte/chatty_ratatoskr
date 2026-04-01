@@ -1,0 +1,6 @@
+rule,scope,description
+full-subtree-read,snapshot,"`getSnapshot` returns the full subtree for the requested root key rather than a partial fragment."
+empty-snapshot-valid,snapshot,A snapshot may be empty when the root key exists but currently has no child value nodes.
+replace-full-baseline,snapshot,"`setSnapshot` replaces the full authoritative subtree baseline for the requested root key."
+replace-in-place,snapshot,"The current snapshot is replaced in place for sync purposes rather than requiring historical snapshot retention in the protocol."
+emit-snapshot-replaced,snapshot,After `setSnapshot` succeeds the server emits `snapshot-replaced` for that root key.

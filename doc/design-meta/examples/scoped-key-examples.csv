@@ -1,0 +1,5 @@
+example_name,product_variant,scope_shape,key_example,description
+tenant-group-user-note,tenant-group-user,"level1/level2/principal","tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text","Example of a principal-scoped key where access is visible through a tenant/group/user hierarchy using stable generated ids rather than mutable names."
+tenant-group-root,tenant-group-user,"level1/level2","tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","Example of a group-scoped document root where all members of the configured group scope may read it."
+department-region-member-note,department-region-member,"level1/level2/principal","department:d9a8c102:region:r6be41f0:member:m17aa9f3:dashboard:d1e52f07:note:n7c401c2:text","Same fixed-depth model with product-specific labels instead of tenant/group/user, still using stable generated ids."
+department-root,department-region-member,"level1","department:d9a8c102:dashboard:d1e52f07","Example of a top-level scoped document root using a department label instead of tenant."

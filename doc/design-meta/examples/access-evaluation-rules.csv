@@ -1,0 +1,9 @@
+rule,operation,description
+level-1-scope-read,read,"A level-1 scoped key is readable when the authenticated principal belongs to the same configured top-level scope identified in `keyId`, for example `tenant` or `department`."
+level-1-scope-write,write,"A level-1 scoped key is writable only when the authenticated principal has write permission for that configured top-level scope."
+level-2-scope-read,read,"A level-2 scoped key is readable when the authenticated principal belongs to the same configured level-1 and level-2 scopes identified in `keyId`, for example `tenant/team` or `department/region`."
+level-2-scope-write,write,"A level-2 scoped key is writable only when the authenticated principal has write permission for that configured level-2 scope."
+principal-scope-read,read,"A principal-scoped key is readable when the authenticated principal id matches the principal identity encoded in `keyId`, regardless of whether the product calls it `user`, `member`, `subscriber`, or another term."
+principal-scope-write,write,"A principal-scoped key is writable only when the authenticated principal id matches the principal identity encoded in `keyId` or another explicit server policy allows it."
+invalid-key-scope,validation,"If the access scope implied by `keyId` is malformed or missing required ownership segments, the request should return `invalid`."
+unauthorised-access,authorization,"If `keyId` is structurally valid but the authenticated user lacks read or write permission for that scope, the request should return `unauthorised`."

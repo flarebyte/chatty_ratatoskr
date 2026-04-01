@@ -1,0 +1,12 @@
+entity_name,field_name,field_title,field_description,ts_kind,go_kind,dart_kind,required,category
+ValueNode,localKeyId,Local Key ID,"Client-side provisional identifier used while waiting for the official `keyId` returned by the server. Production servers should preserve it and may apply basic length or character checks for security, but that validation is outside the mock-server scope.",string,string,String,false,core
+ValueNode,keyId,Key ID,"Logical stream or grouping identifier (for example, a project or topic path).",string,string,String,true,core
+ValueNode,accessScope,Access Scope,"Access scope is structurally visible in `keyId`. User-scoped nodes must include user identity in the key, and group-scoped nodes must include a fixed-depth group path such as tenant or team.",string,string,String,true,core
+ValueNode,secureKeyId,Secure Key ID,"Mandatory integrity field derived from `keyId`. Production servers should verify it using a signed or JWT-style check; the mock server may also use it as a test hook to force a configured non-ok status.",string,string,String,true,core
+ValueNode,options,Options,"Optional metadata flags (for example '--pinned', '--archived', '--sensitive').",string[],[]string,List<String>?,false,core
+ValueNode,kind,Kind,"Server-derived schema for the value node, inferred from `keyId` with unique identifiers removed. A client may use a temporary local hint, but the authoritative kind comes from the server-derived interpretation of `keyId`.",string,string,String,false,core
+ValueNode,language,Language,"Optional ISO language code for the value content. Different value nodes in the same document may use different languages.",string,*string,String?,false,core
+ValueNode,value,Value,"Protocol-level string payload. Higher-level formats such as free text, numbers, booleans, dates, or encoded JSON are still serialized as strings.",string,string,String,true,core
+ValueNode,version,Version,"Server-generated version used for optimistic sync checks so clients and servers can reject writes based on an older state.",string,string,String,true,core
+ValueNode,created,Created,"UTC timestamp when the value node was created (server clock). Useful for ordering nodes by creation time, for example comments or chat messages.",Date,time.Time,DateTime,true,core
+ValueNode,updated,Updated,"UTC timestamp when the value node was last updated (server clock). Useful for support/debugging after version mismatches and for showing recent changes.",Date,time.Time,DateTime,true,core

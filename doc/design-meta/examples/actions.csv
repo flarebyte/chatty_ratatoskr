@@ -1,0 +1,8 @@
+action,role,protocol,endpoint,verb,description
+create-new-keys,client,http,/create,POST,Create server-generated identifiers for requested nodes and their children.
+set-key-value-list,client,http,/node,PUT,Write one or more key/value entries under a root key.
+get-key-value-list,client,http,/node,GET,Read one or more key/value entries under a root key.
+get-snapshot,client,http,/snapshot,GET,Read the latest snapshot for a key.
+set-snapshot,client,http,/snapshot,PUT,Replace the current snapshot for a key.
+receive-events,client,websocket,/events,CONNECT,Open an event stream for subscriptions and server push updates.
+send-event,server,internal,event-bus,EMIT,Emit a sync event to subscribed clients after a state change.

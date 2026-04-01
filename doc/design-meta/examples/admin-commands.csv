@@ -1,0 +1,4 @@
+name,description
+clear-state,Clear all in-memory stores used by the mock server.
+delay-response,Delay responses for timeout and retry testing.
+read-logs,Read mock-server logs for debugging.
