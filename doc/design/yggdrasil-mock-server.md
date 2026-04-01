@@ -316,7 +316,8 @@ This means sync is not a secondary implementation detail. It is a protocol conce
 | client | Fetch the latest authoritative snapshot for a root key. | fetch-snapshot | http |
 | client | Store the snapshot in the local key-value store as the current baseline. | store-snapshot | local-store |
 | client | Open the optional event stream for incremental updates. | open-event-stream | websocket |
-| client | Apply `set` events as local upserts and treat `--archived` as record state. | apply-set-event | websocket |
+| client | Apply `set` events as local upserts and treat `--archived` as record state rather than deletion. | apply-set-event | websocket |
+| server | Emit `snapshot-replaced` after `setSnapshot` updates the authoritative snapshot for a root key. | emit-snapshot-replaced | websocket |
 | client | When `snapshot-replaced` is received, discard the previous baseline for the root key and refetch the snapshot. | handle-snapshot-replaced | websocket |
 | server | Reject writes whose submitted version is not based on the latest server version. | reject-stale-write | http |
 
@@ -329,6 +330,10 @@ import type { KeyParams, KeyValueParams } from './common';
  * Archive is resource state, not an event operation.
  * Archived records are still emitted as `set` events with `--archived`
  * present in the payload options when appropriate.
+ *
+ * `set` must carry `rootKey`, `key`, `keyValue`, and `created`.
+ * `snapshot-replaced` must carry `rootKey`, `snapshotVersion`, and `created`.
+ * `snapshot-replaced` is emitted after `setSnapshot`, not after every normal `set`.
  */
 export type EventOperation = 'set' | 'snapshot-replaced';
 
@@ -366,7 +371,7 @@ Known draft mismatches that should be resolved before implementation hardens.
 The draft material is now closer to a coherent protocol, but a few design questions remain open:
 
 - The project intent is now clear: Yggdrasil is a hierarchical key/value and snapshot protocol. The remaining question is whether the current names such as `TextNode` are specific enough or should be generalized to a broader Yggdrasil node vocabulary.
-- The examples describe both snapshots and event stores, but retention, overwrite semantics, archive behaviour, and snapshot rehydration rules are still under-specified.
+- The core sync rules are now defined, but retention policy and long-term snapshot storage semantics are still under-specified.
 - Security is only sketched through `secureKeyId` and constrained event identifiers. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 
 ## 04 Mock Server Administration
@@ -726,6 +731,7 @@ export interface EventApi {
   // Unregistering a user clears all active subscriptions for that user.
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
+  // Unsubscribing a key that is not currently subscribed is a no-op and does not raise an error.
   unsubscribe(subscription: Subscription): EventResponse;
   receiveUserUpdate(user: UserParams): EventResponse;
 }
@@ -748,11 +754,11 @@ export type EventHandlingRule = {
 export const eventHandlingRules: EventHandlingRule[] = [
   {
     operation: 'set',
-    clientAction: 'Upsert the record locally. If options include --archived, treat archive as record state.',
+    clientAction: 'Upsert the record locally. If options include --archived, treat archive as record state rather than a delete operation.',
   },
   {
     operation: 'snapshot-replaced',
-    clientAction: 'Refetch the authoritative snapshot for the root key and replace the local baseline.',
+    clientAction: 'This is emitted after setSnapshot. Refetch the authoritative snapshot for the root key and replace the local baseline.',
   },
 ];
 

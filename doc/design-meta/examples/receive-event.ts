@@ -27,6 +27,7 @@ export interface EventApi {
   // Unregistering a user clears all active subscriptions for that user.
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
+  // Unsubscribing a key that is not currently subscribed is a no-op and does not raise an error.
   unsubscribe(subscription: Subscription): EventResponse;
   receiveUserUpdate(user: UserParams): EventResponse;
 }
@@ -49,11 +50,11 @@ export type EventHandlingRule = {
 export const eventHandlingRules: EventHandlingRule[] = [
   {
     operation: 'set',
-    clientAction: 'Upsert the record locally. If options include --archived, treat archive as record state.',
+    clientAction: 'Upsert the record locally. If options include --archived, treat archive as record state rather than a delete operation.',
   },
   {
     operation: 'snapshot-replaced',
-    clientAction: 'Refetch the authoritative snapshot for the root key and replace the local baseline.',
+    clientAction: 'This is emitted after setSnapshot. Refetch the authoritative snapshot for the root key and replace the local baseline.',
   },
 ];
 
