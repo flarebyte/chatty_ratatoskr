@@ -285,6 +285,16 @@ Current entity and field definitions used by the draft protocol.
 
 How the logical protocol model maps to server and client storage.
 
+#### Event Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| A `set` event must carry `rootKey`, `key`, `keyValue`, and `created`. | set-required-fields | event |
+| A `snapshot-replaced` event must carry `rootKey`, `snapshotVersion`, and `created`. | snapshot-replaced-required-fields | event |
+| `snapshot-replaced` is emitted after `setSnapshot`, not after every normal `set`. | snapshot-replaced-trigger | event |
+| Archive is carried as record state, typically through `--archived`, rather than as a separate event operation. | archive-as-state | event |
+| Unsubscribing a root key that is not currently subscribed is a no-op and does not raise an error. | unsubscribe-missing-key-noop | client |
+
 #### Logical Keys Versus Storage Encoding
 
 Yggdrasil should separate logical key semantics from storage encoding.
@@ -856,4 +866,14 @@ export type ServerMessage =
 | client-and-server | Use `ping` and `pong` messages to keep the connection alive. | ping-pong | websocket |
 | client | Send `unsubscribe` when the client no longer wants updates for those root keys. | unsubscribe-root-keys | websocket |
 | server | When a user unregisters or the connection closes, remove all active subscriptions tied to that user or connection. | clear-subscriptions-on-unregister | internal |
+
+#### WebSocket Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| Repeated `subscribe` messages extend the active root-key set for the same connection. | subscribe-extends-set | connection |
+| Duplicate root keys are normalized without error. | duplicate-root-keys-normalized | connection |
+| When duplicate root keys are received the most recent subscription entry wins. | most-recent-subscription-wins | connection |
+| Unsubscribing a root key that is not currently subscribed is a no-op and does not raise an error. | unsubscribe-missing-key-noop | connection |
+| When a user unregisters or the connection closes all active subscriptions tied to that user or connection are removed. | disconnect-clears-subscriptions | connection |
 

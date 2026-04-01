@@ -1,0 +1,6 @@
+rule,scope,description
+set-required-fields,event,"A `set` event must carry `rootKey`, `key`, `keyValue`, and `created`."
+snapshot-replaced-required-fields,event,"A `snapshot-replaced` event must carry `rootKey`, `snapshotVersion`, and `created`."
+snapshot-replaced-trigger,event,"`snapshot-replaced` is emitted after `setSnapshot`, not after every normal `set`."
+archive-as-state,event,"Archive is carried as record state, typically through `--archived`, rather than as a separate event operation."
+unsubscribe-missing-key-noop,client,"Unsubscribing a root key that is not currently subscribed is a no-op and does not raise an error."

@@ -50,7 +50,7 @@ reports: [{
 		}, {
 			title:       "04 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
-			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding", "yggdrasil.sync-flow", "yggdrasil.ts.event-envelope", "yggdrasil.ts.snapshot-envelope"]
+			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding", "yggdrasil.sync-flow", "yggdrasil.event-rules", "yggdrasil.ts.event-envelope", "yggdrasil.ts.snapshot-envelope"]
 		}, {
 			title:       "05 Open Inconsistencies"
 			description: "Known draft mismatches that should be resolved before implementation hardens."
@@ -85,6 +85,7 @@ reports: [{
 			title:       "03 Event APIs"
 			description: "Optional WebSocket and event-store oriented examples."
 			notes: [
+				"yggdrasil.websocket-rules",
 				"yggdrasil.websocket-flow",
 				"yggdrasil.ts.websocket-messages",
 				"yggdrasil.ts.receive-event",
@@ -267,11 +268,25 @@ This separation lets the same protocol work across products without forcing ever
 		labels: ["storage", "encoding", "key-model"]
 	},
 	{
+		name:  "yggdrasil.event-rules"
+		title: "Event Rules"
+		filepath: "examples/event-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["event", "rules", "csv"]
+	},
+	{
 		name:  "yggdrasil.websocket-flow"
 		title: "WebSocket Flow"
 		filepath: "examples/websocket-flow.csv"
 		arguments: ["format-csv=table"]
 		labels: ["websocket", "flow", "csv"]
+	},
+	{
+		name:  "yggdrasil.websocket-rules"
+		title: "WebSocket Rules"
+		filepath: "examples/websocket-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["websocket", "rules", "csv"]
 	},
 	{
 		name:  "yggdrasil.ts.event-envelope"

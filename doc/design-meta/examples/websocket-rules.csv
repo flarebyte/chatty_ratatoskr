@@ -1,0 +1,6 @@
+rule,scope,description
+subscribe-extends-set,connection,Repeated `subscribe` messages extend the active root-key set for the same connection.
+duplicate-root-keys-normalized,connection,Duplicate root keys are normalized without error.
+most-recent-subscription-wins,connection,When duplicate root keys are received the most recent subscription entry wins.
+unsubscribe-missing-key-noop,connection,Unsubscribing a root key that is not currently subscribed is a no-op and does not raise an error.
+disconnect-clears-subscriptions,connection,When a user unregisters or the connection closes all active subscriptions tied to that user or connection are removed.
