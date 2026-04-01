@@ -1,0 +1,8 @@
+field,scenario,production_behaviour,mock_behaviour
+secureKeyId,normal-request,Verify integrity token derived from keyId before accepting the request,Assume the input is otherwise valid unless test configuration forces a different status.
+secureKeyId,statusAsKey-enabled,Ignore mock-only forcing and use normal integrity verification,Allow secureKeyId to force a non-ok status such as invalid unauthorised or outdated.
+localKeyId,client-waits-for-official-keyId,Preserve the provisional value while returning the official keyId,Preserve the provisional value while returning the official keyId.
+kind,client-sends-kind-that-does-not-match-keyId,Reject or correct the mismatch and use the kind derived from keyId,Correct or reject the mismatch based on the server-derived interpretation.
+version,client-sends-stale-version,Reject the write as outdated,Reject the write as outdated.
+created,ordering-comments-or-chat,Order by creation time when that is the chosen view,Order by creation time when that is the chosen view.
+updated,support-after-version-mismatch,Use updated to inspect what changed since the client last synced,Use updated to inspect what changed since the client last synced.

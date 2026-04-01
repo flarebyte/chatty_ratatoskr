@@ -52,11 +52,15 @@ reports: [{
 			description: "Minimal error and response semantics for client and mock-server interoperability."
 			notes: ["yggdrasil.http-status-rules"]
 		}, {
-			title:       "05 Sync And Persistence"
+			title:       "05 Trust Model"
+			description: "Which fields are trusted, which are hints, and which are server-derived."
+			notes: ["yggdrasil.field-trust", "yggdrasil.field-runtime-behaviour"]
+		}, {
+			title:       "06 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
 			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding", "yggdrasil.sync-flow", "yggdrasil.event-rules", "yggdrasil.ts.event-envelope", "yggdrasil.ts.snapshot-envelope"]
 		}, {
-			title:       "06 Open Inconsistencies"
+			title:       "07 Open Inconsistencies"
 			description: "Known draft mismatches that should be resolved before implementation hardens."
 			notes: ["yggdrasil.inconsistencies"]
 		}]
@@ -67,6 +71,10 @@ reports: [{
 			title:       "01 Admin Surface"
 			description: "Operational controls for the mock server test harness."
 			notes: ["yggdrasil.admin-boundary", "yggdrasil.admin-commands", "yggdrasil.ts.set-admin-commands", "yggdrasil.ts.get-admin-command"]
+		}, {
+			title:       "02 Production Versus Mock"
+			description: "Where the mock server intentionally diverges from production behavior."
+			notes: ["yggdrasil.mock-vs-production"]
 		}]
 	}, {
 		title:       "05 TypeScript Examples"
@@ -190,6 +198,20 @@ A client may extend its active subscription set by sending additional `subscribe
 		labels: ["protocol", "actions", "csv"]
 	},
 	{
+		name:  "yggdrasil.field-trust"
+		title: "Field Trust"
+		filepath: "examples/field-trust.csv"
+		arguments: ["format-csv=table"]
+		labels: ["trust", "security", "csv"]
+	},
+	{
+		name:  "yggdrasil.field-runtime-behaviour"
+		title: "Field Runtime Behaviour"
+		filepath: "examples/field-runtime-behaviour.csv"
+		arguments: ["format-csv=table"]
+		labels: ["trust", "runtime", "csv"]
+	},
+	{
 		name:  "yggdrasil.admin-boundary"
 		title: "Administration Is Outside The Protocol"
 		markdown: """
@@ -198,6 +220,21 @@ Mock-server control operations such as clearing state, delaying responses, and r
 These controls should remain on a separate administration surface so production clients do not depend on test-only capabilities such as `reset`-style actions. This reduces the risk of accidental exposure and keeps the protocol focused on domain data and synchronisation.
 """
 		labels: ["admin", "security", "boundary"]
+	},
+	{
+		name:  "yggdrasil.mock-vs-production"
+		title: "Production Versus Mock Behavior"
+		markdown: """
+The mock server intentionally shares the protocol shape of a production Yggdrasil server while simplifying some runtime behavior.
+
+- production servers should verify `secureKeyId` as an integrity check derived from `keyId`
+- the mock server may use `secureKeyId` as a test hook to force a non-`ok` status when `statusAsKey` is enabled
+- production servers may apply stricter validation to `localKeyId`, `kind`, and other inputs
+- mock-server administration commands exist only for tests and are outside the Yggdrasil protocol
+
+This keeps client-facing protocol semantics realistic while still allowing the CLI to simulate failure modes cheaply during tests.
+"""
+		labels: ["mock", "production", "boundary"]
 	},
 	{
 		name:  "yggdrasil.admin-commands"

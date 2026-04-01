@@ -1,0 +1,10 @@
+field,source_of_truth,client_role,server_role,trust_level,security_note
+keyId,server,Use returned official identity and reference paths,Generate and validate authoritative identity,authoritative,Identity and schema interpretation must rely on keyId rather than client hints.
+secureKeyId,production-server,Send integrity token derived from keyId,Verify integrity token before accepting the request,verified-required,Production should use a signed or JWT-style check to detect corruption or forgery.
+localKeyId,client,Use provisional local identifier until the official keyId is returned,Preserve value without treating it as authoritative identity,client-hint,Production servers may apply basic validation such as length and character checks.
+kind,server-derived-from-keyId,Use as a temporary local hint before the server responds,Derive authoritative kind from keyId with unique identifiers removed,server-derived,Do not trust client-supplied kind when it conflicts with keyId.
+language,client-and-server,Optionally provide an ISO language code per value node,Preserve and validate optional language metadata,optional-metadata,Different nodes in the same document may use different languages.
+version,server,Send latest known version when writing,Generate and compare versions for optimistic sync,server-managed,Reject writes based on older versions.
+created,server,Use for ordering and display,Generate creation timestamp,server-managed,"Useful for comments, chat, and other chronological views."
+updated,server,"Use for ordering, support, and stale-state diagnosis",Generate update timestamp,server-managed,Useful for understanding what changed after version mismatches.
+value,client-and-server,Send and consume protocol-level string payload,Store and return protocol-level string payload,shared-payload,Interpret richer formats above the protocol layer without changing the transport type.

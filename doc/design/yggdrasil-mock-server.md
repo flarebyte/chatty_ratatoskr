@@ -339,7 +339,37 @@ Minimal error and response semantics for client and mock-server interoperability
 | The submitted version is older than the latest stored version and the write is rejected. | 409 | outdated | stale-write |
 | The payload exceeds the configured HTTP request size limit. | 413 | invalid | payload-too-large |
 
-### 05 Sync And Persistence
+### 05 Trust Model
+
+Which fields are trusted, which are hints, and which are server-derived.
+
+#### Field Runtime Behaviour
+
+| field | mock_behaviour | production_behaviour | scenario |
+| --- | --- | --- | --- |
+| secureKeyId | Assume the input is otherwise valid unless test configuration forces a different status. | Verify integrity token derived from keyId before accepting the request | normal-request |
+| secureKeyId | Allow secureKeyId to force a non-ok status such as invalid unauthorised or outdated. | Ignore mock-only forcing and use normal integrity verification | statusAsKey-enabled |
+| localKeyId | Preserve the provisional value while returning the official keyId. | Preserve the provisional value while returning the official keyId | client-waits-for-official-keyId |
+| kind | Correct or reject the mismatch based on the server-derived interpretation. | Reject or correct the mismatch and use the kind derived from keyId | client-sends-kind-that-does-not-match-keyId |
+| version | Reject the write as outdated. | Reject the write as outdated | client-sends-stale-version |
+| created | Order by creation time when that is the chosen view. | Order by creation time when that is the chosen view | ordering-comments-or-chat |
+| updated | Use updated to inspect what changed since the client last synced. | Use updated to inspect what changed since the client last synced | support-after-version-mismatch |
+
+#### Field Trust
+
+| client_role | field | security_note | server_role | source_of_truth | trust_level |
+| --- | --- | --- | --- | --- | --- |
+| Use returned official identity and reference paths | keyId | Identity and schema interpretation must rely on keyId rather than client hints. | Generate and validate authoritative identity | server | authoritative |
+| Send integrity token derived from keyId | secureKeyId | Production should use a signed or JWT-style check to detect corruption or forgery. | Verify integrity token before accepting the request | production-server | verified-required |
+| Use provisional local identifier until the official keyId is returned | localKeyId | Production servers may apply basic validation such as length and character checks. | Preserve value without treating it as authoritative identity | client | client-hint |
+| Use as a temporary local hint before the server responds | kind | Do not trust client-supplied kind when it conflicts with keyId. | Derive authoritative kind from keyId with unique identifiers removed | server-derived-from-keyId | server-derived |
+| Optionally provide an ISO language code per value node | language | Different nodes in the same document may use different languages. | Preserve and validate optional language metadata | client-and-server | optional-metadata |
+| Send latest known version when writing | version | Reject writes based on older versions. | Generate and compare versions for optimistic sync | server | server-managed |
+| Use for ordering and display | created | Useful for comments, chat, and other chronological views. | Generate creation timestamp | server | server-managed |
+| Use for ordering, support, and stale-state diagnosis | updated | Useful for understanding what changed after version mismatches. | Generate update timestamp | server | server-managed |
+| Send and consume protocol-level string payload | value | Interpret richer formats above the protocol layer without changing the transport type. | Store and return protocol-level string payload | client-and-server | shared-payload |
+
+### 06 Sync And Persistence
 
 How the logical protocol model maps to server and client storage.
 
@@ -430,7 +460,7 @@ export type SnapshotEnvelope = {
 };
 ```
 
-### 06 Open Inconsistencies
+### 07 Open Inconsistencies
 
 Known draft mismatches that should be resolved before implementation hardens.
 
@@ -535,6 +565,21 @@ export const writeCommands: Command[] = [
   },
 ];
 ```
+
+### 02 Production Versus Mock
+
+Where the mock server intentionally diverges from production behavior.
+
+#### Production Versus Mock Behavior
+
+The mock server intentionally shares the protocol shape of a production Yggdrasil server while simplifying some runtime behavior.
+
+- production servers should verify `secureKeyId` as an integrity check derived from `keyId`
+- the mock server may use `secureKeyId` as a test hook to force a non-`ok` status when `statusAsKey` is enabled
+- production servers may apply stricter validation to `localKeyId`, `kind`, and other inputs
+- mock-server administration commands exist only for tests and are outside the Yggdrasil protocol
+
+This keeps client-facing protocol semantics realistic while still allowing the CLI to simulate failure modes cheaply during tests.
 
 ## 05 TypeScript Examples
 
