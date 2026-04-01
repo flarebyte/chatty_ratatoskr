@@ -1,4 +1,4 @@
-import type { OperationStatus, UserParams } from './common';
+import type { OperationStatus, PrincipalParams } from './common';
 import type { EventEnvelope } from './event-envelope';
 import type {
   ClientMessage,
@@ -13,24 +13,24 @@ import type {
 
 type Subscription = {
   id: string;
-  user: UserParams;
+  principal: PrincipalParams;
   rootKeys: string[];
 };
 
 type EventResponse = {
   id: string;
-  user: UserParams;
+  principal: PrincipalParams;
   eventList: [EventEnvelope, OperationStatus][];
 };
 
 export interface EventApi {
-  registerUser(user: UserParams): [UserParams, OperationStatus];
-  // Unregistering a user clears all active subscriptions for that user.
-  unregisterUser(user: UserParams): [UserParams, OperationStatus];
+  registerPrincipal(principal: PrincipalParams): [PrincipalParams, OperationStatus];
+  // Unregistering a principal clears all active subscriptions for that principal.
+  unregisterPrincipal(principal: PrincipalParams): [PrincipalParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   // Unsubscribing a key that is not currently subscribed is a no-op and does not raise an error.
   unsubscribe(subscription: Subscription): EventResponse;
-  receiveUserUpdate(user: UserParams): EventResponse;
+  receivePrincipalUpdate(principal: PrincipalParams): EventResponse;
 }
 
 export interface WebSocketEventApi {
@@ -44,7 +44,7 @@ export interface WebSocketEventApi {
   // A valid unsubscribe request should return unsubscribed even when some keys were not active.
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage | StatusMessage;
   // Closing the connection clears all active subscriptions tied to that connection.
-  disconnect(user: UserParams): void;
+  disconnect(principal: PrincipalParams): void;
 }
 
 export type EventHandlingRule = {
@@ -65,5 +65,5 @@ export const eventHandlingRules: EventHandlingRule[] = [
 
 export interface EventProducerApi {
   emit(event: EventEnvelope): void;
-  receiveUserUpdate(user: UserParams): EventResponse;
+  receivePrincipalUpdate(principal: PrincipalParams): EventResponse;
 }
