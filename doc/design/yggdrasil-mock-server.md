@@ -329,6 +329,16 @@ Current entity and field definitions used by the draft protocol.
 
 Minimal error and response semantics for client and mock-server interoperability.
 
+#### HTTP Response Shape
+
+| description | rule | scope |
+| --- | --- | --- |
+| HTTP responses should include a top-level `id` for request tracing and correlation. | top-level-id | response |
+| HTTP responses should include a top-level `status` when the operation has a single authoritative outcome. | top-level-status | response |
+| `message` is optional and should be used when human-readable context helps explain failures or unusual outcomes. | optional-message | response |
+| Collection operations may return per-item statuses in addition to top-level fields. | item-status-for-collections | response |
+| Structured fields should carry protocol meaning first; `message` is supplementary rather than the primary machine-readable contract. | structured-over-freeform | response |
+
 #### HTTP Status Rules
 
 | description | http_status | operation_status | scenario |
@@ -338,6 +348,16 @@ Minimal error and response semantics for client and mock-server interoperability
 | The client is not authorised to perform the requested operation. | 401 | unauthorised | unauthorised-access |
 | The submitted version is older than the latest stored version and the write is rejected. | 409 | outdated | stale-write |
 | The payload exceeds the configured HTTP request size limit. | 413 | invalid | payload-too-large |
+
+#### Partial Success Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| List-style operations may contain a mix of successful and unsuccessful item-level results. | list-operations-may-mix | collection |
+| For mixed results, item-level statuses are authoritative for each returned item. | per-item-status-authoritative | collection |
+| The top-level status describes whether the request itself was processed, not whether every item succeeded. | top-level-status-reflects-request | collection |
+| A response may still be top-level `ok` when the request was processed successfully but some returned items carry non-ok statuses. | ok-with-item-failures | collection |
+| Clients must inspect item-level statuses for collection operations rather than relying only on the top-level status. | client-must-inspect-items | collection |
 
 ### 05 Trust Model
 
