@@ -281,7 +281,21 @@ Current entity and field definitions used by the draft protocol.
 | core | DateTime | TextNode | UTC timestamp when the message was created (server clock). | created | Created | time.Time | true | Date |
 | core | DateTime | TextNode | UTC timestamp when the message was updated (server clock). | updated | Updated | time.Time | true | Date |
 
-### 04 Sync And Persistence
+### 04 HTTP Status Rules
+
+Minimal error and response semantics for client and mock-server interoperability.
+
+#### HTTP Status Rules
+
+| description | http_status | operation_status | scenario |
+| --- | --- | --- | --- |
+| Request completed successfully and returned the expected response payload. | 200 | ok | success |
+| The request payload or key structure is invalid and the server rejects it. | 400 | invalid | invalid-key-or-payload |
+| The client is not authorised to perform the requested operation. | 401 | unauthorised | unauthorised-access |
+| The submitted version is older than the latest stored version and the write is rejected. | 409 | outdated | stale-write |
+| The payload exceeds the configured HTTP request size limit. | 413 | invalid | payload-too-large |
+
+### 05 Sync And Persistence
 
 How the logical protocol model maps to server and client storage.
 
@@ -372,7 +386,7 @@ export type SnapshotEnvelope = {
 };
 ```
 
-### 05 Open Inconsistencies
+### 06 Open Inconsistencies
 
 Known draft mismatches that should be resolved before implementation hardens.
 

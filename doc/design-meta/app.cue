@@ -48,11 +48,15 @@ reports: [{
 			description: "Current entity and field definitions used by the draft protocol."
 			notes: ["yggdrasil.entities", "yggdrasil.entity-fields"]
 		}, {
-			title:       "04 Sync And Persistence"
+			title:       "04 HTTP Status Rules"
+			description: "Minimal error and response semantics for client and mock-server interoperability."
+			notes: ["yggdrasil.http-status-rules"]
+		}, {
+			title:       "05 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
 			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding", "yggdrasil.sync-flow", "yggdrasil.event-rules", "yggdrasil.ts.event-envelope", "yggdrasil.ts.snapshot-envelope"]
 		}, {
-			title:       "05 Open Inconsistencies"
+			title:       "06 Open Inconsistencies"
 			description: "Known draft mismatches that should be resolved before implementation hardens."
 			notes: ["yggdrasil.inconsistencies"]
 		}]
@@ -227,6 +231,13 @@ The draft material is now closer to a coherent protocol, but a few design questi
 - Security is only sketched through `secureKeyId` and constrained event identifiers. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 """
 		labels: ["design", "inconsistency", "open-questions"]
+	},
+	{
+		name:  "yggdrasil.http-status-rules"
+		title: "HTTP Status Rules"
+		filepath: "examples/http-status-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["http", "status", "rules", "csv"]
 	},
 	{
 		name:  "yggdrasil.sync"
