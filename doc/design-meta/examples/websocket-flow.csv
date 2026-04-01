@@ -6,3 +6,4 @@ confirm-subscription,server,websocket,Reply with `subscribed` to confirm the act
 receive-event,server,websocket,Send an `event` message containing the `EventEnvelope`.
 ping-pong,client-and-server,websocket,Use `ping` and `pong` messages to keep the connection alive.
 unsubscribe-root-keys,client,websocket,Send `unsubscribe` when the client no longer wants updates for those root keys.
+clear-subscriptions-on-unregister,server,internal,"When a user unregisters or the connection closes, remove all active subscriptions tied to that user or connection."

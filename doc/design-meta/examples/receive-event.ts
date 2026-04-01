@@ -24,6 +24,7 @@ type EventResponse = {
 
 export interface EventApi {
   registerUser(user: UserParams): [UserParams, OperationStatus];
+  // Unregistering a user clears all active subscriptions for that user.
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
@@ -35,6 +36,8 @@ export interface WebSocketEventApi {
   // Repeated subscribe messages extend the active root-key set for the connection.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
+  // Closing the connection clears all active subscriptions tied to that connection.
+  disconnect(user: UserParams): void;
 }
 
 export type EventHandlingRule = {

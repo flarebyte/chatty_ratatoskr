@@ -53,6 +53,8 @@ The protocol examples explicitly call out WebSocket support as optional rather t
 
 Current notes suggest a constrained event model with heartbeat support, bounded message sizes, and a preference for well-known identifiers for message safety.
 
+A client may extend its active subscription set by sending additional `subscribe` messages for more root keys on the same connection. When a user unregisters or the connection is closed, all active subscriptions for that user or connection should be removed.
+
 ## 02 Use Cases
 
 Current goals and constraints captured from the draft inputs.
@@ -721,6 +723,7 @@ type EventResponse = {
 
 export interface EventApi {
   registerUser(user: UserParams): [UserParams, OperationStatus];
+  // Unregistering a user clears all active subscriptions for that user.
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
@@ -732,6 +735,8 @@ export interface WebSocketEventApi {
   // Repeated subscribe messages extend the active root-key set for the connection.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
+  // Closing the connection clears all active subscriptions tied to that connection.
+  disconnect(user: UserParams): void;
 }
 
 export type EventHandlingRule = {
@@ -841,4 +846,5 @@ export type ServerMessage =
 | server | Send an `event` message containing the `EventEnvelope`. | receive-event | websocket |
 | client-and-server | Use `ping` and `pong` messages to keep the connection alive. | ping-pong | websocket |
 | client | Send `unsubscribe` when the client no longer wants updates for those root keys. | unsubscribe-root-keys | websocket |
+| server | When a user unregisters or the connection closes, remove all active subscriptions tied to that user or connection. | clear-subscriptions-on-unregister | internal |
 

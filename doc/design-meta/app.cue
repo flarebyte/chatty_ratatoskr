@@ -152,6 +152,8 @@ This aligns with the goal of a simple mock server that is easy to run locally an
 The protocol examples explicitly call out WebSocket support as optional rather than mandatory.
 
 Current notes suggest a constrained event model with heartbeat support, bounded message sizes, and a preference for well-known identifiers for message safety.
+
+A client may extend its active subscription set by sending additional `subscribe` messages for more root keys on the same connection. When a user unregisters or the connection is closed, all active subscriptions for that user or connection should be removed.
 """
 		labels: ["transport", "websocket"]
 	},
