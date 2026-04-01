@@ -4,7 +4,6 @@ export type SnapshotEnvelope = {
   snapshotId: string;
   rootKey: KeyParams;
   version: string;
-  serverTimestamp: string;
+  created: string;
   keyValueList: KeyValueParams[];
-  authoritative: true;
 };

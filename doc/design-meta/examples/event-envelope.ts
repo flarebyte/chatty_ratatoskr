@@ -11,7 +11,7 @@ export type EventEnvelope = {
   eventId: string;
   rootKey: KeyParams;
   operation: EventOperation;
-  serverTimestamp: string;
+  created: string;
   key?: KeyParams;
   keyValue?: KeyValueParams;
   snapshotVersion?: string;

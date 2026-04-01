@@ -334,7 +334,7 @@ export type EventEnvelope = {
   eventId: string;
   rootKey: KeyParams;
   operation: EventOperation;
-  serverTimestamp: string;
+  created: string;
   key?: KeyParams;
   keyValue?: KeyValueParams;
   snapshotVersion?: string;
@@ -350,9 +350,8 @@ export type SnapshotEnvelope = {
   snapshotId: string;
   rootKey: KeyParams;
   version: string;
-  serverTimestamp: string;
+  created: string;
   keyValueList: KeyValueParams[];
-  authoritative: true;
 };
 ```
 
