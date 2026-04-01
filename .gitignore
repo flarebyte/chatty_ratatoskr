@@ -37,3 +37,9 @@ doc/api/
 
 coverage/
 .idea/
+
+# Build and temp
+build/
+temp/
+scratch/
+shared-script/

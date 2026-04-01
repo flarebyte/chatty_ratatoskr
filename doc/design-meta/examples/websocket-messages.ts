@@ -24,10 +24,7 @@ export type PingMessage = CommandMetadata & {
   kind: 'ping';
 };
 
-export type ClientMessage =
-  | SubscribeMessage
-  | UnsubscribeMessage
-  | PingMessage;
+export type ClientMessage = SubscribeMessage | UnsubscribeMessage | PingMessage;
 
 export type SubscribedMessage = {
   kind: 'subscribed';

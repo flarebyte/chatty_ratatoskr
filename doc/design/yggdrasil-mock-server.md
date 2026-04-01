@@ -1058,7 +1058,11 @@ REST-style request and response shapes.
 
 ```ts
 import type { KeyParams } from './common';
-import type { KeyValueStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
+import type {
+  KeyValueStatusResult,
+  RequestMetadata,
+  ResponseEnvelope,
+} from './envelope';
 
 type GetKeyValueRequest = RequestMetadata & {
   rootKey: KeyParams; // required: keyId, secureKeyId
@@ -1099,7 +1103,11 @@ export interface SnapshotReadApi {
 
 ```ts
 import type { KeyParams, NodeKindExample, OperationStatus } from './common';
-import type { KeyStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
+import type {
+  KeyStatusResult,
+  RequestMetadata,
+  ResponseEnvelope,
+} from './envelope';
 
 type ChildParam = {
   localKeyId: string;
@@ -1137,7 +1145,11 @@ export interface NewKeysApi {
 
 ```ts
 import type { KeyParams, KeyValueParams } from './common';
-import type { KeyStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
+import type {
+  KeyStatusResult,
+  RequestMetadata,
+  ResponseEnvelope,
+} from './envelope';
 
 type SetKeyValueRequest = RequestMetadata & {
   rootKey: KeyParams; // required: keyId, secureKeyId
@@ -1207,10 +1219,10 @@ import type {
   EventMessage,
   ServerMessage,
   StatusMessage,
-  SubscribeMessage,
   SubscribedMessage,
-  UnsubscribeMessage,
+  SubscribeMessage,
   UnsubscribedMessage,
+  UnsubscribeMessage,
 } from './websocket-messages';
 
 type Subscription = {
@@ -1226,9 +1238,13 @@ type EventResponse = {
 };
 
 export interface EventApi {
-  registerPrincipal(principal: PrincipalParams): [PrincipalParams, OperationStatus];
+  registerPrincipal(
+    principal: PrincipalParams,
+  ): [PrincipalParams, OperationStatus];
   // Unregistering a principal clears all active subscriptions for that principal.
-  unregisterPrincipal(principal: PrincipalParams): [PrincipalParams, OperationStatus];
+  unregisterPrincipal(
+    principal: PrincipalParams,
+  ): [PrincipalParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   // Unsubscribing a key that is not currently subscribed is a no-op and does not raise an error.
   unsubscribe(subscription: Subscription): EventResponse;
@@ -1257,11 +1273,13 @@ export type EventHandlingRule = {
 export const eventHandlingRules: EventHandlingRule[] = [
   {
     operation: 'set',
-    clientAction: 'Upsert the record locally. If options include --archived, treat archive as record state rather than a delete operation.',
+    clientAction:
+      'Upsert the record locally. If options include --archived, treat archive as record state rather than a delete operation.',
   },
   {
     operation: 'snapshot-replaced',
-    clientAction: 'This is emitted after setSnapshot. Refetch the authoritative snapshot for the root key and replace the local baseline.',
+    clientAction:
+      'This is emitted after setSnapshot. Refetch the authoritative snapshot for the root key and replace the local baseline.',
   },
 ];
 
@@ -1322,10 +1340,7 @@ export type PingMessage = CommandMetadata & {
   kind: 'ping';
 };
 
-export type ClientMessage =
-  | SubscribeMessage
-  | UnsubscribeMessage
-  | PingMessage;
+export type ClientMessage = SubscribeMessage | UnsubscribeMessage | PingMessage;
 
 export type SubscribedMessage = {
   kind: 'subscribed';

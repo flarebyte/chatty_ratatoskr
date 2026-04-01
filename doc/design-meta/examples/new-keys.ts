@@ -1,5 +1,9 @@
 import type { KeyParams, NodeKindExample, OperationStatus } from './common';
-import type { KeyStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
+import type {
+  KeyStatusResult,
+  RequestMetadata,
+  ResponseEnvelope,
+} from './envelope';
 
 type ChildParam = {
   localKeyId: string;
