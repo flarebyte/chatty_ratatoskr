@@ -986,6 +986,7 @@ export interface WebSocketEventApi {
   // A subscribe request for a non-allowed root should return a status message with invalid.
   // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage | StatusMessage;
+  // A valid unsubscribe request should return unsubscribed even when some keys were not active.
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage | StatusMessage;
   // Closing the connection clears all active subscriptions tied to that connection.
   disconnect(user: UserParams): void;
@@ -1111,6 +1112,7 @@ export type ServerMessage =
 | server | Send an `event` message containing the `EventEnvelope`. | receive-event | websocket |
 | client-and-server | Use `ping` and `pong` messages to keep the connection alive. | ping-pong | websocket |
 | client | Send `unsubscribe` when the client no longer wants updates for those root keys. | unsubscribe-root-keys | websocket |
+| server | Reply with `unsubscribed` for valid unsubscribe requests even when some requested root keys were not active. | confirm-unsubscribe | websocket |
 | server | When a user unregisters or the connection closes, remove all active subscriptions tied to that user or connection. | clear-subscriptions-on-unregister | internal |
 
 #### WebSocket Rules
@@ -1128,5 +1130,6 @@ export type ServerMessage =
 | Duplicate root keys are normalized without error. | duplicate-root-keys-normalized | connection |
 | When duplicate root keys are received the most recent subscription entry wins. | most-recent-subscription-wins | connection |
 | Unsubscribing a root key that is not currently subscribed is a no-op and does not raise an error. | unsubscribe-missing-key-noop | connection |
+| A valid `unsubscribe` command should return `unsubscribed` even when some requested root keys were not active. | unsubscribe-valid-ack | connection |
 | When a user unregisters or the connection closes all active subscriptions tied to that user or connection are removed. | disconnect-clears-subscriptions | connection |
 

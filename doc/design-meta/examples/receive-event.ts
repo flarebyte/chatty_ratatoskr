@@ -40,6 +40,7 @@ export interface WebSocketEventApi {
   // A subscribe request for a non-allowed root should return a status message with invalid.
   // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage | StatusMessage;
+  // A valid unsubscribe request should return unsubscribed even when some keys were not active.
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage | StatusMessage;
   // Closing the connection clears all active subscriptions tied to that connection.
   disconnect(user: UserParams): void;
