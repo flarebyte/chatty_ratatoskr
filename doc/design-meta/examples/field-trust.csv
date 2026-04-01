@@ -1,5 +1,5 @@
 field,source_of_truth,client_role,server_role,trust_level,security_note
-keyId,server,Use returned official identity and reference paths,Generate and validate authoritative identity,authoritative,Identity and schema interpretation must rely on keyId rather than client hints.
+keyId,server,Use returned official identity and reference paths,Generate and validate authoritative identity,authoritative,"Identity, schema interpretation, and access-scope derivation must rely on keyId rather than client hints."
 secureKeyId,production-server,Send integrity token derived from keyId,Verify integrity token before accepting the request,verified-required,Production should use a signed or JWT-style check to detect corruption or forgery.
 localKeyId,client,Use provisional local identifier until the official keyId is returned,Preserve value without treating it as authoritative identity,client-hint,Production servers may apply basic validation such as length and character checks.
 kind,server-derived-from-keyId,Use as a temporary local hint before the server responds,Derive authoritative kind from keyId with unique identifiers removed,server-derived,Do not trust client-supplied kind when it conflicts with keyId.

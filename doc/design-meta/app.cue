@@ -54,7 +54,7 @@ reports: [{
 		}, {
 			title:       "05 Trust Model"
 			description: "Which fields are trusted, which are hints, and which are server-derived."
-			notes: ["yggdrasil.field-trust", "yggdrasil.field-runtime-behaviour"]
+			notes: ["yggdrasil.field-trust", "yggdrasil.field-runtime-behaviour", "yggdrasil.access-scope-rules", "yggdrasil.access-evaluation-rules"]
 		}, {
 			title:       "06 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
@@ -211,6 +211,20 @@ A client may extend its active subscription set by sending additional `subscribe
 		filepath: "examples/field-runtime-behaviour.csv"
 		arguments: ["format-csv=table"]
 		labels: ["trust", "runtime", "csv"]
+	},
+	{
+		name:  "yggdrasil.access-scope-rules"
+		title: "Access Scope Rules"
+		filepath: "examples/access-scope-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["access", "scope", "csv"]
+	},
+	{
+		name:  "yggdrasil.access-evaluation-rules"
+		title: "Access Evaluation Rules"
+		filepath: "examples/access-evaluation-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["access", "evaluation", "csv"]
 	},
 	{
 		name:  "yggdrasil.admin-boundary"

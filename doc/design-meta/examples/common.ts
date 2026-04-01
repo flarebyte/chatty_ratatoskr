@@ -65,6 +65,13 @@ export type KeyValueParams = {
 
 export type UserParams = {
   key: KeyParams;
+  // Product-specific top-level scope, for example tenant or department.
+  tenantId?: string;
+  // Product-specific fixed-depth group scopes, for example team or region.
+  teamIdList?: string[];
+  // Product-specific principal identity, often a user but it may also be
+  // called member, subscriber, or another product term.
+  userId?: string;
 };
 
 export type Command = {

@@ -155,6 +155,9 @@ sync: {
 	eventStreaming:    true
 	optimisticWrites:  true
 	clientLocalStore:  true
+	// A valid root subscription may still omit unreadable descendants instead of
+	// failing the whole subscription.
+	filterUnreadableDescendants: true
 }
 
 // Server and client may use different storage implementations while
@@ -244,6 +247,25 @@ schema: {
 	// reject or correct any attempt to send corrupted kind data that conflicts
 	// with keyId. This protects filtering logic and avoids security issues that
 	// could arise from trusting client-supplied kind blindly.
+	//
+	// Access scope should also be structurally visible in keyId. Group hierarchy
+	// is fixed-depth rather than recursive so access can be validated cheaply and
+	// consistently from the key schema. The exact labels are product-specific:
+	// for example tenant/group/user, department/region/member, or similar.
+	accessScope: {
+		visibleInKeyId: true
+		scopeLevels:    ["tenant", "group", "user"]
+		scopeAliases: {
+			level1: ["tenant", "department"]
+			level2: ["group", "team", "region"]
+			principal: ["user", "member", "subscriber"]
+		}
+		recursiveGroups: false
+		principalScopedKeysRequirePrincipalId: true
+		groupScopedKeysRequirePath:            true
+		invalidStatusForMalformedKey: "invalid"
+		unauthorisedStatusForDeniedAccess: "unauthorised"
+	}
 
 	// The protocol standardizes key meaning, not one storage encoding.
 	keyEncoding: {
@@ -252,6 +274,7 @@ schema: {
 			preserveHierarchy:     true
 			preserveIdentity:      true
 			preserveVersioning:    true
+			preserveAccessScope:   true
 		}
 
 		serverExamples: [
@@ -331,6 +354,7 @@ Current entity and field definitions used by the draft protocol.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | core | String | ValueNode | Client-side provisional identifier used while waiting for the official `keyId` returned by the server. Production servers should preserve it and may apply basic length or character checks for security, but that validation is outside the mock-server scope. | localKeyId | Local Key ID | string | false | string |
 | core | String | ValueNode | Logical stream or grouping identifier (for example, a project or topic path). | keyId | Key ID | string | true | string |
+| core | String | ValueNode | Access scope is structurally visible in `keyId`. User-scoped nodes must include user identity in the key, and group-scoped nodes must include a fixed-depth group path such as tenant or team. | accessScope | Access Scope | string | true | string |
 | core | String | ValueNode | Mandatory integrity field derived from `keyId`. Production servers should verify it using a signed or JWT-style check; the mock server may also use it as a test hook to force a configured non-ok status. | secureKeyId | Secure Key ID | string | true | string |
 | core | List<String>? | ValueNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
 | core | String | ValueNode | Server-derived schema for the value node, inferred from `keyId` with unique identifiers removed. A client may use a temporary local hint, but the authoritative kind comes from the server-derived interpretation of `keyId`. | kind | Kind | string | false | string |
@@ -410,6 +434,31 @@ Minimal error and response semantics for client and mock-server interoperability
 
 Which fields are trusted, which are hints, and which are server-derived.
 
+#### Access Evaluation Rules
+
+| description | operation | rule |
+| --- | --- | --- |
+| A level-1 scoped key is readable when the authenticated principal belongs to the same configured top-level scope identified in `keyId`, for example `tenant` or `department`. | read | level-1-scope-read |
+| A level-1 scoped key is writable only when the authenticated principal has write permission for that configured top-level scope. | write | level-1-scope-write |
+| A level-2 scoped key is readable when the authenticated principal belongs to the same configured level-1 and level-2 scopes identified in `keyId`, for example `tenant/team` or `department/region`. | read | level-2-scope-read |
+| A level-2 scoped key is writable only when the authenticated principal has write permission for that configured level-2 scope. | write | level-2-scope-write |
+| A principal-scoped key is readable when the authenticated principal id matches the principal identity encoded in `keyId`, regardless of whether the product calls it `user`, `member`, `subscriber`, or another term. | read | principal-scope-read |
+| A principal-scoped key is writable only when the authenticated principal id matches the principal identity encoded in `keyId` or another explicit server policy allows it. | write | principal-scope-write |
+| If the access scope implied by `keyId` is malformed or missing required ownership segments, the request should return `invalid`. | validation | invalid-key-scope |
+| If `keyId` is structurally valid but the authenticated user lacks read or write permission for that scope, the request should return `unauthorised`. | authorization | unauthorised-access |
+
+#### Access Scope Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| Access scope should be visible in the authoritative `keyId` structure rather than hidden in separate metadata. | ownership-visible-in-key | access |
+| If a key is readable or writable only by one principal, that principal identity must be present in `keyId`. The concrete label may be `user`, `member`, `subscriber`, or another product-specific term. | principal-scope-requires-principal-id | access |
+| If a key is readable or writable by a group scope, the group path must be present in `keyId`. | group-scope-requires-group-path | access |
+| Access hierarchy should use predefined fixed levels configured per product, for example `tenant/group/user`, `department/region/member`, or similar, rather than recursive arbitrary nesting. | fixed-scope-levels | access |
+| The protocol requires structural visibility and fixed-depth scope, but the exact scope labels remain product-specific and configurable. | configurable-scope-labels | access |
+| Access checks should be derived from the authoritative key structure and its server-derived kind, not from client-supplied hints. | kind-maps-to-scope | access |
+| A valid root subscription may silently omit descendants that the user is not allowed to read. | subscription-filters-unreadable-descendants | subscription |
+
 #### Field Runtime Behaviour
 
 | field | mock_behaviour | production_behaviour | scenario |
@@ -426,7 +475,7 @@ Which fields are trusted, which are hints, and which are server-derived.
 
 | client_role | field | security_note | server_role | source_of_truth | trust_level |
 | --- | --- | --- | --- | --- | --- |
-| Use returned official identity and reference paths | keyId | Identity and schema interpretation must rely on keyId rather than client hints. | Generate and validate authoritative identity | server | authoritative |
+| Use returned official identity and reference paths | keyId | Identity, schema interpretation, and access-scope derivation must rely on keyId rather than client hints. | Generate and validate authoritative identity | server | authoritative |
 | Send integrity token derived from keyId | secureKeyId | Production should use a signed or JWT-style check to detect corruption or forgery. | Verify integrity token before accepting the request | production-server | verified-required |
 | Use provisional local identifier until the official keyId is returned | localKeyId | Production servers may apply basic validation such as length and character checks. | Preserve value without treating it as authoritative identity | client | client-hint |
 | Use as a temporary local hint before the server responds | kind | Do not trust client-supplied kind when it conflicts with keyId. | Derive authoritative kind from keyId with unique identifiers removed | server-derived-from-keyId | server-derived |
@@ -744,6 +793,13 @@ export type KeyValueParams = {
 
 export type UserParams = {
   key: KeyParams;
+  // Product-specific top-level scope, for example tenant or department.
+  tenantId?: string;
+  // Product-specific fixed-depth group scopes, for example team or region.
+  teamIdList?: string[];
+  // Product-specific principal identity, often a user but it may also be
+  // called member, subscriber, or another product term.
+  userId?: string;
 };
 
 export type Command = {

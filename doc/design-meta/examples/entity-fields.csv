@@ -1,6 +1,7 @@
 entity_name,field_name,field_title,field_description,ts_kind,go_kind,dart_kind,required,category
 ValueNode,localKeyId,Local Key ID,"Client-side provisional identifier used while waiting for the official `keyId` returned by the server. Production servers should preserve it and may apply basic length or character checks for security, but that validation is outside the mock-server scope.",string,string,String,false,core
 ValueNode,keyId,Key ID,"Logical stream or grouping identifier (for example, a project or topic path).",string,string,String,true,core
+ValueNode,accessScope,Access Scope,"Access scope is structurally visible in `keyId`. User-scoped nodes must include user identity in the key, and group-scoped nodes must include a fixed-depth group path such as tenant or team.",string,string,String,true,core
 ValueNode,secureKeyId,Secure Key ID,"Mandatory integrity field derived from `keyId`. Production servers should verify it using a signed or JWT-style check; the mock server may also use it as a test hook to force a configured non-ok status.",string,string,String,true,core
 ValueNode,options,Options,"Optional metadata flags (for example '--pinned', '--archived', '--sensitive').",string[],[]string,List<String>?,false,core
 ValueNode,kind,Kind,"Server-derived schema for the value node, inferred from `keyId` with unique identifiers removed. A client may use a temporary local hint, but the authoritative kind comes from the server-derived interpretation of `keyId`.",string,string,String,false,core

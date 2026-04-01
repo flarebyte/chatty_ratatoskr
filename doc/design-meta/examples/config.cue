@@ -31,6 +31,9 @@ sync: {
 	eventStreaming:    true
 	optimisticWrites:  true
 	clientLocalStore:  true
+	// A valid root subscription may still omit unreadable descendants instead of
+	// failing the whole subscription.
+	filterUnreadableDescendants: true
 }
 
 // Server and client may use different storage implementations while
@@ -120,6 +123,25 @@ schema: {
 	// reject or correct any attempt to send corrupted kind data that conflicts
 	// with keyId. This protects filtering logic and avoids security issues that
 	// could arise from trusting client-supplied kind blindly.
+	//
+	// Access scope should also be structurally visible in keyId. Group hierarchy
+	// is fixed-depth rather than recursive so access can be validated cheaply and
+	// consistently from the key schema. The exact labels are product-specific:
+	// for example tenant/group/user, department/region/member, or similar.
+	accessScope: {
+		visibleInKeyId: true
+		scopeLevels:    ["tenant", "group", "user"]
+		scopeAliases: {
+			level1: ["tenant", "department"]
+			level2: ["group", "team", "region"]
+			principal: ["user", "member", "subscriber"]
+		}
+		recursiveGroups: false
+		principalScopedKeysRequirePrincipalId: true
+		groupScopedKeysRequirePath:            true
+		invalidStatusForMalformedKey: "invalid"
+		unauthorisedStatusForDeniedAccess: "unauthorised"
+	}
 
 	// The protocol standardizes key meaning, not one storage encoding.
 	keyEncoding: {
@@ -128,6 +150,7 @@ schema: {
 			preserveHierarchy:     true
 			preserveIdentity:      true
 			preserveVersioning:    true
+			preserveAccessScope:   true
 		}
 
 		serverExamples: [

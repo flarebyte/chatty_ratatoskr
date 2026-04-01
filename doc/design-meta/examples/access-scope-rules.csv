@@ -1,0 +1,8 @@
+rule,scope,description
+ownership-visible-in-key,access,"Access scope should be visible in the authoritative `keyId` structure rather than hidden in separate metadata."
+principal-scope-requires-principal-id,access,"If a key is readable or writable only by one principal, that principal identity must be present in `keyId`. The concrete label may be `user`, `member`, `subscriber`, or another product-specific term."
+group-scope-requires-group-path,access,"If a key is readable or writable by a group scope, the group path must be present in `keyId`."
+fixed-scope-levels,access,"Access hierarchy should use predefined fixed levels configured per product, for example `tenant/group/user`, `department/region/member`, or similar, rather than recursive arbitrary nesting."
+configurable-scope-labels,access,"The protocol requires structural visibility and fixed-depth scope, but the exact scope labels remain product-specific and configurable."
+kind-maps-to-scope,access,"Access checks should be derived from the authoritative key structure and its server-derived kind, not from client-supplied hints."
+subscription-filters-unreadable-descendants,subscription,"A valid root subscription may silently omit descendants that the user is not allowed to read."
