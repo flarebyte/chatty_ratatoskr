@@ -305,7 +305,7 @@ Current entity and field definitions used by the draft protocol.
 
 | category | dart_kind | entity_name | field_description | field_name | field_title | go_kind | required | ts_kind |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| core | String | ValueNode | Client-side logical stream or grouping identifier (for example, a project or topic path). | localKeyId | Local Key ID | string | false | string |
+| core | String | ValueNode | Client-side provisional identifier used while waiting for the official `keyId` returned by the server. Production servers should preserve it and may apply basic length or character checks for security, but that validation is outside the mock-server scope. | localKeyId | Local Key ID | string | false | string |
 | core | String | ValueNode | Logical stream or grouping identifier (for example, a project or topic path). | keyId | Key ID | string | true | string |
 | core | String | ValueNode | Mandatory integrity field derived from `keyId`. Production servers should verify it using a signed or JWT-style check; the mock server may also use it as a test hook to force a configured non-ok status. | secureKeyId | Secure Key ID | string | true | string |
 | core | List<String>? | ValueNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
@@ -577,6 +577,9 @@ export type KeyParams = {
   // In production this should carry a signed integrity check for keyId.
   // In the mock server it may also be used to force a non-ok response.
   secureKeyId?: string;
+  // Client-side provisional identifier used while waiting for the official
+  // keyId returned by the server. The server should preserve localKeyId rather
+  // than rewriting it.
   localKeyId?: string;
   // The server should derive kind from keyId and treat that derived value as
   // authoritative. A client may use a temporary kind locally before the server

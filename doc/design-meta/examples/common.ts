@@ -37,6 +37,9 @@ export type KeyParams = {
   // In production this should carry a signed integrity check for keyId.
   // In the mock server it may also be used to force a non-ok response.
   secureKeyId?: string;
+  // Client-side provisional identifier used while waiting for the official
+  // keyId returned by the server. The server should preserve localKeyId rather
+  // than rewriting it.
   localKeyId?: string;
   // The server should derive kind from keyId and treat that derived value as
   // authoritative. A client may use a temporary kind locally before the server
