@@ -90,7 +90,9 @@ schema: {
 
 	// Key hierarchy rules define which kinds may appear at each level.
 	// In normal operation, keyId is the source of truth and kind is derived from
-	// the key schema with unique identifiers removed.
+	// the key schema with unique identifiers removed. KeyKind.language is an
+	// optional ISO code, so multilingual documents may contain nodes in
+	// different languages at the same time.
 	keyKind: {
 		rootWithId: ['dashboard']
 		rootWithoutId: ['profile']

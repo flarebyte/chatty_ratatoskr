@@ -29,6 +29,8 @@ export type OperationStatus = 'ok' | 'invalid' | 'unauthorised' | 'outdated';
 
 export type KeyKind = {
   hierarchy: NodeKindExample[];
+  // Optional ISO language code. Different nodes in the same document may use
+  // different languages, so multilingual documents are supported.
   language?: string;
 };
 

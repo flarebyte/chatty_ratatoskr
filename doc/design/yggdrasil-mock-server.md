@@ -207,7 +207,9 @@ schema: {
 
 	// Key hierarchy rules define which kinds may appear at each level.
 	// In normal operation, keyId is the source of truth and kind is derived from
-	// the key schema with unique identifiers removed.
+	// the key schema with unique identifiers removed. KeyKind.language is an
+	// optional ISO code, so multilingual documents may contain nodes in
+	// different languages at the same time.
 	keyKind: {
 		rootWithId: ['dashboard']
 		rootWithoutId: ['profile']
@@ -310,7 +312,7 @@ Current entity and field definitions used by the draft protocol.
 | core | String | ValueNode | Mandatory integrity field derived from `keyId`. Production servers should verify it using a signed or JWT-style check; the mock server may also use it as a test hook to force a configured non-ok status. | secureKeyId | Secure Key ID | string | true | string |
 | core | List<String>? | ValueNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
 | core | String | ValueNode | Server-derived schema for the value node, inferred from `keyId` with unique identifiers removed. A client may use a temporary local hint, but the authoritative kind comes from the server-derived interpretation of `keyId`. | kind | Kind | string | false | string |
-| core | String? | ValueNode | Optional ISO language code for the value content. | language | Language | *string | false | string |
+| core | String? | ValueNode | Optional ISO language code for the value content. Different value nodes in the same document may use different languages. | language | Language | *string | false | string |
 | core | String | ValueNode | Protocol-level string payload. Higher-level formats such as free text, numbers, booleans, dates, or encoded JSON are still serialized as strings. | value | Value | string | true | string |
 | core | String | ValueNode | Server-generated version used for optimistic sync checks so clients and servers can reject writes based on an older state. | version | Version | string | true | string |
 | core | DateTime | ValueNode | UTC timestamp when the value node was created (server clock). Useful for ordering nodes by creation time, for example comments or chat messages. | created | Created | time.Time | true | Date |
@@ -569,6 +571,8 @@ export type OperationStatus = 'ok' | 'invalid' | 'unauthorised' | 'outdated';
 
 export type KeyKind = {
   hierarchy: NodeKindExample[];
+  // Optional ISO language code. Different nodes in the same document may use
+  // different languages, so multilingual documents are supported.
   language?: string;
 };
 
