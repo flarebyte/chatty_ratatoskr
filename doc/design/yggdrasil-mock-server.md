@@ -261,10 +261,10 @@ schema: {
 			principal: ["user", "member", "subscriber"]
 		}
 		examples: [
-			"tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text",
-			"tenant:acme:group:editorial:dashboard:d1",
-			"department:news:region:emea:member:m17:dashboard:d1:note:n7:text",
-			"department:news:dashboard:d1",
+			"tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text",
+			"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+			"department:d9a8c102:region:r6be41f0:member:m17aa9f3:dashboard:d1e52f07:note:n7c401c2:text",
+			"department:d9a8c102:dashboard:d1e52f07",
 		]
 		recursiveGroups: false
 		principalScopedKeysRequirePrincipalId: true
@@ -515,10 +515,10 @@ Which fields are trusted, which are hints, and which are server-derived.
 
 | description | example_name | key_example | product_variant | scope_shape |
 | --- | --- | --- | --- | --- |
-| Example of a principal-scoped key where access is visible through a tenant/group/user hierarchy. | tenant-group-user-note | tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text | tenant-group-user | level1/level2/principal |
-| Example of a group-scoped document root where all members of the configured group scope may read it. | tenant-group-root | tenant:acme:group:editorial:dashboard:d1 | tenant-group-user | level1/level2 |
-| Same fixed-depth model with product-specific labels instead of tenant/group/user. | department-region-member-note | department:news:region:emea:member:m17:dashboard:d1:note:n7:text | department-region-member | level1/level2/principal |
-| Example of a top-level scoped document root using a department label instead of tenant. | department-root | department:news:dashboard:d1 | department-region-member | level1 |
+| Example of a principal-scoped key where access is visible through a tenant/group/user hierarchy using stable generated ids rather than mutable names. | tenant-group-user-note | tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text | tenant-group-user | level1/level2/principal |
+| Example of a group-scoped document root where all members of the configured group scope may read it. | tenant-group-root | tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07 | tenant-group-user | level1/level2 |
+| Same fixed-depth model with product-specific labels instead of tenant/group/user, still using stable generated ids. | department-region-member-note | department:d9a8c102:region:r6be41f0:member:m17aa9f3:dashboard:d1e52f07:note:n7c401c2:text | department-region-member | level1/level2/principal |
+| Example of a top-level scoped document root using a department label instead of tenant. | department-root | department:d9a8c102:dashboard:d1e52f07 | department-region-member | level1 |
 
 ### 06 Sync And Persistence
 
@@ -848,12 +848,12 @@ export type Command = {
 // - the reserved current-principal placeholder `user:_`
 // - the derived aggregate leaf `count`
 export const keyIdExamples = [
-  'tenant:acme:group:editorial:dashboard:d1',
-  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text',
-  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:comment:c3:text',
-  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:user:_',
-  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:count',
-  'department:news:region:emea:member:m17:dashboard:d1:note:n7:language:_',
+  'tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07',
+  'tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text',
+  'tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:comment:c38dd201:text',
+  'tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:user:_',
+  'tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count',
+  'department:d9a8c102:region:r6be41f0:member:m17aa9f3:dashboard:d1e52f07:note:n7c401c2:language:_',
 ];
 ```
 

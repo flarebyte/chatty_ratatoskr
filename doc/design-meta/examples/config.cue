@@ -137,10 +137,10 @@ schema: {
 			principal: ["user", "member", "subscriber"]
 		}
 		examples: [
-			"tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text",
-			"tenant:acme:group:editorial:dashboard:d1",
-			"department:news:region:emea:member:m17:dashboard:d1:note:n7:text",
-			"department:news:dashboard:d1",
+			"tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text",
+			"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+			"department:d9a8c102:region:r6be41f0:member:m17aa9f3:dashboard:d1e52f07:note:n7c401c2:text",
+			"department:d9a8c102:dashboard:d1e52f07",
 		]
 		recursiveGroups: false
 		principalScopedKeysRequirePrincipalId: true

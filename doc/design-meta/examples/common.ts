@@ -85,10 +85,10 @@ export type Command = {
 // - the reserved current-principal placeholder `user:_`
 // - the derived aggregate leaf `count`
 export const keyIdExamples = [
-  'tenant:acme:group:editorial:dashboard:d1',
-  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text',
-  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:comment:c3:text',
-  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:user:_',
-  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:count',
-  'department:news:region:emea:member:m17:dashboard:d1:note:n7:language:_',
+  'tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07',
+  'tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text',
+  'tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:comment:c38dd201:text',
+  'tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:user:_',
+  'tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count',
+  'department:d9a8c102:region:r6be41f0:member:m17aa9f3:dashboard:d1e52f07:note:n7c401c2:language:_',
 ];
