@@ -733,6 +733,7 @@ export interface EventApi {
 export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
   // Repeated subscribe messages extend the active root-key set for the connection.
+  // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
   // Closing the connection clears all active subscriptions tied to that connection.
@@ -791,7 +792,8 @@ import type { EventEnvelope } from './event-envelope';
 export type SubscribeMessage = {
   kind: 'subscribe';
   // A client may send subscribe more than once to add further root keys
-  // without reopening the WebSocket connection.
+  // without reopening the WebSocket connection. Duplicate root keys are
+  // normalized without error and the most recent subscription entry wins.
   rootKeys: string[];
 };
 
@@ -842,6 +844,7 @@ export type ServerMessage =
 | client | Open the WebSocket connection to the optional `/events` endpoint. | open-connection | websocket |
 | client | Send a `subscribe` message with the root keys to watch. | subscribe-root-keys | websocket |
 | client | Send another `subscribe` message later to add more root keys without reopening the connection. | extend-subscription | websocket |
+| server | Normalize duplicate root keys without error and keep the most recent subscription entry. | deduplicate-subscription | internal |
 | server | Reply with `subscribed` to confirm the active root-key subscriptions. | confirm-subscription | websocket |
 | server | Send an `event` message containing the `EventEnvelope`. | receive-event | websocket |
 | client-and-server | Use `ping` and `pong` messages to keep the connection alive. | ping-pong | websocket |

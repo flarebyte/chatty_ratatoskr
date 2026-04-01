@@ -2,6 +2,7 @@ step,actor,transport,description
 open-connection,client,websocket,Open the WebSocket connection to the optional `/events` endpoint.
 subscribe-root-keys,client,websocket,Send a `subscribe` message with the root keys to watch.
 extend-subscription,client,websocket,Send another `subscribe` message later to add more root keys without reopening the connection.
+deduplicate-subscription,server,internal,"Normalize duplicate root keys without error and keep the most recent subscription entry."
 confirm-subscription,server,websocket,Reply with `subscribed` to confirm the active root-key subscriptions.
 receive-event,server,websocket,Send an `event` message containing the `EventEnvelope`.
 ping-pong,client-and-server,websocket,Use `ping` and `pong` messages to keep the connection alive.

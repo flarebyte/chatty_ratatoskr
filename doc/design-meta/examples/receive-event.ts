@@ -34,6 +34,7 @@ export interface EventApi {
 export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
   // Repeated subscribe messages extend the active root-key set for the connection.
+  // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
   // Closing the connection clears all active subscriptions tied to that connection.

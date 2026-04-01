@@ -3,7 +3,8 @@ import type { EventEnvelope } from './event-envelope';
 export type SubscribeMessage = {
   kind: 'subscribe';
   // A client may send subscribe more than once to add further root keys
-  // without reopening the WebSocket connection.
+  // without reopening the WebSocket connection. Duplicate root keys are
+  // normalized without error and the most recent subscription entry wins.
   rootKeys: string[];
 };
 
