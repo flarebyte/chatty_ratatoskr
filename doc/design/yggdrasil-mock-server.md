@@ -381,6 +381,16 @@ Minimal error and response semantics for client and mock-server interoperability
 | Clients must inspect item-level statuses for collection operations rather than relying only on the top-level status. | client-must-inspect-items | collection |
 | Collection responses should preserve request order so clients can correlate item-level outcomes without additional matching logic. | responses-follow-request-order | collection |
 
+#### Request Correlation
+
+| description | rule | scope |
+| --- | --- | --- |
+| HTTP requests may include an optional top-level `id` for correlation and tracing. | request-id-optional | request |
+| When a request includes `id`, the server should echo the same `id` in the response envelope. | response-echoes-request-id | response |
+| When a request omits `id`, the server should generate a response `id`. | server-generates-response-id | response |
+| Request correlation should not require an additional envelope; `id` remains a shallow optional field on the request itself. | flat-request-shape | request |
+| The same request-correlation rule should apply to both the mock server and a production server so tests can rely on stable tracing behavior. | mock-and-production-consistent | implementation |
+
 ### 05 Trust Model
 
 Which fields are trusted, which are hints, and which are server-derived.
@@ -559,9 +569,9 @@ These controls should remain on a separate administration surface so production 
 
 ```ts
 import type { Command } from './common';
-import type { ResponseEnvelope } from './envelope';
+import type { RequestMetadata, ResponseEnvelope } from './envelope';
 
-type GetCommandRequest = {
+type GetCommandRequest = RequestMetadata & {
   command: Command;
 };
 
@@ -587,7 +597,7 @@ export const readCommands: Command[] = [
 
 ```ts
 import type { Command, OperationStatus } from './common';
-import type { ResponseEnvelope } from './envelope';
+import type { RequestMetadata, ResponseEnvelope } from './envelope';
 
 type CommandStatus = {
   command: Command;
@@ -595,7 +605,7 @@ type CommandStatus = {
   message?: string;
 };
 
-type SetCommandsRequest = {
+type SetCommandsRequest = RequestMetadata & {
   commands: Command[];
 };
 
@@ -750,6 +760,12 @@ export type ResponseEnvelope<T> = {
   data: T;
 };
 
+export type RequestMetadata = {
+  // Optional client-provided correlation identifier. If omitted, the server
+  // should generate a response id.
+  id?: string;
+};
+
 export type KeyStatusResult = {
   key: KeyParams;
   status: OperationStatus;
@@ -771,9 +787,9 @@ REST-style request and response shapes.
 
 ```ts
 import type { KeyParams } from './common';
-import type { KeyValueStatusResult, ResponseEnvelope } from './envelope';
+import type { KeyValueStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
 
-type GetKeyValueRequest = {
+type GetKeyValueRequest = RequestMetadata & {
   rootKey: KeyParams; // required: keyId, secureKeyId
   keyList: KeyParams[]; // required: keyId, secureKeyId
 };
@@ -792,9 +808,9 @@ export interface KeyValueReadApi {
 
 ```ts
 import type { KeyParams, KeyValueParams } from './common';
-import type { ResponseEnvelope } from './envelope';
+import type { RequestMetadata, ResponseEnvelope } from './envelope';
 
-type GetSnapshotRequest = {
+type GetSnapshotRequest = RequestMetadata & {
   key: KeyParams; // required: keyId, secureKeyId
 };
 
@@ -812,7 +828,7 @@ export interface SnapshotReadApi {
 
 ```ts
 import type { KeyParams, NodeKindExample, OperationStatus } from './common';
-import type { KeyStatusResult, ResponseEnvelope } from './envelope';
+import type { KeyStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
 
 type ChildParam = {
   localKeyId: string;
@@ -831,7 +847,7 @@ type SuggestedNewKeyParams = {
   children: KeyStatusResult[];
 };
 
-type NewKeysRequest = {
+type NewKeysRequest = RequestMetadata & {
   rootKey: KeyParams;
   newKeys: NewKeyParams[]; // processed independently and returned in request order
 };
@@ -850,9 +866,9 @@ export interface NewKeysApi {
 
 ```ts
 import type { KeyParams, KeyValueParams } from './common';
-import type { KeyStatusResult, ResponseEnvelope } from './envelope';
+import type { KeyStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
 
-type SetKeyValueRequest = {
+type SetKeyValueRequest = RequestMetadata & {
   rootKey: KeyParams; // required: keyId, secureKeyId
   keyValueList: KeyValueParams[]; // required: keyId, secureKeyId, processed independently and returned in request order
 };
@@ -871,9 +887,9 @@ export interface KeyValueWriteApi {
 
 ```ts
 import type { KeyParams, KeyValueParams } from './common';
-import type { ResponseEnvelope } from './envelope';
+import type { RequestMetadata, ResponseEnvelope } from './envelope';
 
-type SetSnapshotRequest = {
+type SetSnapshotRequest = RequestMetadata & {
   key: KeyParams; // required: keyId, secureKeyId
   keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
 };

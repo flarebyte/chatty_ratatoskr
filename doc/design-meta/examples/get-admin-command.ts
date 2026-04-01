@@ -1,7 +1,7 @@
 import type { Command } from './common';
-import type { ResponseEnvelope } from './envelope';
+import type { RequestMetadata, ResponseEnvelope } from './envelope';
 
-type GetCommandRequest = {
+type GetCommandRequest = RequestMetadata & {
   command: Command;
 };
 

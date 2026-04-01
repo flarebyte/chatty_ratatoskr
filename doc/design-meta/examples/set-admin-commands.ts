@@ -1,5 +1,5 @@
 import type { Command, OperationStatus } from './common';
-import type { ResponseEnvelope } from './envelope';
+import type { RequestMetadata, ResponseEnvelope } from './envelope';
 
 type CommandStatus = {
   command: Command;
@@ -7,7 +7,7 @@ type CommandStatus = {
   message?: string;
 };
 
-type SetCommandsRequest = {
+type SetCommandsRequest = RequestMetadata & {
   commands: Command[];
 };
 

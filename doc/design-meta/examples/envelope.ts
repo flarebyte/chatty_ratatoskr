@@ -7,6 +7,12 @@ export type ResponseEnvelope<T> = {
   data: T;
 };
 
+export type RequestMetadata = {
+  // Optional client-provided correlation identifier. If omitted, the server
+  // should generate a response id.
+  id?: string;
+};
+
 export type KeyStatusResult = {
   key: KeyParams;
   status: OperationStatus;

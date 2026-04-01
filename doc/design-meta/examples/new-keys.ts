@@ -1,5 +1,5 @@
 import type { KeyParams, NodeKindExample, OperationStatus } from './common';
-import type { KeyStatusResult, ResponseEnvelope } from './envelope';
+import type { KeyStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
 
 type ChildParam = {
   localKeyId: string;
@@ -18,7 +18,7 @@ type SuggestedNewKeyParams = {
   children: KeyStatusResult[];
 };
 
-type NewKeysRequest = {
+type NewKeysRequest = RequestMetadata & {
   rootKey: KeyParams;
   newKeys: NewKeyParams[]; // processed independently and returned in request order
 };

@@ -1,0 +1,6 @@
+rule,scope,description
+request-id-optional,request,"HTTP requests may include an optional top-level `id` for correlation and tracing."
+response-echoes-request-id,response,"When a request includes `id`, the server should echo the same `id` in the response envelope."
+server-generates-response-id,response,"When a request omits `id`, the server should generate a response `id`."
+flat-request-shape,request,"Request correlation should not require an additional envelope; `id` remains a shallow optional field on the request itself."
+mock-and-production-consistent,implementation,"The same request-correlation rule should apply to both the mock server and a production server so tests can rely on stable tracing behavior."

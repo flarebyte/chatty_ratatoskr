@@ -1,7 +1,7 @@
 import type { KeyParams, KeyValueParams } from './common';
-import type { ResponseEnvelope } from './envelope';
+import type { RequestMetadata, ResponseEnvelope } from './envelope';
 
-type SetSnapshotRequest = {
+type SetSnapshotRequest = RequestMetadata & {
   key: KeyParams; // required: keyId, secureKeyId
   keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
 };

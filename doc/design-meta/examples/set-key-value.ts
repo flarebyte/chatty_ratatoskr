@@ -1,7 +1,7 @@
 import type { KeyParams, KeyValueParams } from './common';
-import type { KeyStatusResult, ResponseEnvelope } from './envelope';
+import type { KeyStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
 
-type SetKeyValueRequest = {
+type SetKeyValueRequest = RequestMetadata & {
   rootKey: KeyParams; // required: keyId, secureKeyId
   keyValueList: KeyValueParams[]; // required: keyId, secureKeyId, processed independently and returned in request order
 };
