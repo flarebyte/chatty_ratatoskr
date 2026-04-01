@@ -50,7 +50,7 @@ reports: [{
 		}, {
 			title:       "04 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
-			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding"]
+			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding", "yggdrasil.sync-flow", "yggdrasil.ts.event-envelope", "yggdrasil.ts.snapshot-envelope"]
 		}, {
 			title:       "05 Open Inconsistencies"
 			description: "Known draft mismatches that should be resolved before implementation hardens."
@@ -242,6 +242,13 @@ This means sync is not a secondary implementation detail. It is a protocol conce
 		labels: ["sync", "storage", "client", "server"]
 	},
 	{
+		name:  "yggdrasil.sync-flow"
+		title: "Sync Flow"
+		filepath: "examples/sync-flow.csv"
+		arguments: ["format-csv=table"]
+		labels: ["sync", "flow", "csv"]
+	},
+	{
 		name:  "yggdrasil.storage-encoding"
 		title: "Logical Keys Versus Storage Encoding"
 		markdown: """
@@ -255,6 +262,18 @@ The logical model should define what a key means in the protocol. Storage-specif
 This separation lets the same protocol work across products without forcing every implementation into one storage-specific key format.
 """
 		labels: ["storage", "encoding", "key-model"]
+	},
+	{
+		name:  "yggdrasil.ts.event-envelope"
+		title: "Event Envelope"
+		filepath: "examples/event-envelope.ts"
+		labels: ["typescript", "example", "event", "sync"]
+	},
+	{
+		name:  "yggdrasil.ts.snapshot-envelope"
+		title: "Snapshot Envelope"
+		filepath: "examples/snapshot-envelope.ts"
+		labels: ["typescript", "example", "snapshot", "sync"]
 	},
 	{
 		name:  "yggdrasil.ts.common"

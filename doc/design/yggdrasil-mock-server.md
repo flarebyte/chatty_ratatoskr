@@ -307,6 +307,55 @@ The intended model is:
 
 This means sync is not a secondary implementation detail. It is a protocol concern that should shape snapshot semantics, event payloads, and conflict handling.
 
+#### Sync Flow
+
+| actor | description | step | transport |
+| --- | --- | --- | --- |
+| client | Fetch the latest authoritative snapshot for a root key. | fetch-snapshot | http |
+| client | Store the snapshot in the local key-value store as the current baseline. | store-snapshot | local-store |
+| client | Open the optional event stream for incremental updates. | open-event-stream | websocket |
+| client | Apply `set` events as local upserts and treat `--archived` as record state. | apply-set-event | websocket |
+| client | When `snapshot-replaced` is received, discard the previous baseline for the root key and refetch the snapshot. | handle-snapshot-replaced | websocket |
+| server | Reject writes whose submitted version is not based on the latest server version. | reject-stale-write | http |
+
+#### Event Envelope
+
+```ts
+import type { KeyParams, KeyValueParams } from './common';
+
+/**
+ * Archive is resource state, not an event operation.
+ * Archived records are still emitted as `set` events with `--archived`
+ * present in the payload options when appropriate.
+ */
+export type EventOperation = 'set' | 'snapshot-replaced';
+
+export type EventEnvelope = {
+  eventId: string;
+  rootKey: KeyParams;
+  operation: EventOperation;
+  serverTimestamp: string;
+  key?: KeyParams;
+  keyValue?: KeyValueParams;
+  snapshotVersion?: string;
+};
+```
+
+#### Snapshot Envelope
+
+```ts
+import type { KeyParams, KeyValueParams } from './common';
+
+export type SnapshotEnvelope = {
+  snapshotId: string;
+  rootKey: KeyParams;
+  version: string;
+  serverTimestamp: string;
+  keyValueList: KeyValueParams[];
+  authoritative: true;
+};
+```
+
 ### 05 Open Inconsistencies
 
 Known draft mismatches that should be resolved before implementation hardens.
@@ -648,18 +697,19 @@ export interface KeyValueEventStoreApi {
 #### Receive Event Example
 
 ```ts
-import type { KeyParams, OperationStatus, UserParams } from './common';
+import type { OperationStatus, UserParams } from './common';
+import type { EventEnvelope } from './event-envelope';
 
 type Subscription = {
   id: string;
   user: UserParams;
-  eventList: KeyParams[];
+  rootKeys: string[];
 };
 
 type EventResponse = {
   id: string;
   user: UserParams;
-  eventList: [KeyParams, OperationStatus][];
+  eventList: [EventEnvelope, OperationStatus][];
 };
 
 export interface EventApi {
@@ -667,7 +717,27 @@ export interface EventApi {
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
-  sendEvent(user: UserParams, key: KeyParams): void;
+  receiveUserUpdate(user: UserParams): EventResponse;
+}
+
+export type EventHandlingRule = {
+  operation: 'set' | 'snapshot-replaced';
+  clientAction: string;
+};
+
+export const eventHandlingRules: EventHandlingRule[] = [
+  {
+    operation: 'set',
+    clientAction: 'Upsert the record locally. If options include --archived, treat archive as record state.',
+  },
+  {
+    operation: 'snapshot-replaced',
+    clientAction: 'Refetch the authoritative snapshot for the root key and replace the local baseline.',
+  },
+];
+
+export interface EventProducerApi {
+  emit(event: EventEnvelope): void;
   receiveUserUpdate(user: UserParams): EventResponse;
 }
 ```
