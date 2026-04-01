@@ -1,2 +1,2 @@
-name,description,
-reset,reset all cache
+name,description
+reset,Reset all in-memory stores to their default state.

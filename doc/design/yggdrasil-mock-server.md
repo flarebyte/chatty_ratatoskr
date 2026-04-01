@@ -53,18 +53,18 @@ Why the server should exist and what it must support.
 
 | description | usecase |
 | --- | --- |
-| simulate a more complex backend store server that would be developed separately | a |
-| hierarchical tree text store | b |
-| text node is a string representing free text, number, boolean, date, ... | c |
-| write conflict managed by checking that current write is based on latest version of the text or deny | d |
-| run as a CLI that loads a CUE config file | e |
-| behaviour and light validation is customisable to adapt to different product needs | f |
-| should be able to run in CI pipeline | g |
-| should be sufficient to test client code | h |
-| this should be a light implementation of our invented Yggdrasil protocol | i |
-| websocket should be optional in the protocol as a minority of clients may not support it | j |
-| websocket messages should be limited to well known ids for security reasons regarding escaping | k |
-| Heartbeats aka Ping/Pong should be used to keep websocket connection alive | l |
+| Simulate a more complex backend store server that would be developed separately. | simulate-backend-server |
+| Support a hierarchical text-tree store. | hierarchical-text-tree |
+| Allow a text node to represent free text, numbers, booleans, dates, and similar scalar values. | typed-text-node |
+| Reject writes when the submitted version is not based on the latest stored version. | optimistic-write-conflict |
+| Run as a CLI that loads a CUE configuration file. | cue-config-cli |
+| Allow behaviour and lightweight validation to be customised for different product needs. | customisable-behaviour |
+| Run reliably inside CI pipelines. | ci-friendly |
+| Be sufficient to test client code against a realistic mock server. | client-test-support |
+| Provide a lightweight implementation of the evolving Yggdrasil protocol. | lightweight-yggdrasil |
+| Keep WebSocket support optional because some clients may not support it. | optional-websocket |
+| Limit WebSocket messages to well-known identifiers to reduce escaping and safety concerns. | constrained-websocket-messages |
+| Use heartbeat ping/pong messages to keep WebSocket connections alive. | websocket-heartbeats |
 
 ### 02 Implementation Constraints
 
@@ -74,21 +74,21 @@ Preferred implementation choices for the Go CLI.
 
 | description | usecase |
 | --- | --- |
-| CLI should be written in go | a |
-| Use Cobra for CLI command and argument parsing | b |
-| Use CUE as the configuration source of truth | c |
-| Use early returns and guard clauses for errors | d |
-| Keep functions small and single-purpose | e |
-| Separate I/O from core logic | f |
-| Use tiny structs to avoid long parameter lists | g |
-| Replace boolean soup with named predicates | h |
-| Guarantee deterministic ordering in generated outputs | i |
-| Uses JSON for payloads | j |
-| Pick format that are well supported accross languages especially go, ts, dart | k |
-| options fields may be lighweight representations of args parsing limited to safe format | l |
-| CLI should be built for at least linux and macos | h |
-| coder/websocket lib for WebSocket | i |
-| net/http for http REST server | j |
+| Write the CLI in Go. | go-cli |
+| Use Cobra for CLI commands and argument parsing. | cobra-cli |
+| Use CUE as the configuration source of truth. | cue-source-of-truth |
+| Prefer early returns and guard clauses for errors. | guard-clauses |
+| Keep functions small and single-purpose. | small-functions |
+| Separate I/O from core logic. | separate-io |
+| Use small structs to avoid long parameter lists. | tiny-structs |
+| Replace boolean soup with named predicates. | named-predicates |
+| Guarantee deterministic ordering in generated outputs. | deterministic-output |
+| Use JSON for request and response payloads. | json-payloads |
+| Prefer formats that are well supported across languages, especially Go, TypeScript, and Dart. | portable-formats |
+| Keep `options` as lightweight representations of argument parsing, limited to a safe format. | safe-option-flags |
+| Build the CLI for at least Linux and macOS. | target-platforms |
+| Use `coder/websocket` for WebSocket support. | coder-websocket |
+| Use `net/http` for the HTTP server. | net-http |
 
 ## 03 Protocol Surface
 
@@ -102,49 +102,58 @@ CUE draft describing ports, endpoints, and schema constraints.
 
 ```cue
 http: {
-    port: 8080
-    maxPayloadSizeKB:400
+	port: 8080
+	maxPayloadSizeKB: 400
 }
 
 websocket: {
-    supported: true
-    pingInterval:60
-    pongWait: 10
-    maxMessageSizeKB:4
+	supported: true
+	path:      "/events"
+	pingIntervalSeconds: 60
+	pongWaitSeconds:     10
+	maxMessageSizeKB:    4
 }
 
 endpoints: {
-
 	create: {
 		path: "/create"
-        verb: "POST"
+		verb: "POST"
 	}
 
-    setKeyValueList: {
-        path: "/node"
-        verb: "PUT"
-    }
+	setKeyValueList: {
+		path: "/node"
+		verb: "PUT"
+	}
 
-    getKeyValueList: {
-        path: "/node"
-        verb: "GET"
-    }
+	getKeyValueList: {
+		path: "/node"
+		verb: "GET"
+	}
 
-    getSnapshot: {
-        path: "/snapshot"
-        verb: "GET"
-    }
+	getSnapshot: {
+		path: "/snapshot"
+		verb: "GET"
+	}
 
-    setSnapshot: {
-        path: "/snapshot"
-        verb: "PUT"
-    }
+	setSnapshot: {
+		path: "/snapshot"
+		verb: "PUT"
+	}
 
-    receiveEvent: {
-        path: "/event"
-        verb: "GET"
-    }
+	deleteSnapshot: {
+		path: "/snapshot"
+		verb: "DELETE"
+	}
 
+	sendEvent: {
+		path: "/event"
+		verb: "POST"
+	}
+
+	adminCommands: {
+		path: "/admin/commands"
+		verb: "PUT|GET"
+	}
 }
 
 schema: {
@@ -164,18 +173,18 @@ schema: {
 		boolean: ["--archived", "--sensitive"]
 	}
 
-    statusKind: {
-        boolean: ["ok", "invalid", "unauthorised", "outdated"]
-    }
+	statusKind: {
+		boolean: ["ok", "invalid", "unauthorised", "outdated"]
+	}
 
-    secureKeyId: {
-        statusAsKey: true
-    }
+	secureKeyId: {
+		statusAsKey: true
+	}
 
-    text: {
-        maxCharLength: 1000
-        checkVersion: true
-    }
+	text: {
+		maxCharLength: 1000
+		checkVersion:  true
+	}
 }
 ```
 
@@ -187,41 +196,61 @@ HTTP and WebSocket actions currently envisaged by the examples.
 
 | action | description | endpoint | protocol | role | verb |
 | --- | --- | --- | --- | --- | --- |
-| create-new-keys |  | /create | http | client | POST |
-| set-key-value-list |  | /node | http | client | PUT |
-| get-key-value-list |  | /node | http | client | GET |
-| get-snapshot |  | /snapshot | http | client | GET |
-| set-snapshot |  | /snapshot | http | admin | PUT |
-| del-snapshot |  | /snapshot | http | admin | DEL |
-| update-events |  | /events | websockets | server | WS |
-| send-event |  | /event | http | admin | POST |
-| run-admin-commands |  | tool-admin | http | admin | POST |
-| read-admin-command |  | tool-admin | http | admin | GET |
+| create-new-keys | Create server-generated identifiers for requested nodes and their children. | /create | http | client | POST |
+| set-key-value-list | Write one or more key/value entries under a root key. | /node | http | client | PUT |
+| get-key-value-list | Read one or more key/value entries under a root key. | /node | http | client | GET |
+| get-snapshot | Read the latest snapshot for a key. | /snapshot | http | client | GET |
+| set-snapshot | Replace the current snapshot for a key. | /snapshot | http | admin | PUT |
+| delete-snapshot | Delete the snapshot currently stored for a key. | /snapshot | http | admin | DELETE |
+| receive-events | Open an event stream for subscriptions and server push updates. | /events | websocket | client | CONNECT |
+| send-event | Inject an event into the mock server for connected clients. | /event | http | admin | POST |
+| set-admin-commands | Register or replace the supported administrative commands. | /admin/commands | http | admin | PUT |
+| get-admin-command | Read the currently registered administrative commands. | /admin/commands | http | admin | GET |
 
 ### 03 Entity Model
 
 Current entity and field definitions used by the draft protocol.
 
+#### Admin Commands
+
+| description | name |
+| --- | --- |
+| Reset all in-memory stores to their default state. | reset |
+
 #### Entities
 
 | description | entity_name | entity_note_name | labels | title |
 | --- | --- | --- | --- | --- |
-| Text node that is a tree. | TextNode | entity.text-node | data,design,entity | Text node |
+| A node in the hierarchical text tree. | TextNode | entity.text-node | data,design,entity | Text node |
 
 #### Entity Fields
 
 | category | dart_kind | entity_name | field_description | field_name | field_title | go_kind | required | ts_kind |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | core | String | TextNode | Client side logical stream/grouping identifier (e.g., project/topic path). | localKeyId | Local Key ID | string | false | string |
-| core | String | TextNode | Logical stream/grouping identifier (e.g., project/topic path). | keyId | Key ID | string | true | string |
-| core | String | TextNode | Encrypted keyId. | secureKeyId | Secure Key ID | string | true | string |
-| core | List<String>? | TextNode | Optional metadata flags options (e.g., '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
+| core | String | TextNode | Logical stream or grouping identifier (for example, a project or topic path). | keyId | Key ID | string | true | string |
+| core | String | TextNode | Encrypted representation of `keyId`. | secureKeyId | Secure Key ID | string | true | string |
+| core | List<String>? | TextNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
 | core | String | TextNode | Logical type of the message (e.g., 'note'), set by the client. | kind | Kind | string | false | string |
 | core | String? | TextNode | Optional ISO language code for the value content. | language | Language | *string | false | string |
 | core | String | TextNode | The message content or a reference to external data. | value | Value | string | true | string |
 | core | String | TextNode | Server-generated version (e.g., UUID) | version | Version | string | true | string |
 | core | DateTime | TextNode | UTC timestamp when the message was created (server clock). | created | Created | time.Time | true | Date |
 | core | DateTime | TextNode | UTC timestamp when the message was updated (server clock). | updated | Updated | time.Time | true | Date |
+
+### 04 Open Inconsistencies
+
+Known draft mismatches that should be resolved before implementation hardens.
+
+#### Current Draft Inconsistencies
+
+The draft material is now closer to a coherent protocol, but a few design questions remain open:
+
+- The TypeScript examples still use a legacy key/value domain model, while the project description is moving toward a more general Yggdrasil mock server. The team should decide whether `KeyParams` and `KeyValueParams` remain the core contract or become transitional names.
+- `adminCommands` is currently represented as one config entry with `PUT|GET` in `config.cue`. That keeps the draft concise, but it is not as precise as two separate operations and may need to be split later.
+- The WebSocket draft now defines `/events` as the connection path, but the exact message envelope for subscribe, unsubscribe, heartbeat, and event delivery is still only implied by the TypeScript examples rather than defined as a strict protocol contract.
+- The examples describe both snapshots and event stores, but retention, overwrite semantics, and reset behaviour are still under-specified.
+- Security is only sketched through `secureKeyId`, well-known WebSocket identifiers, and admin commands. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 
 ## 04 TypeScript Examples
 
@@ -235,7 +264,7 @@ Common primitives reused by the request/response examples.
 
 ```ts
 /**
- * NodeKind should be extendible and likely be a string internally
+ * NodeKind should be extensible and likely be a string internally,
  * but it should be validated against a supported list.
  */
 export type NodeKindExample =
@@ -285,8 +314,8 @@ export type KeyValueParams = {
 };
 
 export type UserParams = {
-   key: KeyParams;
-}
+  key: KeyParams;
+};
 
 export type Command = {
   id: string;
@@ -294,7 +323,7 @@ export type Command = {
   arguments: string[];
 };
 
-//Redis key compatible
+// Redis-key-compatible examples.
 export const keyIdExamples = [
   "dashboard:52ffe570:note:c401c269:text",
   "dashboard:52ffe570:note:c401c269:comment:e0ee7775",
@@ -345,14 +374,14 @@ export const readCommands: Command[] = [
 import type { KeyParams, KeyValueParams, OperationStatus } from './common';
 
 type GetKeyValueRequest = {
-  rootKey: KeyParams; //required: keyId, secureKeyId
-  keyList: KeyParams[]; //required: keyId, secureKeyId
+  rootKey: KeyParams; // required: keyId, secureKeyId
+  keyList: KeyParams[]; // required: keyId, secureKeyId
 };
 
 type GetKeyValueResponse = {
   id: string;
-  rootKey: KeyParams; //provide keyId, and optionally all other fields except localKeyId
-  keyValueList: [KeyValueParams, OperationStatus][]; //provide keyId, and optionally all other fields except localKeyId
+  rootKey: KeyParams; // provide keyId, and optionally all other fields except localKeyId
+  keyValueList: [KeyValueParams, OperationStatus][]; // provide keyId, and optionally all other fields except localKeyId
 };
 
 export interface KeyValueReadApi {
@@ -366,13 +395,13 @@ export interface KeyValueReadApi {
 import type { KeyParams, KeyValueParams } from './common';
 
 type GetSnapshotRequest = {
-  key: KeyParams; //required: keyId, secureKeyId
+  key: KeyParams; // required: keyId, secureKeyId
 };
 
 type GetSnapshotResponse = {
   id: string;
-  key: KeyParams; //required: keyId, and the rest may be depend on success/failure.
-  keyValueList: KeyValueParams[]; //required: keyId, and the rest may be depend on success/failure.
+  key: KeyParams; // required: keyId, and the remaining fields may depend on success or failure.
+  keyValueList: KeyValueParams[]; // required: keyId, and the remaining fields may depend on success or failure.
 };
 
 export interface SnapshotReadApi {
@@ -404,7 +433,7 @@ type SuggestedNewKeyParams = {
 
 type NewKeysRequest = {
   rootKey: KeyParams;
-  newkeys: NewKeyParams[];
+  newKeys: NewKeyParams[];
 };
 
 type NewKeysResponse = {
@@ -450,7 +479,7 @@ export const writeCommands: Command[] = [
   },
   {
     id: 'delay-response',
-    comment: 'Delay the response for testing purpose',
+    comment: 'Delay the response for testing purposes',
     arguments: ['delay', '--seconds=10'],
   },
   {
@@ -467,14 +496,14 @@ export const writeCommands: Command[] = [
 import type { KeyParams, KeyValueParams, OperationStatus } from './common';
 
 type SetKeyValueRequest = {
-  rootKey: KeyParams; //required: keyId, secureKeyId
-  keyValueList: KeyValueParams[]; //required: keyId, secureKeyId
+  rootKey: KeyParams; // required: keyId, secureKeyId
+  keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
 };
 
 type SetKeyValueResponse = {
   id: string;
-  rootKey: KeyParams; //required: keyId
-  keyList: [KeyParams, OperationStatus][]; //required: keyId, and the rest may be depend on success/failure.
+  rootKey: KeyParams; // required: keyId
+  keyList: [KeyParams, OperationStatus][]; // required: keyId, and the remaining fields may depend on success or failure.
 };
 
 export interface KeyValueWriteApi {
@@ -488,18 +517,18 @@ export interface KeyValueWriteApi {
 import type { KeyParams, KeyValueParams, OperationStatus } from './common';
 
 type SetSnapshotRequest = {
-  key: KeyParams; //required: keyId, secureKeyId
-  keyValueList: KeyValueParams[]; //required: keyId, secureKeyId
+  key: KeyParams; // required: keyId, secureKeyId
+  keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
 };
 
-type SetKeyValueResponse = {
+type SetSnapshotResponse = {
   id: string;
   key: KeyParams;
   status: OperationStatus;
 };
 
 export interface SnapshotWriteApi {
-  setSnapshot(request: SetSnapshotRequest): SetKeyValueResponse;
+  setSnapshot(request: SetSnapshotRequest): SetSnapshotResponse;
 }
 ```
 
@@ -529,7 +558,8 @@ export interface KeyValueEventStoreApi {
 #### Receive Event Example
 
 ```ts
-import type { KeyParams, OperationStatus, UserParams } from "./common";
+import type { KeyParams, OperationStatus, UserParams } from './common';
+
 type Subscription = {
   id: string;
   user: UserParams;
@@ -547,7 +577,7 @@ export interface EventApi {
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
-  send(user: UserParams, key: KeyParams): void;
+  sendEvent(user: UserParams, key: KeyParams): void;
   receiveUserUpdate(user: UserParams): EventResponse;
 }
 ```

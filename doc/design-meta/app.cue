@@ -46,7 +46,11 @@ reports: [{
 		}, {
 			title:       "03 Entity Model"
 			description: "Current entity and field definitions used by the draft protocol."
-			notes: ["yggdrasil.entities", "yggdrasil.entity-fields"]
+			notes: ["yggdrasil.entities", "yggdrasil.entity-fields", "yggdrasil.admin-commands"]
+		}, {
+			title:       "04 Open Inconsistencies"
+			description: "Known draft mismatches that should be resolved before implementation hardens."
+			notes: ["yggdrasil.inconsistencies"]
 		}]
 	}, {
 		title:       "04 TypeScript Examples"
@@ -151,6 +155,13 @@ Current notes suggest a constrained event model with heartbeat support, bounded 
 		labels: ["protocol", "actions", "csv"]
 	},
 	{
+		name:  "yggdrasil.admin-commands"
+		title: "Admin Commands"
+		filepath: "examples/admin-commands.csv"
+		arguments: ["format-csv=table"]
+		labels: ["admin", "commands", "csv"]
+	},
+	{
 		name:  "yggdrasil.entities"
 		title: "Entities"
 		filepath: "examples/entities.csv"
@@ -163,6 +174,20 @@ Current notes suggest a constrained event model with heartbeat support, bounded 
 		filepath: "examples/entity-fields.csv"
 		arguments: ["format-csv=table"]
 		labels: ["entity", "fields", "csv"]
+	},
+	{
+		name:  "yggdrasil.inconsistencies"
+		title: "Current Draft Inconsistencies"
+		markdown: """
+The draft material is now closer to a coherent protocol, but a few design questions remain open:
+
+- The TypeScript examples still use a legacy key/value domain model, while the project description is moving toward a more general Yggdrasil mock server. The team should decide whether `KeyParams` and `KeyValueParams` remain the core contract or become transitional names.
+- `adminCommands` is currently represented as one config entry with `PUT|GET` in `config.cue`. That keeps the draft concise, but it is not as precise as two separate operations and may need to be split later.
+- The WebSocket draft now defines `/events` as the connection path, but the exact message envelope for subscribe, unsubscribe, heartbeat, and event delivery is still only implied by the TypeScript examples rather than defined as a strict protocol contract.
+- The examples describe both snapshots and event stores, but retention, overwrite semantics, and reset behaviour are still under-specified.
+- Security is only sketched through `secureKeyId`, well-known WebSocket identifiers, and admin commands. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
+"""
+		labels: ["design", "inconsistency", "open-questions"]
 	},
 	{
 		name:  "yggdrasil.ts.common"

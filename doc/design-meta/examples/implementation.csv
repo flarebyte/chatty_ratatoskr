@@ -1,18 +1,16 @@
 usecase,description
-a,CLI should be written in go
-b,Use Cobra for CLI command and argument parsing
-c,Use CUE as the configuration source of truth
-d,Use early returns and guard clauses for errors
-e,Keep functions small and single-purpose
-f,Separate I/O from core logic
-g,Use tiny structs to avoid long parameter lists
-h,Replace boolean soup with named predicates
-i,Guarantee deterministic ordering in generated outputs
-j,Uses JSON for payloads
-k,"Pick format that are well supported accross languages especially go, ts, dart"
-l,options fields may be lighweight representations of args parsing limited to safe format
-h,CLI should be built for at least linux and macos
-i,coder/websocket lib for WebSocket
-j,net/http for http REST server
-
-
+go-cli,Write the CLI in Go.
+cobra-cli,Use Cobra for CLI commands and argument parsing.
+cue-source-of-truth,Use CUE as the configuration source of truth.
+guard-clauses,Prefer early returns and guard clauses for errors.
+small-functions,Keep functions small and single-purpose.
+separate-io,Separate I/O from core logic.
+tiny-structs,Use small structs to avoid long parameter lists.
+named-predicates,Replace boolean soup with named predicates.
+deterministic-output,Guarantee deterministic ordering in generated outputs.
+json-payloads,Use JSON for request and response payloads.
+portable-formats,"Prefer formats that are well supported across languages, especially Go, TypeScript, and Dart."
+safe-option-flags,"Keep `options` as lightweight representations of argument parsing, limited to a safe format."
+target-platforms,Build the CLI for at least Linux and macOS.
+coder-websocket,Use `coder/websocket` for WebSocket support.
+net-http,Use `net/http` for the HTTP server.

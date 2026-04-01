@@ -27,7 +27,7 @@ export const writeCommands: Command[] = [
   },
   {
     id: 'delay-response',
-    comment: 'Delay the response for testing purpose',
+    comment: 'Delay the response for testing purposes',
     arguments: ['delay', '--seconds=10'],
   },
   {

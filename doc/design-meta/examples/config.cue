@@ -1,47 +1,56 @@
 http: {
-    port: 8080
-    maxPayloadSizeKB:400
+	port: 8080
+	maxPayloadSizeKB: 400
 }
 
 websocket: {
-    supported: true
-    pingInterval:60
-    pongWait: 10
-    maxMessageSizeKB:4
+	supported: true
+	path:      "/events"
+	pingIntervalSeconds: 60
+	pongWaitSeconds:     10
+	maxMessageSizeKB:    4
 }
 
 endpoints: {
-
 	create: {
 		path: "/create"
-        verb: "POST"
+		verb: "POST"
 	}
 
-    setKeyValueList: {
-        path: "/node"
-        verb: "PUT"
-    }
+	setKeyValueList: {
+		path: "/node"
+		verb: "PUT"
+	}
 
-    getKeyValueList: {
-        path: "/node"
-        verb: "GET"
-    }
+	getKeyValueList: {
+		path: "/node"
+		verb: "GET"
+	}
 
-    getSnapshot: {
-        path: "/snapshot"
-        verb: "GET"
-    }
+	getSnapshot: {
+		path: "/snapshot"
+		verb: "GET"
+	}
 
-    setSnapshot: {
-        path: "/snapshot"
-        verb: "PUT"
-    }
+	setSnapshot: {
+		path: "/snapshot"
+		verb: "PUT"
+	}
 
-    receiveEvent: {
-        path: "/event"
-        verb: "GET"
-    }
+	deleteSnapshot: {
+		path: "/snapshot"
+		verb: "DELETE"
+	}
 
+	sendEvent: {
+		path: "/event"
+		verb: "POST"
+	}
+
+	adminCommands: {
+		path: "/admin/commands"
+		verb: "PUT|GET"
+	}
 }
 
 schema: {
@@ -61,16 +70,16 @@ schema: {
 		boolean: ["--archived", "--sensitive"]
 	}
 
-    statusKind: {
-        boolean: ["ok", "invalid", "unauthorised", "outdated"]
-    }
+	statusKind: {
+		boolean: ["ok", "invalid", "unauthorised", "outdated"]
+	}
 
-    secureKeyId: {
-        statusAsKey: true
-    }
+	secureKeyId: {
+		statusAsKey: true
+	}
 
-    text: {
-        maxCharLength: 1000
-        checkVersion: true
-    }
+	text: {
+		maxCharLength: 1000
+		checkVersion:  true
+	}
 }

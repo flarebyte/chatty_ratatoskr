@@ -1,13 +1,13 @@
 usecase,description
-a,simulate a more complex backend store server that would be developed separately
-b,hierarchical tree text store
-c,"text node is a string representing free text, number, boolean, date, ..."
-d,write conflict managed by checking that current write is based on latest version of the text or deny
-e,run as a CLI that loads a CUE config file
-f,behaviour and light validation is customisable to adapt to different product needs
-g,should be able to run in CI pipeline
-h,should be sufficient to test client code
-i,this should be a light implementation of our invented Yggdrasil protocol
-j,websocket should be optional in the protocol as a minority of clients may not support it
-k,websocket messages should be limited to well known ids for security reasons regarding escaping
-l,Heartbeats aka Ping/Pong should be used to keep websocket connection alive
+simulate-backend-server,Simulate a more complex backend store server that would be developed separately.
+hierarchical-text-tree,Support a hierarchical text-tree store.
+typed-text-node,"Allow a text node to represent free text, numbers, booleans, dates, and similar scalar values."
+optimistic-write-conflict,Reject writes when the submitted version is not based on the latest stored version.
+cue-config-cli,Run as a CLI that loads a CUE configuration file.
+customisable-behaviour,Allow behaviour and lightweight validation to be customised for different product needs.
+ci-friendly,Run reliably inside CI pipelines.
+client-test-support,Be sufficient to test client code against a realistic mock server.
+lightweight-yggdrasil,Provide a lightweight implementation of the evolving Yggdrasil protocol.
+optional-websocket,Keep WebSocket support optional because some clients may not support it.
+constrained-websocket-messages,Limit WebSocket messages to well-known identifiers to reduce escaping and safety concerns.
+websocket-heartbeats,Use heartbeat ping/pong messages to keep WebSocket connections alive.

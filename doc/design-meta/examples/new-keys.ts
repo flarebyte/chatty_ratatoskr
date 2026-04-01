@@ -19,7 +19,7 @@ type SuggestedNewKeyParams = {
 
 type NewKeysRequest = {
   rootKey: KeyParams;
-  newkeys: NewKeyParams[];
+  newKeys: NewKeyParams[];
 };
 
 type NewKeysResponse = {

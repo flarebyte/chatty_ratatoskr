@@ -1,4 +1,5 @@
-import type { KeyParams, OperationStatus, UserParams } from "./common";
+import type { KeyParams, OperationStatus, UserParams } from './common';
+
 type Subscription = {
   id: string;
   user: UserParams;
@@ -16,6 +17,6 @@ export interface EventApi {
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
-  send(user: UserParams, key: KeyParams): void;
+  sendEvent(user: UserParams, key: KeyParams): void;
   receiveUserUpdate(user: UserParams): EventResponse;
 }

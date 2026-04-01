@@ -1,5 +1,5 @@
 /**
- * NodeKind should be extendible and likely be a string internally
+ * NodeKind should be extensible and likely be a string internally,
  * but it should be validated against a supported list.
  */
 export type NodeKindExample =
@@ -49,8 +49,8 @@ export type KeyValueParams = {
 };
 
 export type UserParams = {
-   key: KeyParams;
-}
+  key: KeyParams;
+};
 
 export type Command = {
   id: string;
@@ -58,7 +58,7 @@ export type Command = {
   arguments: string[];
 };
 
-//Redis key compatible
+// Redis-key-compatible examples.
 export const keyIdExamples = [
   "dashboard:52ffe570:note:c401c269:text",
   "dashboard:52ffe570:note:c401c269:comment:e0ee7775",

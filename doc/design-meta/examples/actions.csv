@@ -1,11 +1,11 @@
 action,role,protocol,endpoint,verb,description
-create-new-keys,client,http,/create,POST,
-set-key-value-list,client,http,/node,PUT,
-get-key-value-list,client,http,/node,GET,
-get-snapshot,client,http,/snapshot,GET,
-set-snapshot,admin,http,/snapshot,PUT,
-del-snapshot,admin,http,/snapshot,DEL,
-update-events,server,websockets,/events,WS,
-send-event,admin,http,/event,POST,
-run-admin-commands,admin,http,tool-admin,POST,
-read-admin-command,admin,http,tool-admin,GET,
+create-new-keys,client,http,/create,POST,Create server-generated identifiers for requested nodes and their children.
+set-key-value-list,client,http,/node,PUT,Write one or more key/value entries under a root key.
+get-key-value-list,client,http,/node,GET,Read one or more key/value entries under a root key.
+get-snapshot,client,http,/snapshot,GET,Read the latest snapshot for a key.
+set-snapshot,admin,http,/snapshot,PUT,Replace the current snapshot for a key.
+delete-snapshot,admin,http,/snapshot,DELETE,Delete the snapshot currently stored for a key.
+receive-events,client,websocket,/events,CONNECT,Open an event stream for subscriptions and server push updates.
+send-event,admin,http,/event,POST,Inject an event into the mock server for connected clients.
+set-admin-commands,admin,http,/admin/commands,PUT,Register or replace the supported administrative commands.
+get-admin-command,admin,http,/admin/commands,GET,Read the currently registered administrative commands.
