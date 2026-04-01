@@ -151,8 +151,8 @@ schema: {
 				profile:   "id"
 				note:      "id"
 				comment:   "id"
-				thumbnail: "leaf"
-				language:  "leaf"
+				thumbnail: "branch"
+				language:  "branch"
 				like:      "branch"
 			}
 			optional: true
@@ -163,8 +163,8 @@ schema: {
 			valueKindByLabel: {
 				note:       "id"
 				comment:    "id"
-				thumbnail:  "leaf"
-				language:   "leaf"
+				thumbnail:  "branch"
+				language:   "branch"
 				like:       "branch"
 				text:       "leaf"
 				count:      "derived"
@@ -186,7 +186,7 @@ schema: {
 				comment:    "id"
 				like:       "branch"
 				text:       "leaf"
-				language:   "leaf"
+				language:   "branch"
 				count:      "derived"
 				user:       "id"
 				member:     "id"
@@ -207,7 +207,7 @@ schema: {
 				member:     "id"
 				subscriber: "id"
 				text:       "leaf"
-				language:   "leaf"
+				language:   "branch"
 				count:      "derived"
 			}
 			aliasesByLabel: {
@@ -222,8 +222,11 @@ schema: {
 			labels: ["text", "language", "count"]
 			valueKindByLabel: {
 				text:     "leaf"
-				language: "leaf"
+				language: "branch"
 				count:    "derived"
+			}
+			aliasesByLabel: {
+				language: ["_"]
 			}
 			optional: true
 		}
@@ -232,8 +235,11 @@ schema: {
 			labels: ["text", "language", "count"]
 			valueKindByLabel: {
 				text:     "leaf"
-				language: "leaf"
+				language: "branch"
 				count:    "derived"
+			}
+			aliasesByLabel: {
+				language: ["_"]
 			}
 			optional: true
 		}

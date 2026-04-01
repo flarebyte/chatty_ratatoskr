@@ -6,4 +6,5 @@ derived-count-leaf,key,"`count` is a reserved derived leaf representing aggregat
 derived-leaf-read-only,key,"Derived aggregate leaves such as `count` are readable by normal clients but are not directly writable by them."
 principal-action-updates-aggregate,key,"Server logic should update derived aggregate leaves as a consequence of principal-scoped actions such as like and unlike."
 like-is-branch,key,"`like` should be treated as a branch label that leads to either a principal-scoped like record such as `user:_` or a derived aggregate leaf such as `count`."
+language-is-branch,key,"`language` should be treated as a branch label when it leads to another token such as `_` or a language code."
 private-principal-actions,key,"Principal-scoped action records such as likes should remain isolated to the acting principal and should not expose other principals' identities to ordinary readers."

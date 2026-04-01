@@ -4,4 +4,5 @@ branch-continues-without-id,key,"When a label has `valueKind` or `valueKindByLab
 leaf-terminates,key,"When a label has `valueKind` or `valueKindByLabel` set to `leaf`, that label is terminal for the key path."
 derived-terminates,key,"When a label has `valueKind` or `valueKindByLabel` set to `derived`, that label is terminal and server-managed."
 aliases-are-label-specific,key,"The `_` placeholder should be accepted only for labels that explicitly allow it through `aliases` or `aliasesByLabel`."
+language-and-thumbnail-branch,key,"Labels such as `language` and `thumbnail` should be treated as branch labels when they lead to another token such as `_` or `text`, rather than as terminal leaves."
 label-behaviour-overrides-level-default,key,"When `valueKindByLabel` exists for a level, the server should use the per-label rule rather than assuming one behavior for the whole level."

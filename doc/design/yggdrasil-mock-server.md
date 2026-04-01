@@ -275,8 +275,8 @@ schema: {
 				profile:   "id"
 				note:      "id"
 				comment:   "id"
-				thumbnail: "leaf"
-				language:  "leaf"
+				thumbnail: "branch"
+				language:  "branch"
 				like:      "branch"
 			}
 			optional: true
@@ -287,8 +287,8 @@ schema: {
 			valueKindByLabel: {
 				note:       "id"
 				comment:    "id"
-				thumbnail:  "leaf"
-				language:   "leaf"
+				thumbnail:  "branch"
+				language:   "branch"
 				like:       "branch"
 				text:       "leaf"
 				count:      "derived"
@@ -310,7 +310,7 @@ schema: {
 				comment:    "id"
 				like:       "branch"
 				text:       "leaf"
-				language:   "leaf"
+				language:   "branch"
 				count:      "derived"
 				user:       "id"
 				member:     "id"
@@ -331,7 +331,7 @@ schema: {
 				member:     "id"
 				subscriber: "id"
 				text:       "leaf"
-				language:   "leaf"
+				language:   "branch"
 				count:      "derived"
 			}
 			aliasesByLabel: {
@@ -346,8 +346,11 @@ schema: {
 			labels: ["text", "language", "count"]
 			valueKindByLabel: {
 				text:     "leaf"
-				language: "leaf"
+				language: "branch"
 				count:    "derived"
+			}
+			aliasesByLabel: {
+				language: ["_"]
 			}
 			optional: true
 		}
@@ -356,8 +359,11 @@ schema: {
 			labels: ["text", "language", "count"]
 			valueKindByLabel: {
 				text:     "leaf"
-				language: "leaf"
+				language: "branch"
 				count:    "derived"
+			}
+			aliasesByLabel: {
+				language: ["_"]
 			}
 			optional: true
 		}
@@ -465,6 +471,7 @@ schema: {
 | When a label has `valueKind` or `valueKindByLabel` set to `leaf`, that label is terminal for the key path. | leaf-terminates | key |
 | When a label has `valueKind` or `valueKindByLabel` set to `derived`, that label is terminal and server-managed. | derived-terminates | key |
 | The `_` placeholder should be accepted only for labels that explicitly allow it through `aliases` or `aliasesByLabel`. | aliases-are-label-specific | key |
+| Labels such as `language` and `thumbnail` should be treated as branch labels when they lead to another token such as `_` or `text`, rather than as terminal leaves. | language-and-thumbnail-branch | key |
 | When `valueKindByLabel` exists for a level, the server should use the per-label rule rather than assuming one behavior for the whole level. | label-behaviour-overrides-level-default | key |
 
 ### 02 Action Matrix
@@ -615,6 +622,7 @@ Which fields are trusted, which are hints, and which are server-derived.
 | Derived aggregate leaves such as `count` are readable by normal clients but are not directly writable by them. | derived-leaf-read-only | key |
 | Server logic should update derived aggregate leaves as a consequence of principal-scoped actions such as like and unlike. | principal-action-updates-aggregate | key |
 | `like` should be treated as a branch label that leads to either a principal-scoped like record such as `user:_` or a derived aggregate leaf such as `count`. | like-is-branch | key |
+| `language` should be treated as a branch label when it leads to another token such as `_` or a language code. | language-is-branch | key |
 | Principal-scoped action records such as likes should remain isolated to the acting principal and should not expose other principals' identities to ordinary readers. | private-principal-actions | key |
 
 #### Field Runtime Behaviour
