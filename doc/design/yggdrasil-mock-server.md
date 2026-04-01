@@ -260,6 +260,12 @@ schema: {
 			level2: ["group", "team", "region"]
 			principal: ["user", "member", "subscriber"]
 		}
+		examples: [
+			"tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text",
+			"tenant:acme:group:editorial:dashboard:d1",
+			"department:news:region:emea:member:m17:dashboard:d1:note:n7:text",
+			"department:news:dashboard:d1",
+		]
 		recursiveGroups: false
 		principalScopedKeysRequirePrincipalId: true
 		groupScopedKeysRequirePath:            true
@@ -484,6 +490,15 @@ Which fields are trusted, which are hints, and which are server-derived.
 | Use for ordering and display | created | Useful for comments, chat, and other chronological views. | Generate creation timestamp | server | server-managed |
 | Use for ordering, support, and stale-state diagnosis | updated | Useful for understanding what changed after version mismatches. | Generate update timestamp | server | server-managed |
 | Send and consume protocol-level string payload | value | Interpret richer formats above the protocol layer without changing the transport type. | Store and return protocol-level string payload | client-and-server | shared-payload |
+
+#### Scoped Key Examples
+
+| description | example_name | key_example | product_variant | scope_shape |
+| --- | --- | --- | --- | --- |
+| Example of a principal-scoped key where access is visible through a tenant/group/user hierarchy. | tenant-group-user-note | tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text | tenant-group-user | level1/level2/principal |
+| Example of a group-scoped document root where all members of the configured group scope may read it. | tenant-group-root | tenant:acme:group:editorial:dashboard:d1 | tenant-group-user | level1/level2 |
+| Same fixed-depth model with product-specific labels instead of tenant/group/user. | department-region-member-note | department:news:region:emea:member:m17:dashboard:d1:note:n7:text | department-region-member | level1/level2/principal |
+| Example of a top-level scoped document root using a department label instead of tenant. | department-root | department:news:dashboard:d1 | department-region-member | level1 |
 
 ### 06 Sync And Persistence
 

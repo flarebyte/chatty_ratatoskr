@@ -136,6 +136,12 @@ schema: {
 			level2: ["group", "team", "region"]
 			principal: ["user", "member", "subscriber"]
 		}
+		examples: [
+			"tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text",
+			"tenant:acme:group:editorial:dashboard:d1",
+			"department:news:region:emea:member:m17:dashboard:d1:note:n7:text",
+			"department:news:dashboard:d1",
+		]
 		recursiveGroups: false
 		principalScopedKeysRequirePrincipalId: true
 		groupScopedKeysRequirePath:            true
