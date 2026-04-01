@@ -11,6 +11,25 @@ websocket: {
 	maxMessageSizeKB:    4
 }
 
+sync: {
+	snapshotBootstrap: true
+	eventStreaming:    true
+	optimisticWrites:  true
+	clientLocalStore:  true
+}
+
+storage: {
+	server: {
+		kind: "key-value"
+		examples: ["redis", "other-compatible-store"]
+	}
+
+	client: {
+		kind: "local-key-value"
+		examples: ["dart-local-store"]
+	}
+}
+
 endpoints: {
 	create: {
 		path: "/create"
@@ -64,6 +83,24 @@ schema: {
 		childrenWithId: ["note", "thumbnail"]
 		childrenWithoutId: ["text", "user"]
 		maxLevels: 20
+	}
+
+	keyEncoding: {
+		logicalModel: {
+			productSpecificFormat: true
+			preserveHierarchy:     true
+			preserveIdentity:      true
+			preserveVersioning:    true
+		}
+
+		serverExamples: [
+			"dashboard:52ffe570:note:c401c269:text",
+			"dashboard:52ffe570:note:c401c269:comment:e0ee7775",
+		]
+
+		clientExamples: [
+			"{root:'dashboard', id:'52ffe570', path:['note','c401c269','text']}",
+		]
 	}
 
 	optionKind: {

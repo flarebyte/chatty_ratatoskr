@@ -10,6 +10,18 @@ Problem framing and the main architectural shape.
 
 Why this server exists and how it should be used.
 
+#### Logical Key Model
+
+Yggdrasil should be treated as a protocol for hierarchical key/value, snapshot, and sync-oriented event operations.
+
+The protocol should standardize the logical meaning of a key:
+- hierarchical identity and parent/child structure
+- kind and optional language or metadata facets
+- versioning and conflict detection
+- public and secure forms when needed
+
+The protocol should not require a single serialized key format across products. A product may encode the same logical key as a Redis-friendly string, a structured Dart local-store record, or another storage-specific representation.
+
 #### Spec-First Workflow
 
 The source of truth for the design is intended to live in `doc/design-meta` as flyb input.
@@ -21,9 +33,9 @@ The examples under `doc/design-meta/examples` are design artefacts that capture 
 
 #### Lightweight Go Mock Server
 
-The project is shaping a lightweight CLI in Go that runs a mock backend over HTTP and, optionally, WebSocket.
+The project is shaping a lightweight CLI in Go that runs a mock Yggdrasil server over HTTP and, optionally, WebSocket.
 
-Its purpose is to support testing and CI by simulating a more capable server that would exist elsewhere, while keeping behavior explicit, configurable, and cheap to run.
+Its purpose is to support testing and CI by simulating a production server that manages hierarchical key/value data, snapshots, and incremental updates while keeping behavior explicit, configurable, and cheap to run.
 
 ### 02 Transports
 
@@ -114,6 +126,25 @@ websocket: {
 	maxMessageSizeKB:    4
 }
 
+sync: {
+	snapshotBootstrap: true
+	eventStreaming:    true
+	optimisticWrites:  true
+	clientLocalStore:  true
+}
+
+storage: {
+	server: {
+		kind: "key-value"
+		examples: ["redis", "other-compatible-store"]
+	}
+
+	client: {
+		kind: "local-key-value"
+		examples: ["dart-local-store"]
+	}
+}
+
 endpoints: {
 	create: {
 		path: "/create"
@@ -167,6 +198,24 @@ schema: {
 		childrenWithId: ["note", "thumbnail"]
 		childrenWithoutId: ["text", "user"]
 		maxLevels: 20
+	}
+
+	keyEncoding: {
+		logicalModel: {
+			productSpecificFormat: true
+			preserveHierarchy:     true
+			preserveIdentity:      true
+			preserveVersioning:    true
+		}
+
+		serverExamples: [
+			"dashboard:52ffe570:note:c401c269:text",
+			"dashboard:52ffe570:note:c401c269:comment:e0ee7775",
+		]
+
+		clientExamples: [
+			"{root:'dashboard', id:'52ffe570', path:['note','c401c269','text']}",
+		]
 	}
 
 	optionKind: {
@@ -238,7 +287,35 @@ Current entity and field definitions used by the draft protocol.
 | core | DateTime | TextNode | UTC timestamp when the message was created (server clock). | created | Created | time.Time | true | Date |
 | core | DateTime | TextNode | UTC timestamp when the message was updated (server clock). | updated | Updated | time.Time | true | Date |
 
-### 04 Open Inconsistencies
+### 04 Sync And Persistence
+
+How the logical protocol model maps to server and client storage.
+
+#### Logical Keys Versus Storage Encoding
+
+Yggdrasil should separate logical key semantics from storage encoding.
+
+The logical model should define what a key means in the protocol. Storage-specific encodings should define how that key is serialized in a given implementation:
+- Redis or similar server-side stores may prefer colon-delimited string keys
+- a Dart local store may prefer a structured object or a different compact string format
+- both encodings remain valid if they preserve the same hierarchy, identity, and version semantics
+
+This separation lets the same protocol work across products without forcing every implementation into one storage-specific key format.
+
+#### Sync Between Server And Client Stores
+
+The protocol should support synchronisation between a production server and client-side local storage.
+
+The intended model is:
+- the server persists hierarchical key/value data, likely in a key-value store such as Redis or a similar backend
+- the Dart client can store the same logical data in a local key-value store
+- snapshots provide fast state rehydration
+- events provide incremental updates after the last known state
+- versions are used to reject stale writes and help clients converge on the latest state
+
+This means sync is not a secondary implementation detail. It is a protocol concern that should shape snapshot semantics, event payloads, and conflict handling.
+
+### 05 Open Inconsistencies
 
 Known draft mismatches that should be resolved before implementation hardens.
 
@@ -246,10 +323,10 @@ Known draft mismatches that should be resolved before implementation hardens.
 
 The draft material is now closer to a coherent protocol, but a few design questions remain open:
 
-- The TypeScript examples still use a legacy key/value domain model, while the project description is moving toward a more general Yggdrasil mock server. The team should decide whether `KeyParams` and `KeyValueParams` remain the core contract or become transitional names.
+- The project intent is now clear: Yggdrasil is a hierarchical key/value and snapshot protocol. The remaining question is whether the current names such as `TextNode` are specific enough or should be generalized to a broader Yggdrasil node vocabulary.
 - `adminCommands` is currently represented as one config entry with `PUT|GET` in `config.cue`. That keeps the draft concise, but it is not as precise as two separate operations and may need to be split later.
 - The WebSocket draft now defines `/events` as the connection path, but the exact message envelope for subscribe, unsubscribe, heartbeat, and event delivery is still only implied by the TypeScript examples rather than defined as a strict protocol contract.
-- The examples describe both snapshots and event stores, but retention, overwrite semantics, and reset behaviour are still under-specified.
+- The examples describe both snapshots and event stores, but retention, overwrite semantics, reset behaviour, and snapshot rehydration rules are still under-specified.
 - Security is only sketched through `secureKeyId`, well-known WebSocket identifiers, and admin commands. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 
 ## 04 TypeScript Examples
