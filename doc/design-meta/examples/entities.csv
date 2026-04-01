@@ -1,2 +1,2 @@
 entity_name,entity_note_name,title,description,labels
-TextNode,entity.text-node,Text node,"A node in the hierarchical text tree.","data,design,entity"
+ValueNode,entity.value-node,Value node,"A hierarchical value node whose payload remains a protocol-level string.","data,design,entity"

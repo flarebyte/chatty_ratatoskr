@@ -69,7 +69,7 @@ Why the server should exist and what it must support.
 | --- | --- |
 | Simulate a more complex backend store server that would be developed separately. | simulate-backend-server |
 | Support a hierarchical text-tree store. | hierarchical-text-tree |
-| Allow a text node to represent free text, numbers, booleans, dates, and similar scalar values. | typed-text-node |
+| Allow a value node to carry free text, numbers, booleans, dates, and similar higher-level formats while remaining a protocol-level string. | typed-value-node |
 | Reject writes when the submitted version is not based on the latest stored version. | optimistic-write-conflict |
 | Run as a CLI that loads a CUE configuration file. | cue-config-cli |
 | Allow behaviour and lightweight validation to be customised for different product needs. | customisable-behaviour |
@@ -264,22 +264,22 @@ Current entity and field definitions used by the draft protocol.
 
 | description | entity_name | entity_note_name | labels | title |
 | --- | --- | --- | --- | --- |
-| A node in the hierarchical text tree. | TextNode | entity.text-node | data,design,entity | Text node |
+| A hierarchical value node whose payload remains a protocol-level string. | ValueNode | entity.value-node | data,design,entity | Value node |
 
 #### Entity Fields
 
 | category | dart_kind | entity_name | field_description | field_name | field_title | go_kind | required | ts_kind |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| core | String | TextNode | Client side logical stream/grouping identifier (e.g., project/topic path). | localKeyId | Local Key ID | string | false | string |
-| core | String | TextNode | Logical stream or grouping identifier (for example, a project or topic path). | keyId | Key ID | string | true | string |
-| core | String | TextNode | Encrypted representation of `keyId`. | secureKeyId | Secure Key ID | string | true | string |
-| core | List<String>? | TextNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
-| core | String | TextNode | Logical type of the message (e.g., 'note'), set by the client. | kind | Kind | string | false | string |
-| core | String? | TextNode | Optional ISO language code for the value content. | language | Language | *string | false | string |
-| core | String | TextNode | The message content or a reference to external data. | value | Value | string | true | string |
-| core | String | TextNode | Server-generated version (e.g., UUID) | version | Version | string | true | string |
-| core | DateTime | TextNode | UTC timestamp when the message was created (server clock). | created | Created | time.Time | true | Date |
-| core | DateTime | TextNode | UTC timestamp when the message was updated (server clock). | updated | Updated | time.Time | true | Date |
+| core | String | ValueNode | Client-side logical stream or grouping identifier (for example, a project or topic path). | localKeyId | Local Key ID | string | false | string |
+| core | String | ValueNode | Logical stream or grouping identifier (for example, a project or topic path). | keyId | Key ID | string | true | string |
+| core | String | ValueNode | Encrypted representation of `keyId`. | secureKeyId | Secure Key ID | string | true | string |
+| core | List<String>? | ValueNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
+| core | String | ValueNode | Logical type of the value node (for example 'note'), set by the client. | kind | Kind | string | false | string |
+| core | String? | ValueNode | Optional ISO language code for the value content. | language | Language | *string | false | string |
+| core | String | ValueNode | Protocol-level string payload. Higher-level formats such as free text, numbers, booleans, dates, or encoded JSON are still serialized as strings. | value | Value | string | true | string |
+| core | String | ValueNode | Server-generated version (for example, UUID) | version | Version | string | true | string |
+| core | DateTime | ValueNode | UTC timestamp when the value node was created (server clock). | created | Created | time.Time | true | Date |
+| core | DateTime | ValueNode | UTC timestamp when the value node was updated (server clock). | updated | Updated | time.Time | true | Date |
 
 ### 04 HTTP Status Rules
 
@@ -394,7 +394,6 @@ Known draft mismatches that should be resolved before implementation hardens.
 
 The draft material is now closer to a coherent protocol, but a few design questions remain open:
 
-- The project intent is now clear: Yggdrasil is a hierarchical key/value and snapshot protocol. The remaining question is whether the current names such as `TextNode` are specific enough or should be generalized to a broader Yggdrasil node vocabulary.
 - The core sync rules are now defined, but retention policy and long-term snapshot storage semantics are still under-specified.
 - Security is only sketched through `secureKeyId` and constrained event identifiers. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 

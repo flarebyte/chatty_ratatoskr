@@ -1,7 +1,7 @@
 usecase,description
 simulate-backend-server,Simulate a more complex backend store server that would be developed separately.
 hierarchical-text-tree,Support a hierarchical text-tree store.
-typed-text-node,"Allow a text node to represent free text, numbers, booleans, dates, and similar scalar values."
+typed-value-node,"Allow a value node to carry free text, numbers, booleans, dates, and similar higher-level formats while remaining a protocol-level string."
 optimistic-write-conflict,Reject writes when the submitted version is not based on the latest stored version.
 cue-config-cli,Run as a CLI that loads a CUE configuration file.
 customisable-behaviour,Allow behaviour and lightweight validation to be customised for different product needs.

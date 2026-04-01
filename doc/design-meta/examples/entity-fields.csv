@@ -1,11 +1,11 @@
 entity_name,field_name,field_title,field_description,ts_kind,go_kind,dart_kind,required,category
-TextNode,localKeyId,Local Key ID,"Client side logical stream/grouping identifier (e.g., project/topic path).",string,string,String,false,core
-TextNode,keyId,Key ID,"Logical stream or grouping identifier (for example, a project or topic path).",string,string,String,true,core
-TextNode,secureKeyId,Secure Key ID,Encrypted representation of `keyId`.,string,string,String,true,core
-TextNode,options,Options,"Optional metadata flags (for example '--pinned', '--archived', '--sensitive').",string[],[]string,List<String>?,false,core
-TextNode,kind,Kind,"Logical type of the message (e.g., 'note'), set by the client.",string,string,String,false,core
-TextNode,language,Language,Optional ISO language code for the value content.,string,*string,String?,false,core
-TextNode,value,Value,The message content or a reference to external data.,string,string,String,true,core
-TextNode,version,Version,"Server-generated version (e.g., UUID)",string,string,String,true,core
-TextNode,created,Created,UTC timestamp when the message was created (server clock).,Date,time.Time,DateTime,true,core
-TextNode,updated,Updated,UTC timestamp when the message was updated (server clock).,Date,time.Time,DateTime,true,core
+ValueNode,localKeyId,Local Key ID,"Client-side logical stream or grouping identifier (for example, a project or topic path).",string,string,String,false,core
+ValueNode,keyId,Key ID,"Logical stream or grouping identifier (for example, a project or topic path).",string,string,String,true,core
+ValueNode,secureKeyId,Secure Key ID,Encrypted representation of `keyId`.,string,string,String,true,core
+ValueNode,options,Options,"Optional metadata flags (for example '--pinned', '--archived', '--sensitive').",string[],[]string,List<String>?,false,core
+ValueNode,kind,Kind,"Logical type of the value node (for example 'note'), set by the client.",string,string,String,false,core
+ValueNode,language,Language,Optional ISO language code for the value content.,string,*string,String?,false,core
+ValueNode,value,Value,"Protocol-level string payload. Higher-level formats such as free text, numbers, booleans, dates, or encoded JSON are still serialized as strings.",string,string,String,true,core
+ValueNode,version,Version,"Server-generated version (for example, UUID)",string,string,String,true,core
+ValueNode,created,Created,UTC timestamp when the value node was created (server clock).,Date,time.Time,DateTime,true,core
+ValueNode,updated,Updated,UTC timestamp when the value node was updated (server clock).,Date,time.Time,DateTime,true,core

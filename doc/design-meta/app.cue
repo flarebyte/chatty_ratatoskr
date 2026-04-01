@@ -226,7 +226,6 @@ These controls should remain on a separate administration surface so production 
 		markdown: """
 The draft material is now closer to a coherent protocol, but a few design questions remain open:
 
-- The project intent is now clear: Yggdrasil is a hierarchical key/value and snapshot protocol. The remaining question is whether the current names such as `TextNode` are specific enough or should be generalized to a broader Yggdrasil node vocabulary.
 - The core sync rules are now defined, but retention policy and long-term snapshot storage semantics are still under-specified.
 - Security is only sketched through `secureKeyId` and constrained event identifiers. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 """
