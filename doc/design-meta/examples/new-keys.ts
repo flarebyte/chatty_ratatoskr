@@ -1,4 +1,5 @@
 import type { KeyParams, NodeKindExample, OperationStatus } from './common';
+import type { KeyStatusResult, ResponseEnvelope } from './envelope';
 
 type ChildParam = {
   localKeyId: string;
@@ -14,7 +15,7 @@ type NewKeyParams = {
 type SuggestedNewKeyParams = {
   key: KeyParams;
   status: OperationStatus;
-  children: [KeyParams, OperationStatus][];
+  children: KeyStatusResult[];
 };
 
 type NewKeysRequest = {
@@ -22,11 +23,10 @@ type NewKeysRequest = {
   newKeys: NewKeyParams[];
 };
 
-type NewKeysResponse = {
-  id: string;
+type NewKeysResponse = ResponseEnvelope<{
   rootKey: KeyParams;
   newKeys: SuggestedNewKeyParams[];
-};
+}>;
 
 export interface NewKeysApi {
   createNewKeys(request: NewKeysRequest): NewKeysResponse;

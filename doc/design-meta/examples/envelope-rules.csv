@@ -1,0 +1,6 @@
+rule,scope,description
+response-envelope-minimal,response,"HTTP responses should use a shared envelope with `id`, top-level `status`, optional `message`, and a shallow `data` payload."
+requests-remain-flat,request,"Requests should remain domain-shaped and should not be wrapped in an additional envelope unless correlation metadata becomes necessary later."
+single-outcome-uses-top-level-status,response,"Operations with a single authoritative outcome should rely on the top-level `status` rather than duplicating the same status inside `data`."
+collection-statuses-live-in-data,collection,"Collection operations may include per-item statuses inside `data` while keeping the top-level envelope consistent."
+go-friendly-shape,implementation,"The envelope should stay shallow so the same contract maps cleanly to a Go struct with embedded or nested payload data."

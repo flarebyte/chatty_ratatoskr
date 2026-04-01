@@ -1,16 +1,14 @@
-import type { Command, OperationStatus } from './common';
+import type { Command } from './common';
+import type { ResponseEnvelope } from './envelope';
 
 type GetCommandRequest = {
   command: Command;
 };
 
-type GetCommandResponse = {
-  id: string;
+type GetCommandResponse = ResponseEnvelope<{
   command: Command;
-  status: OperationStatus;
-  message?: string;
   content: string;
-};
+}>;
 
 export interface CommandReadApi {
   getCommand(request: GetCommandRequest): GetCommandResponse;

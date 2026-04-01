@@ -50,7 +50,7 @@ reports: [{
 		}, {
 			title:       "04 HTTP Status Rules"
 			description: "Minimal error and response semantics for client and mock-server interoperability."
-			notes: ["yggdrasil.http-status-rules", "yggdrasil.http-response-shape", "yggdrasil.partial-success-rules"]
+			notes: ["yggdrasil.http-status-rules", "yggdrasil.http-response-shape", "yggdrasil.envelope-rules", "yggdrasil.partial-success-rules"]
 		}, {
 			title:       "05 Trust Model"
 			description: "Which fields are trusted, which are hints, and which are server-derived."
@@ -82,7 +82,7 @@ reports: [{
 		sections: [{
 			title:       "01 Shared Types"
 			description: "Common primitives reused by the request/response examples."
-			notes: ["yggdrasil.ts.common"]
+			notes: ["yggdrasil.ts.common", "yggdrasil.ts.envelope"]
 		}, {
 			title:       "02 HTTP APIs"
 			description: "REST-style request and response shapes."
@@ -283,6 +283,13 @@ The draft material is now closer to a coherent protocol, but a few design questi
 		labels: ["http", "response", "shape", "csv"]
 	},
 	{
+		name:  "yggdrasil.envelope-rules"
+		title: "Envelope Rules"
+		filepath: "examples/envelope-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["http", "response", "envelope", "csv"]
+	},
+	{
 		name:  "yggdrasil.partial-success-rules"
 		title: "Partial Success Rules"
 		filepath: "examples/partial-success-rules.csv"
@@ -386,6 +393,12 @@ This separation lets the same protocol work across products without forcing ever
 		title: "Common TypeScript Types"
 		filepath: "examples/common.ts"
 		labels: ["typescript", "example", "shared"]
+	},
+	{
+		name:  "yggdrasil.ts.envelope"
+		title: "Shared Response Envelope Example"
+		filepath: "examples/envelope.ts"
+		labels: ["typescript", "example", "shared", "response"]
 	},
 	{
 		name:  "yggdrasil.ts.new-keys"

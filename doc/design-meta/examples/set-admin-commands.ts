@@ -1,4 +1,5 @@
 import type { Command, OperationStatus } from './common';
+import type { ResponseEnvelope } from './envelope';
 
 type CommandStatus = {
   command: Command;
@@ -10,10 +11,9 @@ type SetCommandsRequest = {
   commands: Command[];
 };
 
-type SetCommandsResponse = {
-  id: string;
+type SetCommandsResponse = ResponseEnvelope<{
   results: CommandStatus[];
-};
+}>;
 
 export interface CommandWriteApi {
   setCommands(request: SetCommandsRequest): SetCommandsResponse;

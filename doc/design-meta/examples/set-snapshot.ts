@@ -1,15 +1,14 @@
-import type { KeyParams, KeyValueParams, OperationStatus } from './common';
+import type { KeyParams, KeyValueParams } from './common';
+import type { ResponseEnvelope } from './envelope';
 
 type SetSnapshotRequest = {
   key: KeyParams; // required: keyId, secureKeyId
   keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
 };
 
-type SetSnapshotResponse = {
-  id: string;
+type SetSnapshotResponse = ResponseEnvelope<{
   key: KeyParams;
-  status: OperationStatus;
-};
+}>;
 
 export interface SnapshotWriteApi {
   setSnapshot(request: SetSnapshotRequest): SetSnapshotResponse;

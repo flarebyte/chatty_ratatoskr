@@ -329,12 +329,23 @@ Current entity and field definitions used by the draft protocol.
 
 Minimal error and response semantics for client and mock-server interoperability.
 
+#### Envelope Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| HTTP responses should use a shared envelope with `id`, top-level `status`, optional `message`, and a shallow `data` payload. | response-envelope-minimal | response |
+| Requests should remain domain-shaped and should not be wrapped in an additional envelope unless correlation metadata becomes necessary later. | requests-remain-flat | request |
+| Operations with a single authoritative outcome should rely on the top-level `status` rather than duplicating the same status inside `data`. | single-outcome-uses-top-level-status | response |
+| Collection operations may include per-item statuses inside `data` while keeping the top-level envelope consistent. | collection-statuses-live-in-data | collection |
+| The envelope should stay shallow so the same contract maps cleanly to a Go struct with embedded or nested payload data. | go-friendly-shape | implementation |
+
 #### HTTP Response Shape
 
 | description | rule | scope |
 | --- | --- | --- |
 | HTTP responses should include a top-level `id` for request tracing and correlation. | top-level-id | response |
 | HTTP responses should include a top-level `status` when the operation has a single authoritative outcome. | top-level-status | response |
+| HTTP responses should carry the domain payload under a shallow top-level `data` field. | top-level-data | response |
 | `message` is optional and should be used when human-readable context helps explain failures or unusual outcomes. | optional-message | response |
 | Collection operations may return per-item statuses in addition to top-level fields. | item-status-for-collections | response |
 | Structured fields should carry protocol meaning first; `message` is supplementary rather than the primary machine-readable contract. | structured-over-freeform | response |
@@ -536,19 +547,17 @@ These controls should remain on a separate administration surface so production 
 #### Get Admin Command Example
 
 ```ts
-import type { Command, OperationStatus } from './common';
+import type { Command } from './common';
+import type { ResponseEnvelope } from './envelope';
 
 type GetCommandRequest = {
   command: Command;
 };
 
-type GetCommandResponse = {
-  id: string;
+type GetCommandResponse = ResponseEnvelope<{
   command: Command;
-  status: OperationStatus;
-  message?: string;
   content: string;
-};
+}>;
 
 export interface CommandReadApi {
   getCommand(request: GetCommandRequest): GetCommandResponse;
@@ -567,6 +576,7 @@ export const readCommands: Command[] = [
 
 ```ts
 import type { Command, OperationStatus } from './common';
+import type { ResponseEnvelope } from './envelope';
 
 type CommandStatus = {
   command: Command;
@@ -578,10 +588,9 @@ type SetCommandsRequest = {
   commands: Command[];
 };
 
-type SetCommandsResponse = {
-  id: string;
+type SetCommandsResponse = ResponseEnvelope<{
   results: CommandStatus[];
-};
+}>;
 
 export interface CommandWriteApi {
   setCommands(request: SetCommandsRequest): SetCommandsResponse;
@@ -718,6 +727,31 @@ export const keyIdExamples = [
 ];
 ```
 
+#### Shared Response Envelope Example
+
+```ts
+import type { KeyParams, KeyValueParams, OperationStatus } from './common';
+
+export type ResponseEnvelope<T> = {
+  id: string;
+  status: OperationStatus;
+  message?: string;
+  data: T;
+};
+
+export type KeyStatusResult = {
+  key: KeyParams;
+  status: OperationStatus;
+  message?: string;
+};
+
+export type KeyValueStatusResult = {
+  keyValue: KeyValueParams;
+  status: OperationStatus;
+  message?: string;
+};
+```
+
 ### 02 HTTP APIs
 
 REST-style request and response shapes.
@@ -725,18 +759,18 @@ REST-style request and response shapes.
 #### Get Key Value Example
 
 ```ts
-import type { KeyParams, KeyValueParams, OperationStatus } from './common';
+import type { KeyParams } from './common';
+import type { KeyValueStatusResult, ResponseEnvelope } from './envelope';
 
 type GetKeyValueRequest = {
   rootKey: KeyParams; // required: keyId, secureKeyId
   keyList: KeyParams[]; // required: keyId, secureKeyId
 };
 
-type GetKeyValueResponse = {
-  id: string;
+type GetKeyValueResponse = ResponseEnvelope<{
   rootKey: KeyParams; // provide keyId, and optionally all other fields except localKeyId
-  keyValueList: [KeyValueParams, OperationStatus][]; // provide keyId, and optionally all other fields except localKeyId
-};
+  keyValueList: KeyValueStatusResult[]; // provide keyId, and optionally all other fields except localKeyId
+}>;
 
 export interface KeyValueReadApi {
   getKeyValueList(request: GetKeyValueRequest): GetKeyValueResponse;
@@ -747,16 +781,16 @@ export interface KeyValueReadApi {
 
 ```ts
 import type { KeyParams, KeyValueParams } from './common';
+import type { ResponseEnvelope } from './envelope';
 
 type GetSnapshotRequest = {
   key: KeyParams; // required: keyId, secureKeyId
 };
 
-type GetSnapshotResponse = {
-  id: string;
+type GetSnapshotResponse = ResponseEnvelope<{
   key: KeyParams; // required: keyId, and the remaining fields may depend on success or failure.
   keyValueList: KeyValueParams[]; // required: keyId, and the remaining fields may depend on success or failure.
-};
+}>;
 
 export interface SnapshotReadApi {
   getSnapshot(request: GetSnapshotRequest): GetSnapshotResponse;
@@ -767,6 +801,7 @@ export interface SnapshotReadApi {
 
 ```ts
 import type { KeyParams, NodeKindExample, OperationStatus } from './common';
+import type { KeyStatusResult, ResponseEnvelope } from './envelope';
 
 type ChildParam = {
   localKeyId: string;
@@ -782,7 +817,7 @@ type NewKeyParams = {
 type SuggestedNewKeyParams = {
   key: KeyParams;
   status: OperationStatus;
-  children: [KeyParams, OperationStatus][];
+  children: KeyStatusResult[];
 };
 
 type NewKeysRequest = {
@@ -790,11 +825,10 @@ type NewKeysRequest = {
   newKeys: NewKeyParams[];
 };
 
-type NewKeysResponse = {
-  id: string;
+type NewKeysResponse = ResponseEnvelope<{
   rootKey: KeyParams;
   newKeys: SuggestedNewKeyParams[];
-};
+}>;
 
 export interface NewKeysApi {
   createNewKeys(request: NewKeysRequest): NewKeysResponse;
@@ -804,18 +838,18 @@ export interface NewKeysApi {
 #### Set Key Value Example
 
 ```ts
-import type { KeyParams, KeyValueParams, OperationStatus } from './common';
+import type { KeyParams, KeyValueParams } from './common';
+import type { KeyStatusResult, ResponseEnvelope } from './envelope';
 
 type SetKeyValueRequest = {
   rootKey: KeyParams; // required: keyId, secureKeyId
   keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
 };
 
-type SetKeyValueResponse = {
-  id: string;
+type SetKeyValueResponse = ResponseEnvelope<{
   rootKey: KeyParams; // required: keyId
-  keyList: [KeyParams, OperationStatus][]; // required: keyId, and the remaining fields may depend on success or failure.
-};
+  keyList: KeyStatusResult[]; // required: keyId, and the remaining fields may depend on success or failure.
+}>;
 
 export interface KeyValueWriteApi {
   setKeyValueList(request: SetKeyValueRequest): SetKeyValueResponse;
@@ -825,18 +859,17 @@ export interface KeyValueWriteApi {
 #### Set Snapshot Example
 
 ```ts
-import type { KeyParams, KeyValueParams, OperationStatus } from './common';
+import type { KeyParams, KeyValueParams } from './common';
+import type { ResponseEnvelope } from './envelope';
 
 type SetSnapshotRequest = {
   key: KeyParams; // required: keyId, secureKeyId
   keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
 };
 
-type SetSnapshotResponse = {
-  id: string;
+type SetSnapshotResponse = ResponseEnvelope<{
   key: KeyParams;
-  status: OperationStatus;
-};
+}>;
 
 export interface SnapshotWriteApi {
   setSnapshot(request: SetSnapshotRequest): SetSnapshotResponse;
