@@ -4,3 +4,4 @@ per-item-status-authoritative,collection,"For mixed results, item-level statuses
 top-level-status-reflects-request,collection,"The top-level status describes whether the request itself was processed, not whether every item succeeded."
 ok-with-item-failures,collection,"A response may still be top-level `ok` when the request was processed successfully but some returned items carry non-ok statuses."
 client-must-inspect-items,collection,Clients must inspect item-level statuses for collection operations rather than relying only on the top-level status.
+responses-follow-request-order,collection,"Collection responses should preserve request order so clients can correlate item-level outcomes without additional matching logic."

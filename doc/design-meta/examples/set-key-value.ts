@@ -3,12 +3,12 @@ import type { KeyStatusResult, ResponseEnvelope } from './envelope';
 
 type SetKeyValueRequest = {
   rootKey: KeyParams; // required: keyId, secureKeyId
-  keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
+  keyValueList: KeyValueParams[]; // required: keyId, secureKeyId, processed independently and returned in request order
 };
 
 type SetKeyValueResponse = ResponseEnvelope<{
   rootKey: KeyParams; // required: keyId
-  keyList: KeyStatusResult[]; // required: keyId, and the remaining fields may depend on success or failure.
+  keyList: KeyStatusResult[]; // required: keyId, with one per-item status for each requested write
 }>;
 
 export interface KeyValueWriteApi {

@@ -329,6 +329,16 @@ Current entity and field definitions used by the draft protocol.
 
 Minimal error and response semantics for client and mock-server interoperability.
 
+#### Batch Write Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| `createNewKeys` and `setKeyValueList` should process items independently rather than failing the entire request when one item fails. | best-effort-processing | collection-write |
+| Batch write responses should return an item-level status for every requested item so clients can distinguish successful and unsuccessful writes. | per-item-status-required | collection-write |
+| Batch write responses should preserve the request order of items to keep client-side correlation simple. | request-order-preserved | collection-write |
+| The top-level response `status` should describe whether the batch request was accepted and processed, not whether every item succeeded. | top-level-status-is-transport-level | collection-write |
+| The protocol should not imply transactional rollback across items; successful item writes remain valid even if other items in the same request fail. | no-implicit-rollback | collection-write |
+
 #### Envelope Rules
 
 | description | rule | scope |
@@ -369,6 +379,7 @@ Minimal error and response semantics for client and mock-server interoperability
 | The top-level status describes whether the request itself was processed, not whether every item succeeded. | top-level-status-reflects-request | collection |
 | A response may still be top-level `ok` when the request was processed successfully but some returned items carry non-ok statuses. | ok-with-item-failures | collection |
 | Clients must inspect item-level statuses for collection operations rather than relying only on the top-level status. | client-must-inspect-items | collection |
+| Collection responses should preserve request order so clients can correlate item-level outcomes without additional matching logic. | responses-follow-request-order | collection |
 
 ### 05 Trust Model
 
@@ -822,12 +833,12 @@ type SuggestedNewKeyParams = {
 
 type NewKeysRequest = {
   rootKey: KeyParams;
-  newKeys: NewKeyParams[];
+  newKeys: NewKeyParams[]; // processed independently and returned in request order
 };
 
 type NewKeysResponse = ResponseEnvelope<{
   rootKey: KeyParams;
-  newKeys: SuggestedNewKeyParams[];
+  newKeys: SuggestedNewKeyParams[]; // every requested item should receive a corresponding per-item status
 }>;
 
 export interface NewKeysApi {
@@ -843,12 +854,12 @@ import type { KeyStatusResult, ResponseEnvelope } from './envelope';
 
 type SetKeyValueRequest = {
   rootKey: KeyParams; // required: keyId, secureKeyId
-  keyValueList: KeyValueParams[]; // required: keyId, secureKeyId
+  keyValueList: KeyValueParams[]; // required: keyId, secureKeyId, processed independently and returned in request order
 };
 
 type SetKeyValueResponse = ResponseEnvelope<{
   rootKey: KeyParams; // required: keyId
-  keyList: KeyStatusResult[]; // required: keyId, and the remaining fields may depend on success or failure.
+  keyList: KeyStatusResult[]; // required: keyId, with one per-item status for each requested write
 }>;
 
 export interface KeyValueWriteApi {

@@ -50,7 +50,7 @@ reports: [{
 		}, {
 			title:       "04 HTTP Status Rules"
 			description: "Minimal error and response semantics for client and mock-server interoperability."
-			notes: ["yggdrasil.http-status-rules", "yggdrasil.http-response-shape", "yggdrasil.envelope-rules", "yggdrasil.partial-success-rules"]
+			notes: ["yggdrasil.http-status-rules", "yggdrasil.http-response-shape", "yggdrasil.envelope-rules", "yggdrasil.partial-success-rules", "yggdrasil.batch-write-rules"]
 		}, {
 			title:       "05 Trust Model"
 			description: "Which fields are trusted, which are hints, and which are server-derived."
@@ -295,6 +295,13 @@ The draft material is now closer to a coherent protocol, but a few design questi
 		filepath: "examples/partial-success-rules.csv"
 		arguments: ["format-csv=table"]
 		labels: ["http", "partial-success", "csv"]
+	},
+	{
+		name:  "yggdrasil.batch-write-rules"
+		title: "Batch Write Rules"
+		filepath: "examples/batch-write-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["http", "batch-write", "csv"]
 	},
 	{
 		name:  "yggdrasil.sync"

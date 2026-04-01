@@ -20,12 +20,12 @@ type SuggestedNewKeyParams = {
 
 type NewKeysRequest = {
   rootKey: KeyParams;
-  newKeys: NewKeyParams[];
+  newKeys: NewKeyParams[]; // processed independently and returned in request order
 };
 
 type NewKeysResponse = ResponseEnvelope<{
   rootKey: KeyParams;
-  newKeys: SuggestedNewKeyParams[];
+  newKeys: SuggestedNewKeyParams[]; // every requested item should receive a corresponding per-item status
 }>;
 
 export interface NewKeysApi {
