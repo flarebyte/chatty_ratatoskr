@@ -36,6 +36,7 @@ export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
   // Repeated subscribe messages extend the active root-key set for the connection.
   // Root subscriptions are predefined and apply to the full readable descendant subtree.
+  // A subscribe request for a non-allowed root should return invalid.
   // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;

@@ -1,7 +1,7 @@
 step,actor,transport,description
 open-connection,client,websocket,Open the WebSocket connection to the optional `/events` endpoint.
 subscribe-root-keys,client,websocket,Send a `subscribe` message with one or more allowed root keys to watch.
-validate-roots,server,internal,Reject or warn on subscriptions that target arbitrary subtrees instead of predefined subscribable roots.
+validate-roots,server,internal,Return `invalid` for subscriptions that target arbitrary subtrees or root keys outside the predefined subscribable set.
 expand-to-descendants,server,internal,Apply each accepted root subscription to that root and all readable descendants.
 extend-subscription,client,websocket,Send another `subscribe` message later to add more root keys without reopening the connection.
 deduplicate-subscription,server,internal,"Normalize duplicate root keys without error and keep the most recent subscription entry."

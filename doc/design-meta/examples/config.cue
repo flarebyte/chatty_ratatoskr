@@ -17,6 +17,7 @@ websocket: {
 		predefinedRootsOnly: true
 		includeDescendants:  true
 		allowSubtreeRoots:   false
+		invalidStatusForNonAllowedRoot: "invalid"
 		// Overlapping configured roots should not exist in practice. The mock
 		// server may warn, while stricter production validation may reject them.
 		warnOnOverlappingRoots: true

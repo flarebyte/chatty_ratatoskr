@@ -141,6 +141,7 @@ websocket: {
 		predefinedRootsOnly: true
 		includeDescendants:  true
 		allowSubtreeRoots:   false
+		invalidStatusForNonAllowedRoot: "invalid"
 		// Overlapping configured roots should not exist in practice. The mock
 		// server may warn, while stricter production validation may reject them.
 		warnOnOverlappingRoots: true
@@ -981,6 +982,7 @@ export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
   // Repeated subscribe messages extend the active root-key set for the connection.
   // Root subscriptions are predefined and apply to the full readable descendant subtree.
+  // A subscribe request for a non-allowed root should return invalid.
   // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
@@ -1091,7 +1093,7 @@ export type ServerMessage =
 | --- | --- | --- | --- |
 | client | Open the WebSocket connection to the optional `/events` endpoint. | open-connection | websocket |
 | client | Send a `subscribe` message with one or more allowed root keys to watch. | subscribe-root-keys | websocket |
-| server | Reject or warn on subscriptions that target arbitrary subtrees instead of predefined subscribable roots. | validate-roots | internal |
+| server | Return `invalid` for subscriptions that target arbitrary subtrees or root keys outside the predefined subscribable set. | validate-roots | internal |
 | server | Apply each accepted root subscription to that root and all readable descendants. | expand-to-descendants | internal |
 | client | Send another `subscribe` message later to add more root keys without reopening the connection. | extend-subscription | websocket |
 | server | Normalize duplicate root keys without error and keep the most recent subscription entry. | deduplicate-subscription | internal |
@@ -1109,6 +1111,7 @@ export type ServerMessage =
 | A subscription only yields descendant events that the user is allowed to read. | read-access-still-applies | subscription |
 | The list of subscribable root keys should be predefined by configuration rather than accepted as arbitrary subtree keys. | roots-predefined | configuration |
 | Clients should be able to subscribe to a document root but not to an arbitrary section or nested subtree inside that root. | subtree-subscriptions-not-allowed | subscription |
+| Subscribing to a root key outside the predefined allowed set should return `invalid`. | non-allowed-root-invalid | subscription |
 | Configured subscribable roots should not overlap. This should be treated as a configuration warning or validation error rather than a runtime merge rule. | overlapping-roots-disallowed | configuration |
 | Repeated `subscribe` messages extend the active root-key set for the same connection. | subscribe-extends-set | connection |
 | Duplicate root keys are normalized without error. | duplicate-root-keys-normalized | connection |
