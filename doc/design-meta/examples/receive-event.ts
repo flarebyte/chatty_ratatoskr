@@ -38,6 +38,7 @@ export interface WebSocketEventApi {
   // Repeated subscribe messages extend the active root-key set for the connection.
   // Root subscriptions are predefined and apply to the full readable descendant subtree.
   // A subscribe request for a non-allowed root should return a status message with invalid.
+  // When present, the client command id should be echoed by the matching reply.
   // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage | StatusMessage;
   // A valid unsubscribe request should return unsubscribed even when some keys were not active.

@@ -98,6 +98,7 @@ reports: [{
 			description: "Optional WebSocket and event-store oriented examples."
 			notes: [
 				"yggdrasil.websocket-rules",
+				"yggdrasil.websocket-correlation",
 				"yggdrasil.websocket-flow",
 				"yggdrasil.ts.websocket-messages",
 				"yggdrasil.ts.receive-event",
@@ -383,6 +384,13 @@ This separation lets the same protocol work across products without forcing ever
 		filepath: "examples/websocket-rules.csv"
 		arguments: ["format-csv=table"]
 		labels: ["websocket", "rules", "csv"]
+	},
+	{
+		name:  "yggdrasil.websocket-correlation"
+		title: "WebSocket Correlation"
+		filepath: "examples/websocket-correlation.csv"
+		arguments: ["format-csv=table"]
+		labels: ["websocket", "correlation", "csv"]
 	},
 	{
 		name:  "yggdrasil.ts.event-envelope"

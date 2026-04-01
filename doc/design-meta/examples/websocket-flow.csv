@@ -1,13 +1,13 @@
 step,actor,transport,description
 open-connection,client,websocket,Open the WebSocket connection to the optional `/events` endpoint.
-subscribe-root-keys,client,websocket,Send a `subscribe` message with one or more allowed root keys to watch.
+subscribe-root-keys,client,websocket,Send a `subscribe` message with one or more allowed root keys to watch and an optional command `id`.
 validate-roots,server,internal,Return a `status` message with `invalid` for subscriptions that target arbitrary subtrees or root keys outside the predefined subscribable set.
 expand-to-descendants,server,internal,Apply each accepted root subscription to that root and all readable descendants.
 extend-subscription,client,websocket,Send another `subscribe` message later to add more root keys without reopening the connection.
 deduplicate-subscription,server,internal,"Normalize duplicate root keys without error and keep the most recent subscription entry."
-confirm-subscription,server,websocket,Reply with `subscribed` to confirm the active root-key subscriptions.
+confirm-subscription,server,websocket,Reply with `subscribed` to confirm the active root-key subscriptions and echo the command `id` when present.
 receive-event,server,websocket,Send an `event` message containing the `EventEnvelope`.
-ping-pong,client-and-server,websocket,Use `ping` and `pong` messages to keep the connection alive.
-unsubscribe-root-keys,client,websocket,Send `unsubscribe` when the client no longer wants updates for those root keys.
-confirm-unsubscribe,server,websocket,Reply with `unsubscribed` for valid unsubscribe requests even when some requested root keys were not active.
+ping-pong,client-and-server,websocket,Use `ping` and `pong` messages to keep the connection alive and echo the command `id` when present.
+unsubscribe-root-keys,client,websocket,Send `unsubscribe` with an optional command `id` when the client no longer wants updates for those root keys.
+confirm-unsubscribe,server,websocket,Reply with `unsubscribed` for valid unsubscribe requests even when some requested root keys were not active and echo the command `id` when present.
 clear-subscriptions-on-unregister,server,internal,"When a user unregisters or the connection closes, remove all active subscriptions tied to that user or connection."

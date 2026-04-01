@@ -984,6 +984,7 @@ export interface WebSocketEventApi {
   // Repeated subscribe messages extend the active root-key set for the connection.
   // Root subscriptions are predefined and apply to the full readable descendant subtree.
   // A subscribe request for a non-allowed root should return a status message with invalid.
+  // When present, the client command id should be echoed by the matching reply.
   // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage | StatusMessage;
   // A valid unsubscribe request should return unsubscribed even when some keys were not active.
@@ -1042,7 +1043,13 @@ export interface SnapshotEventStoreApi {
 import type { OperationStatus } from './common';
 import type { EventEnvelope } from './event-envelope';
 
-export type SubscribeMessage = {
+export type CommandMetadata = {
+  // Optional client-provided correlation identifier echoed by the matching
+  // acknowledgement or status response for the same command.
+  id?: string;
+};
+
+export type SubscribeMessage = CommandMetadata & {
   kind: 'subscribe';
   // A client may send subscribe more than once to add further root keys
   // without reopening the WebSocket connection. Duplicate root keys are
@@ -1050,12 +1057,12 @@ export type SubscribeMessage = {
   rootKeys: string[];
 };
 
-export type UnsubscribeMessage = {
+export type UnsubscribeMessage = CommandMetadata & {
   kind: 'unsubscribe';
   rootKeys: string[];
 };
 
-export type PingMessage = {
+export type PingMessage = CommandMetadata & {
   kind: 'ping';
 };
 
@@ -1066,11 +1073,13 @@ export type ClientMessage =
 
 export type SubscribedMessage = {
   kind: 'subscribed';
+  id?: string;
   rootKeys: string[];
 };
 
 export type UnsubscribedMessage = {
   kind: 'unsubscribed';
+  id?: string;
   rootKeys: string[];
 };
 
@@ -1088,6 +1097,7 @@ export type StatusMessage = {
 
 export type PongMessage = {
   kind: 'pong';
+  id?: string;
 };
 
 export type ServerMessage =
@@ -1098,21 +1108,31 @@ export type ServerMessage =
   | PongMessage;
 ```
 
+#### WebSocket Correlation
+
+| description | rule | scope |
+| --- | --- | --- |
+| Client WebSocket commands may include an optional shallow `id` for correlation. | command-id-optional | websocket |
+| When a client command includes `id`, the matching `subscribed`, `unsubscribed`, `pong`, or `status` response should echo the same `id`. | ack-echoes-command-id | websocket |
+| Server-pushed `event` messages do not need a command-correlation `id` because they are not direct replies to a client command. | server-may-omit-id-for-push | websocket |
+| WebSocket command correlation should not require an additional wrapper; `id` remains a shallow optional field on command messages. | no-extra-command-envelope | websocket |
+| WebSocket command correlation should follow the same echo-or-generate intent as HTTP request correlation where practical. | consistent-with-http | implementation |
+
 #### WebSocket Flow
 
 | actor | description | step | transport |
 | --- | --- | --- | --- |
 | client | Open the WebSocket connection to the optional `/events` endpoint. | open-connection | websocket |
-| client | Send a `subscribe` message with one or more allowed root keys to watch. | subscribe-root-keys | websocket |
+| client | Send a `subscribe` message with one or more allowed root keys to watch and an optional command `id`. | subscribe-root-keys | websocket |
 | server | Return a `status` message with `invalid` for subscriptions that target arbitrary subtrees or root keys outside the predefined subscribable set. | validate-roots | internal |
 | server | Apply each accepted root subscription to that root and all readable descendants. | expand-to-descendants | internal |
 | client | Send another `subscribe` message later to add more root keys without reopening the connection. | extend-subscription | websocket |
 | server | Normalize duplicate root keys without error and keep the most recent subscription entry. | deduplicate-subscription | internal |
-| server | Reply with `subscribed` to confirm the active root-key subscriptions. | confirm-subscription | websocket |
+| server | Reply with `subscribed` to confirm the active root-key subscriptions and echo the command `id` when present. | confirm-subscription | websocket |
 | server | Send an `event` message containing the `EventEnvelope`. | receive-event | websocket |
-| client-and-server | Use `ping` and `pong` messages to keep the connection alive. | ping-pong | websocket |
-| client | Send `unsubscribe` when the client no longer wants updates for those root keys. | unsubscribe-root-keys | websocket |
-| server | Reply with `unsubscribed` for valid unsubscribe requests even when some requested root keys were not active. | confirm-unsubscribe | websocket |
+| client-and-server | Use `ping` and `pong` messages to keep the connection alive and echo the command `id` when present. | ping-pong | websocket |
+| client | Send `unsubscribe` with an optional command `id` when the client no longer wants updates for those root keys. | unsubscribe-root-keys | websocket |
+| server | Reply with `unsubscribed` for valid unsubscribe requests even when some requested root keys were not active and echo the command `id` when present. | confirm-unsubscribe | websocket |
 | server | When a user unregisters or the connection closes, remove all active subscriptions tied to that user or connection. | clear-subscriptions-on-unregister | internal |
 
 #### WebSocket Rules
@@ -1125,6 +1145,7 @@ export type ServerMessage =
 | Clients should be able to subscribe to a document root but not to an arbitrary section or nested subtree inside that root. | subtree-subscriptions-not-allowed | subscription |
 | Subscribing to a root key outside the predefined allowed set should return `invalid`. | non-allowed-root-invalid | subscription |
 | When a client WebSocket command cannot be accepted, the server should return a `status` message with the relevant `OperationStatus` and optional `message`. | status-message-for-command-errors | connection |
+| When a client WebSocket command includes `id`, the matching acknowledgement or `status` response should echo that same `id`. | command-id-echoed | connection |
 | Configured subscribable roots should not overlap. This should be treated as a configuration warning or validation error rather than a runtime merge rule. | overlapping-roots-disallowed | configuration |
 | Repeated `subscribe` messages extend the active root-key set for the same connection. | subscribe-extends-set | connection |
 | Duplicate root keys are normalized without error. | duplicate-root-keys-normalized | connection |
