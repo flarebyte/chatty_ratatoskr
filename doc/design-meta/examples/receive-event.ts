@@ -16,6 +16,6 @@ export interface EventApi {
   unregisterUser(user: UserParams): [UserParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
-  send(key: KeyParams): void;
+  send(user: UserParams, key: KeyParams): void;
   receiveUserUpdate(user: UserParams): EventResponse;
 }

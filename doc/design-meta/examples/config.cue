@@ -1,4 +1,10 @@
-port: 8080
+http: {
+    port: 8080
+}
+
+websocket: {
+    supported: true
+}
 
 endpoints: {
 

@@ -1,0 +1,16 @@
+usecase,description
+a,CLI should be written in go
+b,Use Cobra for CLI command and argument parsing
+c,Use CUE as the configuration source of truth
+d,Use early returns and guard clauses for errors
+e,Keep functions small and single-purpose
+f,Separate I/O from core logic
+g,Use tiny structs to avoid long parameter lists
+h,Replace boolean soup with named predicates
+i,Guarantee deterministic ordering in generated outputs
+j,Uses JSON for payloads
+k,"Pick format that are well supported accross languages especially go, ts, dart"
+l,options fields may be lighweight representations of args parsing limited to safe format
+h,CLI should be built for at least linux and macos
+
+

@@ -1,6 +1,12 @@
 usecase,description
-a,simulate backend store server
+a,simulate a more complex backend store server that would be developed separately
 b,hierarchical tree text store
-c,store text node in multiple formats
-d,write conflict managed by checking the version
-e,
+c,"text node is a string representing free text, number, boolean, date, ..."
+d,write conflict managed by checking that current write is based on latest version of the text or deny
+e,run as a CLI that loads a CUE config file
+f,behaviour and light validation is customisable to adapt to different product needs
+g,should be able to run in CI pipeline
+h,should be sufficient to test client code
+i,this should be a light implementation of our invented Yggdrasil protocol
+j,websocket should be optional in the protocol as a minority of clients may not support it
+k,websocket messages should be limited to well known ids for security reasons regarding escaping
