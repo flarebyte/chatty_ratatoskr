@@ -10,3 +10,4 @@ h,should be sufficient to test client code
 i,this should be a light implementation of our invented Yggdrasil protocol
 j,websocket should be optional in the protocol as a minority of clients may not support it
 k,websocket messages should be limited to well known ids for security reasons regarding escaping
+l,Heartbeats aka Ping/Pong should be used to keep websocket connection alive

@@ -1,9 +1,13 @@
 http: {
     port: 8080
+    maxPayloadSizeKB:400
 }
 
 websocket: {
     supported: true
+    pingInterval:60
+    pongWait: 10
+    maxMessageSizeKB:4
 }
 
 endpoints: {

@@ -12,5 +12,7 @@ j,Uses JSON for payloads
 k,"Pick format that are well supported accross languages especially go, ts, dart"
 l,options fields may be lighweight representations of args parsing limited to safe format
 h,CLI should be built for at least linux and macos
+i,coder/websocket lib for WebSocket
+j,net/http for http REST server
 
 
