@@ -1,0 +1,6 @@
+rule,scope,description
+archived-in-state,archive,Archive remains record state carried by the value node rather than a delete operation.
+archived-in-snapshots,archive,Archived value nodes may still appear in snapshots so clients can reconstruct the full known state.
+archived-in-events,archive,Archived value nodes may still be emitted in `set` events with `--archived` present in the payload options.
+archive-indefinite-default,archive,Archive retention is indefinite by default at the protocol level.
+cleanup-implementation-specific,archive,Physical cleanup or compaction of archived nodes is an implementation-specific concern rather than a protocol guarantee.

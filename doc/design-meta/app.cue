@@ -58,7 +58,7 @@ reports: [{
 		}, {
 			title:       "06 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
-			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding", "yggdrasil.sync-flow", "yggdrasil.event-rules", "yggdrasil.ts.event-envelope", "yggdrasil.ts.snapshot-envelope"]
+			notes: ["yggdrasil.sync", "yggdrasil.storage-encoding", "yggdrasil.sync-flow", "yggdrasil.event-rules", "yggdrasil.snapshot-lifecycle", "yggdrasil.archive-retention", "yggdrasil.ts.event-envelope", "yggdrasil.ts.snapshot-envelope"]
 		}, {
 			title:       "07 Open Inconsistencies"
 			description: "Known draft mismatches that should be resolved before implementation hardens."
@@ -291,6 +291,20 @@ The intended model is:
 This means sync is not a secondary implementation detail. It is a protocol concern that should shape snapshot semantics, event payloads, and conflict handling.
 """
 		labels: ["sync", "storage", "client", "server"]
+	},
+	{
+		name:  "yggdrasil.snapshot-lifecycle"
+		title: "Snapshot Lifecycle"
+		filepath: "examples/snapshot-lifecycle.csv"
+		arguments: ["format-csv=table"]
+		labels: ["snapshot", "lifecycle", "csv"]
+	},
+	{
+		name:  "yggdrasil.archive-retention"
+		title: "Archive Retention"
+		filepath: "examples/archive-retention.csv"
+		arguments: ["format-csv=table"]
+		labels: ["archive", "retention", "csv"]
 	},
 	{
 		name:  "yggdrasil.sync-flow"

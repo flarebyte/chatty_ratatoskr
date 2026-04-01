@@ -373,6 +373,16 @@ Which fields are trusted, which are hints, and which are server-derived.
 
 How the logical protocol model maps to server and client storage.
 
+#### Archive Retention
+
+| description | rule | scope |
+| --- | --- | --- |
+| Archive remains record state carried by the value node rather than a delete operation. | archived-in-state | archive |
+| Archived value nodes may still appear in snapshots so clients can reconstruct the full known state. | archived-in-snapshots | archive |
+| Archived value nodes may still be emitted in `set` events with `--archived` present in the payload options. | archived-in-events | archive |
+| Archive retention is indefinite by default at the protocol level. | archive-indefinite-default | archive |
+| Physical cleanup or compaction of archived nodes is an implementation-specific concern rather than a protocol guarantee. | cleanup-implementation-specific | archive |
+
 #### Event Rules
 
 | description | rule | scope |
@@ -382,6 +392,16 @@ How the logical protocol model maps to server and client storage.
 | `snapshot-replaced` is emitted after `setSnapshot`, not after every normal `set`. | snapshot-replaced-trigger | event |
 | Archive is carried as record state, typically through `--archived`, rather than as a separate event operation. | archive-as-state | event |
 | Unsubscribing a root key that is not currently subscribed is a no-op and does not raise an error. | unsubscribe-missing-key-noop | client |
+
+#### Snapshot Lifecycle
+
+| description | rule | scope |
+| --- | --- | --- |
+| `getSnapshot` returns the full subtree for the requested root key rather than a partial fragment. | full-subtree-read | snapshot |
+| A snapshot may be empty when the root key exists but currently has no child value nodes. | empty-snapshot-valid | snapshot |
+| `setSnapshot` replaces the full authoritative subtree baseline for the requested root key. | replace-full-baseline | snapshot |
+| The current snapshot is replaced in place for sync purposes rather than requiring historical snapshot retention in the protocol. | replace-in-place | snapshot |
+| After `setSnapshot` succeeds the server emits `snapshot-replaced` for that root key. | emit-snapshot-replaced | snapshot |
 
 #### Logical Keys Versus Storage Encoding
 
