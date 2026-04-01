@@ -462,6 +462,17 @@ schema: {
 }
 ```
 
+#### Key Acceptance Examples
+
+| example_name | expected_result | key_example | reason |
+| --- | --- | --- | --- |
+| group-root | accept | tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07 | Valid scoped document root with level1, level2, and root entity ids. |
+| principal-note-text | accept | tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text | Valid principal-scoped note text key ending in a terminal leaf. |
+| principal-comment-text | accept | tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:comment:c38dd201:text | Valid deeper content key with comment id followed by a terminal text leaf. |
+| like-current-principal | accept | tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:user:_ | Valid branch to a current-principal placeholder under like. |
+| like-count | accept | tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count | Valid branch to a derived aggregate leaf. |
+| language-current-principal | accept | department:d9a8c102:region:r6be41f0:member:m17aa9f3:dashboard:d1e52f07:note:n7c401c2:language:_ | Valid product-specific label variant using a branch label followed by an allowed alias. |
+
 #### Key Parsing Rules
 
 | description | rule | scope |
@@ -473,6 +484,17 @@ schema: {
 | The `_` placeholder should be accepted only for labels that explicitly allow it through `aliases` or `aliasesByLabel`. | aliases-are-label-specific | key |
 | Labels such as `language` and `thumbnail` should be treated as branch labels when they lead to another token such as `_` or `text`, rather than as terminal leaves. | language-and-thumbnail-branch | key |
 | When `valueKindByLabel` exists for a level, the server should use the per-label rule rather than assuming one behavior for the whole level. | label-behaviour-overrides-level-default | key |
+
+#### Key Rejection Examples
+
+| example_name | expected_result | key_example | reason |
+| --- | --- | --- | --- |
+| missing-root-id | reject | tenant:t8f3a1c2:group:g4b7d9e1:dashboard | `dashboard` expects an id token and cannot terminate the key by itself. |
+| unknown-level1-label | reject | workspace:w1234567:group:g4b7d9e1:dashboard:d1e52f07 | `workspace` is not an allowed level1 label in the configured v1 schema. |
+| principal-placeholder-without-label | reject | tenant:t8f3a1c2:group:g4b7d9e1:_:dashboard:d1e52f07 | The current-principal alias `_` is only valid as the value of an explicitly allowed principal label. |
+| derived-leaf-with-child | reject | tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count:text | `count` is a derived terminal leaf and cannot have descendants. |
+| leaf-with-child | reject | tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text:comment:c38dd201 | `text` is a terminal leaf and cannot have descendants. |
+| unknown-derived-leaf | reject | tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:total | `total` is not a configured derived leaf; only allowed labels such as `count` should be accepted. |
 
 ### 02 Action Matrix
 

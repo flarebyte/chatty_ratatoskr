@@ -1,0 +1,7 @@
+example_name,key_example,expected_result,reason
+missing-root-id,"tenant:t8f3a1c2:group:g4b7d9e1:dashboard",reject,"`dashboard` expects an id token and cannot terminate the key by itself."
+unknown-level1-label,"workspace:w1234567:group:g4b7d9e1:dashboard:d1e52f07",reject,"`workspace` is not an allowed level1 label in the configured v1 schema."
+principal-placeholder-without-label,"tenant:t8f3a1c2:group:g4b7d9e1:_:dashboard:d1e52f07",reject,"The current-principal alias `_` is only valid as the value of an explicitly allowed principal label."
+derived-leaf-with-child,"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count:text",reject,"`count` is a derived terminal leaf and cannot have descendants."
+leaf-with-child,"tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text:comment:c38dd201",reject,"`text` is a terminal leaf and cannot have descendants."
+unknown-derived-leaf,"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:total",reject,"`total` is not a configured derived leaf; only allowed labels such as `count` should be accepted."

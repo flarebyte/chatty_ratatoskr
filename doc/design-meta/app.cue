@@ -38,7 +38,7 @@ reports: [{
 		sections: [{
 			title:       "01 Config Draft"
 			description: "CUE draft describing ports, endpoints, and schema constraints."
-			notes: ["yggdrasil.config", "yggdrasil.key-parsing-rules"]
+			notes: ["yggdrasil.config", "yggdrasil.key-parsing-rules", "yggdrasil.key-acceptance-examples", "yggdrasil.key-rejection-examples"]
 		}, {
 			title:       "02 Action Matrix"
 			description: "HTTP and WebSocket actions currently envisaged by the examples."
@@ -183,6 +183,20 @@ A client may extend its active subscription set by sending additional `subscribe
 		filepath: "examples/key-parsing-rules.csv"
 		arguments: ["format-csv=table"]
 		labels: ["config", "key", "parsing", "csv"]
+	},
+	{
+		name:  "yggdrasil.key-acceptance-examples"
+		title: "Key Acceptance Examples"
+		filepath: "examples/key-acceptance-examples.csv"
+		arguments: ["format-csv=table"]
+		labels: ["config", "key", "acceptance", "csv"]
+	},
+	{
+		name:  "yggdrasil.key-rejection-examples"
+		title: "Key Rejection Examples"
+		filepath: "examples/key-rejection-examples.csv"
+		arguments: ["format-csv=table"]
+		labels: ["config", "key", "rejection", "csv"]
 	},
 	{
 		name:  "yggdrasil.usecases"
