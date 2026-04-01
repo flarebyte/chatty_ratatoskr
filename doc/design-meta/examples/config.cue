@@ -106,17 +106,75 @@ schema: {
 		format: "uuid[:8]"
 	}
 
-	// Key hierarchy rules define which kinds may appear at each level.
-	// In normal operation, keyId is the source of truth and kind is derived from
-	// the key schema with unique identifiers removed. KeyKind.language is an
-	// optional ISO code, so multilingual documents may contain nodes in
-	// different languages at the same time.
-	keyKind: {
-		rootWithId: ['dashboard']
-		rootWithoutId: ['profile']
-		childrenWithId: ["note", "thumbnail"]
-		childrenWithoutId: ["text", "user"]
-		maxLevels: 20
+	// Key hierarchy is positional for v1. Each level defines which labels are
+	// accepted there, what kind of value follows, and whether special aliases
+	// such as `_` may be resolved by the server. This keeps the mock-server
+	// schema practical without introducing a more advanced rule engine.
+	valueKind: ["id", "leaf", "derived"]
+
+	keyPart: {
+		maxLevels: 9
+
+		level1: {
+			labels:    ["tenant", "department"]
+			valueKind: "id"
+			aliases:   ["_"]
+		}
+
+		level2: {
+			labels:    ["group", "team", "region"]
+			valueKind: "id"
+			aliases:   ["_"]
+			optional:  true
+		}
+
+		level3: {
+			labels:    ["user", "member", "subscriber", "dashboard", "profile"]
+			valueKind: "id"
+			aliases:   ["_"]
+		}
+
+		level4: {
+			labels:    ["dashboard", "profile", "note", "comment", "thumbnail", "language", "like"]
+			valueKind: "id"
+			aliases:   ["_"]
+			optional:  true
+		}
+
+		level5: {
+			labels:    ["note", "comment", "thumbnail", "language", "like", "text", "count"]
+			valueKind: "id"
+			aliases:   ["_", "count"]
+			optional:  true
+		}
+
+		level6: {
+			labels:    ["comment", "like", "text", "language", "count"]
+			valueKind: "id"
+			aliases:   ["_", "count"]
+			optional:  true
+		}
+
+		level7: {
+			labels:    ["user", "member", "subscriber", "text", "language", "count"]
+			valueKind: "id"
+			aliases:   ["_", "count"]
+			optional:  true
+		}
+
+		level8: {
+			labels:    ["text", "language", "count"]
+			valueKind: "leaf"
+			aliases:   ["_", "count"]
+			optional:  true
+		}
+
+		level9: {
+			labels:    ["text", "language", "count"]
+			valueKind: "leaf"
+			aliases:   ["_", "count"]
+			optional:  true
+		}
 	}
 
 	// The server should treat derived kind information as authoritative and
