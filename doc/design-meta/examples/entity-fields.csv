@@ -6,6 +6,6 @@ ValueNode,options,Options,"Optional metadata flags (for example '--pinned', '--a
 ValueNode,kind,Kind,"Logical type of the value node (for example 'note'), set by the client.",string,string,String,false,core
 ValueNode,language,Language,Optional ISO language code for the value content.,string,*string,String?,false,core
 ValueNode,value,Value,"Protocol-level string payload. Higher-level formats such as free text, numbers, booleans, dates, or encoded JSON are still serialized as strings.",string,string,String,true,core
-ValueNode,version,Version,"Server-generated version (for example, UUID)",string,string,String,true,core
-ValueNode,created,Created,UTC timestamp when the value node was created (server clock).,Date,time.Time,DateTime,true,core
-ValueNode,updated,Updated,UTC timestamp when the value node was updated (server clock).,Date,time.Time,DateTime,true,core
+ValueNode,version,Version,"Server-generated version used for optimistic sync checks so clients and servers can reject writes based on an older state.",string,string,String,true,core
+ValueNode,created,Created,"UTC timestamp when the value node was created (server clock). Useful for ordering nodes by creation time, for example comments or chat messages.",Date,time.Time,DateTime,true,core
+ValueNode,updated,Updated,"UTC timestamp when the value node was last updated (server clock). Useful for support/debugging after version mismatches and for showing recent changes.",Date,time.Time,DateTime,true,core

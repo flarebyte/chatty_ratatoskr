@@ -39,8 +39,13 @@ export type KeyParams = {
   secureKeyId?: string;
   localKeyId?: string;
   kind?: KeyKind;
+  // Used by clients and servers for optimistic sync checks so writes are based
+  // on the latest known state rather than an older version.
   version?: string;
+  // Useful for ordering nodes by first appearance, for example comments or chat.
   created?: string;
+  // Useful for support/debugging after a version mismatch and for showing that a
+  // node has been updated more recently than its creation time.
   updated?: string;
 };
 

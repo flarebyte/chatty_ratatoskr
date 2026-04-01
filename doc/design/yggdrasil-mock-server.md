@@ -305,9 +305,9 @@ Current entity and field definitions used by the draft protocol.
 | core | String | ValueNode | Logical type of the value node (for example 'note'), set by the client. | kind | Kind | string | false | string |
 | core | String? | ValueNode | Optional ISO language code for the value content. | language | Language | *string | false | string |
 | core | String | ValueNode | Protocol-level string payload. Higher-level formats such as free text, numbers, booleans, dates, or encoded JSON are still serialized as strings. | value | Value | string | true | string |
-| core | String | ValueNode | Server-generated version (for example, UUID) | version | Version | string | true | string |
-| core | DateTime | ValueNode | UTC timestamp when the value node was created (server clock). | created | Created | time.Time | true | Date |
-| core | DateTime | ValueNode | UTC timestamp when the value node was updated (server clock). | updated | Updated | time.Time | true | Date |
+| core | String | ValueNode | Server-generated version used for optimistic sync checks so clients and servers can reject writes based on an older state. | version | Version | string | true | string |
+| core | DateTime | ValueNode | UTC timestamp when the value node was created (server clock). Useful for ordering nodes by creation time, for example comments or chat messages. | created | Created | time.Time | true | Date |
+| core | DateTime | ValueNode | UTC timestamp when the value node was last updated (server clock). Useful for support/debugging after version mismatches and for showing recent changes. | updated | Updated | time.Time | true | Date |
 
 ### 04 HTTP Status Rules
 
@@ -572,8 +572,13 @@ export type KeyParams = {
   secureKeyId?: string;
   localKeyId?: string;
   kind?: KeyKind;
+  // Used by clients and servers for optimistic sync checks so writes are based
+  // on the latest known state rather than an older version.
   version?: string;
+  // Useful for ordering nodes by first appearance, for example comments or chat.
   created?: string;
+  // Useful for support/debugging after a version mismatch and for showing that a
+  // node has been updated more recently than its creation time.
   updated?: string;
 };
 
