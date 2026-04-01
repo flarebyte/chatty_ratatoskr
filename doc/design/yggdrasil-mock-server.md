@@ -698,6 +698,15 @@ export interface KeyValueEventStoreApi {
 ```ts
 import type { OperationStatus, UserParams } from './common';
 import type { EventEnvelope } from './event-envelope';
+import type {
+  ClientMessage,
+  EventMessage,
+  ServerMessage,
+  SubscribeMessage,
+  SubscribedMessage,
+  UnsubscribeMessage,
+  UnsubscribedMessage,
+} from './websocket-messages';
 
 type Subscription = {
   id: string;
@@ -717,6 +726,12 @@ export interface EventApi {
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
   receiveUserUpdate(user: UserParams): EventResponse;
+}
+
+export interface WebSocketEventApi {
+  onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
+  subscribe(message: SubscribeMessage): SubscribedMessage;
+  unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
 }
 
 export type EventHandlingRule = {
@@ -762,4 +777,65 @@ export interface SnapshotEventStoreApi {
   clear(): void;
 }
 ```
+
+#### WebSocket Messages
+
+```ts
+import type { EventEnvelope } from './event-envelope';
+
+export type SubscribeMessage = {
+  kind: 'subscribe';
+  rootKeys: string[];
+};
+
+export type UnsubscribeMessage = {
+  kind: 'unsubscribe';
+  rootKeys: string[];
+};
+
+export type PingMessage = {
+  kind: 'ping';
+};
+
+export type ClientMessage =
+  | SubscribeMessage
+  | UnsubscribeMessage
+  | PingMessage;
+
+export type SubscribedMessage = {
+  kind: 'subscribed';
+  rootKeys: string[];
+};
+
+export type UnsubscribedMessage = {
+  kind: 'unsubscribed';
+  rootKeys: string[];
+};
+
+export type EventMessage = {
+  kind: 'event';
+  event: EventEnvelope;
+};
+
+export type PongMessage = {
+  kind: 'pong';
+};
+
+export type ServerMessage =
+  | SubscribedMessage
+  | UnsubscribedMessage
+  | EventMessage
+  | PongMessage;
+```
+
+#### WebSocket Flow
+
+| actor | description | step | transport |
+| --- | --- | --- | --- |
+| client | Open the WebSocket connection to the optional `/events` endpoint. | open-connection | websocket |
+| client | Send a `subscribe` message with the root keys to watch. | subscribe-root-keys | websocket |
+| server | Reply with `subscribed` to confirm the active root-key subscriptions. | confirm-subscription | websocket |
+| server | Send an `event` message containing the `EventEnvelope`. | receive-event | websocket |
+| client-and-server | Use `ping` and `pong` messages to keep the connection alive. | ping-pong | websocket |
+| client | Send `unsubscribe` when the client no longer wants updates for those root keys. | unsubscribe-root-keys | websocket |
 

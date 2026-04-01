@@ -85,6 +85,8 @@ reports: [{
 			title:       "03 Event APIs"
 			description: "Optional WebSocket and event-store oriented examples."
 			notes: [
+				"yggdrasil.websocket-flow",
+				"yggdrasil.ts.websocket-messages",
 				"yggdrasil.ts.receive-event",
 				"yggdrasil.ts.key-value-store",
 				"yggdrasil.ts.snapshot-store",
@@ -264,6 +266,13 @@ This separation lets the same protocol work across products without forcing ever
 		labels: ["storage", "encoding", "key-model"]
 	},
 	{
+		name:  "yggdrasil.websocket-flow"
+		title: "WebSocket Flow"
+		filepath: "examples/websocket-flow.csv"
+		arguments: ["format-csv=table"]
+		labels: ["websocket", "flow", "csv"]
+	},
+	{
 		name:  "yggdrasil.ts.event-envelope"
 		title: "Event Envelope"
 		filepath: "examples/event-envelope.ts"
@@ -274,6 +283,12 @@ This separation lets the same protocol work across products without forcing ever
 		title: "Snapshot Envelope"
 		filepath: "examples/snapshot-envelope.ts"
 		labels: ["typescript", "example", "snapshot", "sync"]
+	},
+	{
+		name:  "yggdrasil.ts.websocket-messages"
+		title: "WebSocket Messages"
+		filepath: "examples/websocket-messages.ts"
+		labels: ["typescript", "example", "websocket", "sync"]
 	},
 	{
 		name:  "yggdrasil.ts.common"

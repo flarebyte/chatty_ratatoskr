@@ -1,5 +1,14 @@
 import type { OperationStatus, UserParams } from './common';
 import type { EventEnvelope } from './event-envelope';
+import type {
+  ClientMessage,
+  EventMessage,
+  ServerMessage,
+  SubscribeMessage,
+  SubscribedMessage,
+  UnsubscribeMessage,
+  UnsubscribedMessage,
+} from './websocket-messages';
 
 type Subscription = {
   id: string;
@@ -19,6 +28,12 @@ export interface EventApi {
   subscribe(subscription: Subscription): EventResponse;
   unsubscribe(subscription: Subscription): EventResponse;
   receiveUserUpdate(user: UserParams): EventResponse;
+}
+
+export interface WebSocketEventApi {
+  onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
+  subscribe(message: SubscribeMessage): SubscribedMessage;
+  unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
 }
 
 export type EventHandlingRule = {
