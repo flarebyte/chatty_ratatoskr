@@ -1,4 +1,4 @@
-action,role,protocol,endpoint,verb,description,
+action,role,protocol,endpoint,verb,description
 create-new-keys,client,http,/create,POST,
 set-key-value-list,client,http,/node,PUT,
 get-key-value-list,client,http,/node,GET,
