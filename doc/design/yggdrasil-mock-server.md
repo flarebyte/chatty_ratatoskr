@@ -230,17 +230,137 @@ schema: {
 		format: "uuid[:8]"
 	}
 
-	// Key hierarchy rules define which kinds may appear at each level.
-	// In normal operation, keyId is the source of truth and kind is derived from
-	// the key schema with unique identifiers removed. KeyKind.language is an
-	// optional ISO code, so multilingual documents may contain nodes in
-	// different languages at the same time.
-	keyKind: {
-		rootWithId: ['dashboard']
-		rootWithoutId: ['profile']
-		childrenWithId: ["note", "thumbnail"]
-		childrenWithoutId: ["text", "user"]
-		maxLevels: 20
+	// Key hierarchy is positional for v1. Each level defines which labels are
+	// accepted there, what kind of value follows, and whether special aliases
+	// such as `_` may be resolved by the server. This keeps the mock-server
+	// schema practical without introducing a more advanced rule engine.
+	valueKind: ["id", "leaf", "derived"]
+
+	keyPart: {
+		maxLevels: 9
+
+		level1: {
+			labels:    ["tenant", "department"]
+			valueKind: "id"
+			aliases:   ["_"]
+		}
+
+		level2: {
+			labels:    ["group", "team", "region"]
+			valueKind: "id"
+			aliases:   ["_"]
+			optional:  true
+		}
+
+		level3: {
+			labels: ["user", "member", "subscriber", "dashboard", "profile"]
+			valueKindByLabel: {
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+				dashboard:  "id"
+				profile:    "id"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
+		}
+
+		level4: {
+			labels: ["dashboard", "profile", "note", "comment", "thumbnail", "language", "like"]
+			valueKindByLabel: {
+				dashboard: "id"
+				profile:   "id"
+				note:      "id"
+				comment:   "id"
+				thumbnail: "leaf"
+				language:  "leaf"
+				like:      "leaf"
+			}
+			optional: true
+		}
+
+		level5: {
+			labels: ["note", "comment", "thumbnail", "language", "like", "text", "count", "user", "member", "subscriber"]
+			valueKindByLabel: {
+				note:       "id"
+				comment:    "id"
+				thumbnail:  "leaf"
+				language:   "leaf"
+				like:       "leaf"
+				text:       "leaf"
+				count:      "derived"
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
+			optional: true
+		}
+
+		level6: {
+			labels: ["comment", "like", "text", "language", "count", "user", "member", "subscriber"]
+			valueKindByLabel: {
+				comment:    "id"
+				like:       "leaf"
+				text:       "leaf"
+				language:   "leaf"
+				count:      "derived"
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
+			optional: true
+		}
+
+		level7: {
+			labels: ["user", "member", "subscriber", "text", "language", "count"]
+			valueKindByLabel: {
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+				text:       "leaf"
+				language:   "leaf"
+				count:      "derived"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
+			optional: true
+		}
+
+		level8: {
+			labels: ["text", "language", "count"]
+			valueKindByLabel: {
+				text:     "leaf"
+				language: "leaf"
+				count:    "derived"
+			}
+			optional: true
+		}
+
+		level9: {
+			labels: ["text", "language", "count"]
+			valueKindByLabel: {
+				text:     "leaf"
+				language: "leaf"
+				count:    "derived"
+			}
+			optional: true
+		}
 	}
 
 	// The server should treat derived kind information as authoritative and
@@ -335,6 +455,16 @@ schema: {
 	}
 }
 ```
+
+#### Key Parsing Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| When a label has `valueKind` or `valueKindByLabel` set to `id`, the parser should consume the following token as the label value. | id-consumes-next-token | key |
+| When a label has `valueKind` or `valueKindByLabel` set to `leaf`, that label is terminal for the key path. | leaf-terminates | key |
+| When a label has `valueKind` or `valueKindByLabel` set to `derived`, that label is terminal and server-managed. | derived-terminates | key |
+| The `_` placeholder should be accepted only for labels that explicitly allow it through `aliases` or `aliasesByLabel`. | aliases-are-label-specific | key |
+| When `valueKindByLabel` exists for a level, the server should use the per-label rule rather than assuming one behavior for the whole level. | label-behaviour-overrides-level-default | key |
 
 ### 02 Action Matrix
 

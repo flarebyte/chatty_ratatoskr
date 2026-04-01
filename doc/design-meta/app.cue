@@ -38,7 +38,7 @@ reports: [{
 		sections: [{
 			title:       "01 Config Draft"
 			description: "CUE draft describing ports, endpoints, and schema constraints."
-			notes: ["yggdrasil.config"]
+			notes: ["yggdrasil.config", "yggdrasil.key-parsing-rules"]
 		}, {
 			title:       "02 Action Matrix"
 			description: "HTTP and WebSocket actions currently envisaged by the examples."
@@ -176,6 +176,13 @@ A client may extend its active subscription set by sending additional `subscribe
 		title: "Draft Protocol Config"
 		filepath: "examples/config.cue"
 		labels: ["config", "cue", "protocol"]
+	},
+	{
+		name:  "yggdrasil.key-parsing-rules"
+		title: "Key Parsing Rules"
+		filepath: "examples/key-parsing-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["config", "key", "parsing", "csv"]
 	},
 	{
 		name:  "yggdrasil.usecases"

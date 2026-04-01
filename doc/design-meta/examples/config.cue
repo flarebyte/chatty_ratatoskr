@@ -129,51 +129,113 @@ schema: {
 		}
 
 		level3: {
-			labels:    ["user", "member", "subscriber", "dashboard", "profile"]
-			valueKind: "id"
-			aliases:   ["_"]
+			labels: ["user", "member", "subscriber", "dashboard", "profile"]
+			valueKindByLabel: {
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+				dashboard:  "id"
+				profile:    "id"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
 		}
 
 		level4: {
-			labels:    ["dashboard", "profile", "note", "comment", "thumbnail", "language", "like"]
-			valueKind: "id"
-			aliases:   ["_"]
-			optional:  true
+			labels: ["dashboard", "profile", "note", "comment", "thumbnail", "language", "like"]
+			valueKindByLabel: {
+				dashboard: "id"
+				profile:   "id"
+				note:      "id"
+				comment:   "id"
+				thumbnail: "leaf"
+				language:  "leaf"
+				like:      "leaf"
+			}
+			optional: true
 		}
 
 		level5: {
-			labels:    ["note", "comment", "thumbnail", "language", "like", "text", "count"]
-			valueKind: "id"
-			aliases:   ["_", "count"]
-			optional:  true
+			labels: ["note", "comment", "thumbnail", "language", "like", "text", "count", "user", "member", "subscriber"]
+			valueKindByLabel: {
+				note:       "id"
+				comment:    "id"
+				thumbnail:  "leaf"
+				language:   "leaf"
+				like:       "leaf"
+				text:       "leaf"
+				count:      "derived"
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
+			optional: true
 		}
 
 		level6: {
-			labels:    ["comment", "like", "text", "language", "count"]
-			valueKind: "id"
-			aliases:   ["_", "count"]
-			optional:  true
+			labels: ["comment", "like", "text", "language", "count", "user", "member", "subscriber"]
+			valueKindByLabel: {
+				comment:    "id"
+				like:       "leaf"
+				text:       "leaf"
+				language:   "leaf"
+				count:      "derived"
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
+			optional: true
 		}
 
 		level7: {
-			labels:    ["user", "member", "subscriber", "text", "language", "count"]
-			valueKind: "id"
-			aliases:   ["_", "count"]
-			optional:  true
+			labels: ["user", "member", "subscriber", "text", "language", "count"]
+			valueKindByLabel: {
+				user:       "id"
+				member:     "id"
+				subscriber: "id"
+				text:       "leaf"
+				language:   "leaf"
+				count:      "derived"
+			}
+			aliasesByLabel: {
+				user:       ["_"]
+				member:     ["_"]
+				subscriber: ["_"]
+			}
+			optional: true
 		}
 
 		level8: {
-			labels:    ["text", "language", "count"]
-			valueKind: "leaf"
-			aliases:   ["_", "count"]
-			optional:  true
+			labels: ["text", "language", "count"]
+			valueKindByLabel: {
+				text:     "leaf"
+				language: "leaf"
+				count:    "derived"
+			}
+			optional: true
 		}
 
 		level9: {
-			labels:    ["text", "language", "count"]
-			valueKind: "leaf"
-			aliases:   ["_", "count"]
-			optional:  true
+			labels: ["text", "language", "count"]
+			valueKindByLabel: {
+				text:     "leaf"
+				language: "leaf"
+				count:    "derived"
+			}
+			optional: true
 		}
 	}
 
