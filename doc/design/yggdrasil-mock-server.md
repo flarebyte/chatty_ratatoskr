@@ -271,6 +271,7 @@ schema: {
 		groupScopedKeysRequirePath:            true
 		invalidStatusForMalformedKey: "invalid"
 		unauthorisedStatusForDeniedAccess: "unauthorised"
+		currentPrincipalPlaceholders: ["principal:_", "user:_"]
 	}
 
 	// The protocol standardizes key meaning, not one storage encoding.
@@ -281,6 +282,8 @@ schema: {
 			preserveIdentity:      true
 			preserveVersioning:    true
 			preserveAccessScope:   true
+			serverResolvesCurrentPrincipal: true
+			supportsDerivedLeaves:          true
 		}
 
 		serverExamples: [
@@ -291,6 +294,11 @@ schema: {
 		clientExamples: [
 			"{root:'dashboard', id:'52ffe570', path:['note','c401c269','text']}",
 		]
+
+		reservedLeaves: {
+			currentPrincipal: ["principal:_", "user:_"]
+			derivedAggregate: ["count"]
+		}
 	}
 
 	// Options are lightweight string flags rather than a full dynamic schema.
@@ -464,6 +472,18 @@ Which fields are trusted, which are hints, and which are server-derived.
 | The protocol requires structural visibility and fixed-depth scope, but the exact scope labels remain product-specific and configurable. | configurable-scope-labels | access |
 | Access checks should be derived from the authoritative key structure and its server-derived kind, not from client-supplied hints. | kind-maps-to-scope | access |
 | A valid root subscription may silently omit descendants that the user is not allowed to read. | subscription-filters-unreadable-descendants | subscription |
+
+#### Derived Key Rules
+
+| description | rule | scope |
+| --- | --- | --- |
+| `principal:_` or a product-specific alias such as `user:_` is a reserved placeholder meaning the current authenticated principal. | current-principal-placeholder | key |
+| The server should resolve the current-principal placeholder to the authenticated principal identity before applying access checks and storage rules. | server-resolves-placeholder | key |
+| If a request uses the current-principal placeholder without an authenticated principal context, the request should return `unauthorised`. | placeholder-requires-authentication | key |
+| `count` is a reserved derived leaf representing aggregate server-managed state such as like totals. | derived-count-leaf | key |
+| Derived aggregate leaves such as `count` are readable by normal clients but are not directly writable by them. | derived-leaf-read-only | key |
+| Server logic should update derived aggregate leaves as a consequence of principal-scoped actions such as like and unlike. | principal-action-updates-aggregate | key |
+| Principal-scoped action records such as likes should remain isolated to the acting principal and should not expose other principals' identities to ordinary readers. | private-principal-actions | key |
 
 #### Field Runtime Behaviour
 
@@ -823,14 +843,17 @@ export type Command = {
   arguments: string[];
 };
 
-// Redis-key-compatible examples.
+// Redis-key-compatible examples. These include:
+// - scoped document and node examples
+// - the reserved current-principal placeholder `user:_`
+// - the derived aggregate leaf `count`
 export const keyIdExamples = [
-  'dashboard:52ffe570:note:c401c269:text',
-  'dashboard:52ffe570:note:c401c269:comment:e0ee7775',
-  'dashboard:52ffe570:note:c401c269:thumbnail:text',
-  'dashboard:52ffe570:note:c401c269:like:user:_',
-  'dashboard:52ffe570:note:c401c269:like:count',
-  'dashboard:52ffe570:note:c401c269:comment:76f6d5e0:language:_',
+  'tenant:acme:group:editorial:dashboard:d1',
+  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text',
+  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:comment:c3:text',
+  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:user:_',
+  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:count',
+  'department:news:region:emea:member:m17:dashboard:d1:note:n7:language:_',
 ];
 ```
 

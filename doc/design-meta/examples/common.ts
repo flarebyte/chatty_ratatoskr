@@ -80,12 +80,15 @@ export type Command = {
   arguments: string[];
 };
 
-// Redis-key-compatible examples.
+// Redis-key-compatible examples. These include:
+// - scoped document and node examples
+// - the reserved current-principal placeholder `user:_`
+// - the derived aggregate leaf `count`
 export const keyIdExamples = [
-  'dashboard:52ffe570:note:c401c269:text',
-  'dashboard:52ffe570:note:c401c269:comment:e0ee7775',
-  'dashboard:52ffe570:note:c401c269:thumbnail:text',
-  'dashboard:52ffe570:note:c401c269:like:user:_',
-  'dashboard:52ffe570:note:c401c269:like:count',
-  'dashboard:52ffe570:note:c401c269:comment:76f6d5e0:language:_',
+  'tenant:acme:group:editorial:dashboard:d1',
+  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:text',
+  'tenant:acme:group:editorial:user:u42:dashboard:d1:note:n7:comment:c3:text',
+  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:user:_',
+  'tenant:acme:group:editorial:dashboard:d1:note:n7:like:count',
+  'department:news:region:emea:member:m17:dashboard:d1:note:n7:language:_',
 ];

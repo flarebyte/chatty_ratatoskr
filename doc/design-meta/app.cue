@@ -54,7 +54,7 @@ reports: [{
 		}, {
 			title:       "05 Trust Model"
 			description: "Which fields are trusted, which are hints, and which are server-derived."
-			notes: ["yggdrasil.field-trust", "yggdrasil.field-runtime-behaviour", "yggdrasil.access-scope-rules", "yggdrasil.access-evaluation-rules", "yggdrasil.scoped-key-examples"]
+			notes: ["yggdrasil.field-trust", "yggdrasil.field-runtime-behaviour", "yggdrasil.access-scope-rules", "yggdrasil.access-evaluation-rules", "yggdrasil.scoped-key-examples", "yggdrasil.derived-key-rules"]
 		}, {
 			title:       "06 Sync And Persistence"
 			description: "How the logical protocol model maps to server and client storage."
@@ -232,6 +232,13 @@ A client may extend its active subscription set by sending additional `subscribe
 		filepath: "examples/scoped-key-examples.csv"
 		arguments: ["format-csv=table"]
 		labels: ["access", "key", "examples", "csv"]
+	},
+	{
+		name:  "yggdrasil.derived-key-rules"
+		title: "Derived Key Rules"
+		filepath: "examples/derived-key-rules.csv"
+		arguments: ["format-csv=table"]
+		labels: ["access", "derived", "key", "csv"]
 	},
 	{
 		name:  "yggdrasil.admin-boundary"

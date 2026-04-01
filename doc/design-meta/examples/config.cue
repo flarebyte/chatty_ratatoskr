@@ -147,6 +147,7 @@ schema: {
 		groupScopedKeysRequirePath:            true
 		invalidStatusForMalformedKey: "invalid"
 		unauthorisedStatusForDeniedAccess: "unauthorised"
+		currentPrincipalPlaceholders: ["principal:_", "user:_"]
 	}
 
 	// The protocol standardizes key meaning, not one storage encoding.
@@ -157,6 +158,8 @@ schema: {
 			preserveIdentity:      true
 			preserveVersioning:    true
 			preserveAccessScope:   true
+			serverResolvesCurrentPrincipal: true
+			supportsDerivedLeaves:          true
 		}
 
 		serverExamples: [
@@ -167,6 +170,11 @@ schema: {
 		clientExamples: [
 			"{root:'dashboard', id:'52ffe570', path:['note','c401c269','text']}",
 		]
+
+		reservedLeaves: {
+			currentPrincipal: ["principal:_", "user:_"]
+			derivedAggregate: ["count"]
+		}
 	}
 
 	// Options are lightweight string flags rather than a full dynamic schema.
