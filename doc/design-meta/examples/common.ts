@@ -34,6 +34,8 @@ export type KeyKind = {
 
 export type KeyParams = {
   keyId?: string;
+  // In production this should carry a signed integrity check for keyId.
+  // In the mock server it may also be used to force a non-ok response.
   secureKeyId?: string;
   localKeyId?: string;
   kind?: KeyKind;

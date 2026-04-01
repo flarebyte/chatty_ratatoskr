@@ -115,11 +115,13 @@ CUE draft describing ports, endpoints, and schema constraints.
 #### Draft Protocol Config
 
 ```cue
+// Transport-level limits for the HTTP API.
 http: {
 	port: 8080
 	maxPayloadSizeKB: 400
 }
 
+// WebSocket is optional and exists only for incremental updates.
 websocket: {
 	supported: true
 	path:      "/events"
@@ -128,6 +130,7 @@ websocket: {
 	maxMessageSizeKB:    4
 }
 
+// Sync is based on authoritative snapshots plus incremental events.
 sync: {
 	snapshotBootstrap: true
 	eventStreaming:    true
@@ -135,6 +138,8 @@ sync: {
 	clientLocalStore:  true
 }
 
+// Server and client may use different storage implementations while
+// preserving the same logical key and version semantics.
 storage: {
 	server: {
 		kind: "key-value"
@@ -147,6 +152,7 @@ storage: {
 	}
 }
 
+// Production Yggdrasil endpoints.
 endpoints: {
 	create: {
 		path: "/create"
@@ -174,11 +180,13 @@ endpoints: {
 	}
 }
 
+// Events are emitted by the server after state changes.
 events: {
 	connectionPath: "/events"
 	source:         "server-generated-after-state-change"
 }
 
+// Mock-server controls are intentionally outside the Yggdrasil protocol.
 admin: {
 	scope: "mock-server-only"
 
@@ -191,10 +199,13 @@ admin: {
 }
 
 schema: {
+	// Logical identifiers remain product-specific in format, but the mock server
+	// still validates enough structure to exercise client behavior.
 	id: {
 		format: "uuid[:8]"
 	}
 
+	// Key hierarchy rules define which kinds may appear at each level.
 	keyKind: {
 		rootWithId: ['dashboard']
 		rootWithoutId: ['profile']
@@ -203,6 +214,7 @@ schema: {
 		maxLevels: 20
 	}
 
+	// The protocol standardizes key meaning, not one storage encoding.
 	keyEncoding: {
 		logicalModel: {
 			productSpecificFormat: true
@@ -221,18 +233,34 @@ schema: {
 		]
 	}
 
+	// Options are lightweight string flags rather than a full dynamic schema.
 	optionKind: {
 		boolean: ["--archived", "--sensitive"]
 	}
 
+	// The protocol-level operation status vocabulary.
 	statusKind: {
 		boolean: ["ok", "invalid", "unauthorised", "outdated"]
 	}
 
+	// secureKeyId is mandatory in normal client requests and is used by servers
+	// to detect whether the transmitted key identity has been corrupted or forged.
+	//
+	// Production intent:
+	// - secureKeyId carries a signed or JWT-style check derived from keyId
+	// - the server verifies it before accepting the request
+	//
+	// Mock-server intent:
+	// - this CLI assumes the incoming value is otherwise valid
+	// - when statusAsKey is true, secureKeyId may be used as a test hook to
+	//   force a non-ok status such as invalid, unauthorised, or outdated
+	// - this is intentionally a mock-only shortcut and not production behavior
 	secureKeyId: {
 		statusAsKey: true
 	}
 
+	// Value remains a protocol-level string even when it represents richer
+	// formats such as dates, booleans, numbers, or encoded JSON.
 	text: {
 		maxCharLength: 1000
 		checkVersion:  true
@@ -272,7 +300,7 @@ Current entity and field definitions used by the draft protocol.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | core | String | ValueNode | Client-side logical stream or grouping identifier (for example, a project or topic path). | localKeyId | Local Key ID | string | false | string |
 | core | String | ValueNode | Logical stream or grouping identifier (for example, a project or topic path). | keyId | Key ID | string | true | string |
-| core | String | ValueNode | Encrypted representation of `keyId`. | secureKeyId | Secure Key ID | string | true | string |
+| core | String | ValueNode | Mandatory integrity field derived from `keyId`. Production servers should verify it using a signed or JWT-style check; the mock server may also use it as a test hook to force a configured non-ok status. | secureKeyId | Secure Key ID | string | true | string |
 | core | List<String>? | ValueNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
 | core | String | ValueNode | Logical type of the value node (for example 'note'), set by the client. | kind | Kind | string | false | string |
 | core | String? | ValueNode | Optional ISO language code for the value content. | language | Language | *string | false | string |
@@ -539,6 +567,8 @@ export type KeyKind = {
 
 export type KeyParams = {
   keyId?: string;
+  // In production this should carry a signed integrity check for keyId.
+  // In the mock server it may also be used to force a non-ok response.
   secureKeyId?: string;
   localKeyId?: string;
   kind?: KeyKind;
