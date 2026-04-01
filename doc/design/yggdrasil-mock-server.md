@@ -68,14 +68,18 @@ Why the server should exist and what it must support.
 | description | usecase |
 | --- | --- |
 | Simulate a more complex backend store server that would be developed separately. | simulate-backend-server |
-| Support a hierarchical text-tree store. | hierarchical-text-tree |
+| Support a hierarchical value-tree store addressed by logical keys. | hierarchical-value-tree |
 | Allow a value node to carry free text, numbers, booleans, dates, and similar higher-level formats while remaining a protocol-level string. | typed-value-node |
 | Reject writes when the submitted version is not based on the latest stored version. | optimistic-write-conflict |
-| Run as a CLI that loads a CUE configuration file. | cue-config-cli |
-| Allow behaviour and lightweight validation to be customised for different product needs. | customisable-behaviour |
-| Run reliably inside CI pipelines. | ci-friendly |
+| Allow clients to bootstrap local state from an authoritative snapshot for a root key. | snapshot-bootstrap |
+| Allow clients to stay in sync through incremental events after the snapshot baseline. | incremental-sync |
+| Allow clients to keep the same logical data in a local key-value store for sync and offline-friendly flows. | client-local-store |
+| Allow clients to use provisional localKeyId values until the server returns the official keyId. | provisional-local-keys |
+| Derive kind from keyId on the server so filtering and validation use the authoritative key schema. | server-derived-kind |
+| Allow different value nodes in the same document to use different ISO language codes. | multilingual-nodes |
+| Require secureKeyId as an integrity check so corrupted or forged key identities can be detected. | secure-key-integrity |
+| Allow the mock server to force protocol status responses through test-oriented configuration hooks. | mock-status-forcing |
 | Be sufficient to test client code against a realistic mock server. | client-test-support |
-| Provide a lightweight implementation of the evolving Yggdrasil protocol. | lightweight-yggdrasil |
 | Keep WebSocket support optional because some clients may not support it. | optional-websocket |
 | Limit WebSocket messages to well-known identifiers to reduce escaping and safety concerns. | constrained-websocket-messages |
 | Use heartbeat ping/pong messages to keep WebSocket connections alive. | websocket-heartbeats |
@@ -103,6 +107,9 @@ Preferred implementation choices for the Go CLI.
 | Build the CLI for at least Linux and macOS. | target-platforms |
 | Use `coder/websocket` for WebSocket support. | coder-websocket |
 | Use `net/http` for the HTTP server. | net-http |
+| Prefer a lightweight single-binary server suitable for local development and CI. | single-binary |
+| Use in-memory state for the mock server rather than production-grade persistence. | in-memory-mock-state |
+| Keep mock-server administration outside the protocol-facing Yggdrasil surface. | separate-admin-surface |
 
 ## 03 Protocol Surface
 

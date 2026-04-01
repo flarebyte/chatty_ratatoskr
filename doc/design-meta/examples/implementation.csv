@@ -14,3 +14,6 @@ safe-option-flags,"Keep `options` as lightweight representations of argument par
 target-platforms,Build the CLI for at least Linux and macOS.
 coder-websocket,Use `coder/websocket` for WebSocket support.
 net-http,Use `net/http` for the HTTP server.
+single-binary,Prefer a lightweight single-binary server suitable for local development and CI.
+in-memory-mock-state,Use in-memory state for the mock server rather than production-grade persistence.
+separate-admin-surface,Keep mock-server administration outside the protocol-facing Yggdrasil surface.

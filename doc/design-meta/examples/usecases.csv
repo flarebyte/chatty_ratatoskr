@@ -1,13 +1,17 @@
 usecase,description
 simulate-backend-server,Simulate a more complex backend store server that would be developed separately.
-hierarchical-text-tree,Support a hierarchical text-tree store.
+hierarchical-value-tree,Support a hierarchical value-tree store addressed by logical keys.
 typed-value-node,"Allow a value node to carry free text, numbers, booleans, dates, and similar higher-level formats while remaining a protocol-level string."
 optimistic-write-conflict,Reject writes when the submitted version is not based on the latest stored version.
-cue-config-cli,Run as a CLI that loads a CUE configuration file.
-customisable-behaviour,Allow behaviour and lightweight validation to be customised for different product needs.
-ci-friendly,Run reliably inside CI pipelines.
+snapshot-bootstrap,Allow clients to bootstrap local state from an authoritative snapshot for a root key.
+incremental-sync,Allow clients to stay in sync through incremental events after the snapshot baseline.
+client-local-store,Allow clients to keep the same logical data in a local key-value store for sync and offline-friendly flows.
+provisional-local-keys,Allow clients to use provisional localKeyId values until the server returns the official keyId.
+server-derived-kind,Derive kind from keyId on the server so filtering and validation use the authoritative key schema.
+multilingual-nodes,Allow different value nodes in the same document to use different ISO language codes.
+secure-key-integrity,Require secureKeyId as an integrity check so corrupted or forged key identities can be detected.
+mock-status-forcing,Allow the mock server to force protocol status responses through test-oriented configuration hooks.
 client-test-support,Be sufficient to test client code against a realistic mock server.
-lightweight-yggdrasil,Provide a lightweight implementation of the evolving Yggdrasil protocol.
 optional-websocket,Keep WebSocket support optional because some clients may not support it.
 constrained-websocket-messages,Limit WebSocket messages to well-known identifiers to reduce escaping and safety concerns.
 websocket-heartbeats,Use heartbeat ping/pong messages to keep WebSocket connections alive.
