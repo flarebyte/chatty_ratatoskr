@@ -234,7 +234,7 @@ schema: {
 	// accepted there, what kind of value follows, and whether special aliases
 	// such as `_` may be resolved by the server. This keeps the mock-server
 	// schema practical without introducing a more advanced rule engine.
-	valueKind: ["id", "leaf", "derived"]
+	valueKind: ["id", "branch", "leaf", "derived"]
 
 	keyPart: {
 		maxLevels: 9
@@ -277,7 +277,7 @@ schema: {
 				comment:   "id"
 				thumbnail: "leaf"
 				language:  "leaf"
-				like:      "leaf"
+				like:      "branch"
 			}
 			optional: true
 		}
@@ -289,7 +289,7 @@ schema: {
 				comment:    "id"
 				thumbnail:  "leaf"
 				language:   "leaf"
-				like:       "leaf"
+				like:       "branch"
 				text:       "leaf"
 				count:      "derived"
 				user:       "id"
@@ -308,7 +308,7 @@ schema: {
 			labels: ["comment", "like", "text", "language", "count", "user", "member", "subscriber"]
 			valueKindByLabel: {
 				comment:    "id"
-				like:       "leaf"
+				like:       "branch"
 				text:       "leaf"
 				language:   "leaf"
 				count:      "derived"
@@ -461,6 +461,7 @@ schema: {
 | description | rule | scope |
 | --- | --- | --- |
 | When a label has `valueKind` or `valueKindByLabel` set to `id`, the parser should consume the following token as the label value. | id-consumes-next-token | key |
+| When a label has `valueKind` or `valueKindByLabel` set to `branch`, that label continues the key path without consuming an id token for itself. | branch-continues-without-id | key |
 | When a label has `valueKind` or `valueKindByLabel` set to `leaf`, that label is terminal for the key path. | leaf-terminates | key |
 | When a label has `valueKind` or `valueKindByLabel` set to `derived`, that label is terminal and server-managed. | derived-terminates | key |
 | The `_` placeholder should be accepted only for labels that explicitly allow it through `aliases` or `aliasesByLabel`. | aliases-are-label-specific | key |
@@ -613,6 +614,7 @@ Which fields are trusted, which are hints, and which are server-derived.
 | `count` is a reserved derived leaf representing aggregate server-managed state such as like totals. | derived-count-leaf | key |
 | Derived aggregate leaves such as `count` are readable by normal clients but are not directly writable by them. | derived-leaf-read-only | key |
 | Server logic should update derived aggregate leaves as a consequence of principal-scoped actions such as like and unlike. | principal-action-updates-aggregate | key |
+| `like` should be treated as a branch label that leads to either a principal-scoped like record such as `user:_` or a derived aggregate leaf such as `count`. | like-is-branch | key |
 | Principal-scoped action records such as likes should remain isolated to the acting principal and should not expose other principals' identities to ordinary readers. | private-principal-actions | key |
 
 #### Field Runtime Behaviour

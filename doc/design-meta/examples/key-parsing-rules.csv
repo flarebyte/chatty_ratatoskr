@@ -1,5 +1,6 @@
 rule,scope,description
 id-consumes-next-token,key,"When a label has `valueKind` or `valueKindByLabel` set to `id`, the parser should consume the following token as the label value."
+branch-continues-without-id,key,"When a label has `valueKind` or `valueKindByLabel` set to `branch`, that label continues the key path without consuming an id token for itself."
 leaf-terminates,key,"When a label has `valueKind` or `valueKindByLabel` set to `leaf`, that label is terminal for the key path."
 derived-terminates,key,"When a label has `valueKind` or `valueKindByLabel` set to `derived`, that label is terminal and server-managed."
 aliases-are-label-specific,key,"The `_` placeholder should be accepted only for labels that explicitly allow it through `aliases` or `aliasesByLabel`."

@@ -110,7 +110,7 @@ schema: {
 	// accepted there, what kind of value follows, and whether special aliases
 	// such as `_` may be resolved by the server. This keeps the mock-server
 	// schema practical without introducing a more advanced rule engine.
-	valueKind: ["id", "leaf", "derived"]
+	valueKind: ["id", "branch", "leaf", "derived"]
 
 	keyPart: {
 		maxLevels: 9
@@ -153,7 +153,7 @@ schema: {
 				comment:   "id"
 				thumbnail: "leaf"
 				language:  "leaf"
-				like:      "leaf"
+				like:      "branch"
 			}
 			optional: true
 		}
@@ -165,7 +165,7 @@ schema: {
 				comment:    "id"
 				thumbnail:  "leaf"
 				language:   "leaf"
-				like:       "leaf"
+				like:       "branch"
 				text:       "leaf"
 				count:      "derived"
 				user:       "id"
@@ -184,7 +184,7 @@ schema: {
 			labels: ["comment", "like", "text", "language", "count", "user", "member", "subscriber"]
 			valueKindByLabel: {
 				comment:    "id"
-				like:       "leaf"
+				like:       "branch"
 				text:       "leaf"
 				language:   "leaf"
 				count:      "derived"
