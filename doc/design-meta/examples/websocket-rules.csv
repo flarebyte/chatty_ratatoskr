@@ -4,6 +4,7 @@ read-access-still-applies,subscription,"A subscription only yields descendant ev
 roots-predefined,configuration,"The list of subscribable root keys should be predefined by configuration rather than accepted as arbitrary subtree keys."
 subtree-subscriptions-not-allowed,subscription,"Clients should be able to subscribe to a document root but not to an arbitrary section or nested subtree inside that root."
 non-allowed-root-invalid,subscription,"Subscribing to a root key outside the predefined allowed set should return `invalid`."
+status-message-for-command-errors,connection,"When a client WebSocket command cannot be accepted, the server should return a `status` message with the relevant `OperationStatus` and optional `message`."
 overlapping-roots-disallowed,configuration,"Configured subscribable roots should not overlap. This should be treated as a configuration warning or validation error rather than a runtime merge rule."
 subscribe-extends-set,connection,Repeated `subscribe` messages extend the active root-key set for the same connection.
 duplicate-root-keys-normalized,connection,Duplicate root keys are normalized without error.

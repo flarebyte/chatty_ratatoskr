@@ -1,3 +1,4 @@
+import type { OperationStatus } from './common';
 import type { EventEnvelope } from './event-envelope';
 
 export type SubscribeMessage = {
@@ -37,6 +38,13 @@ export type EventMessage = {
   event: EventEnvelope;
 };
 
+export type StatusMessage = {
+  kind: 'status';
+  id?: string;
+  status: OperationStatus;
+  message?: string;
+};
+
 export type PongMessage = {
   kind: 'pong';
 };
@@ -45,4 +53,5 @@ export type ServerMessage =
   | SubscribedMessage
   | UnsubscribedMessage
   | EventMessage
+  | StatusMessage
   | PongMessage;

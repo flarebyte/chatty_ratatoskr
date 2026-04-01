@@ -4,6 +4,7 @@ import type {
   ClientMessage,
   EventMessage,
   ServerMessage,
+  StatusMessage,
   SubscribeMessage,
   SubscribedMessage,
   UnsubscribeMessage,
@@ -36,10 +37,10 @@ export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
   // Repeated subscribe messages extend the active root-key set for the connection.
   // Root subscriptions are predefined and apply to the full readable descendant subtree.
-  // A subscribe request for a non-allowed root should return invalid.
+  // A subscribe request for a non-allowed root should return a status message with invalid.
   // Duplicate root keys are normalized and the most recent entry wins.
-  subscribe(message: SubscribeMessage): SubscribedMessage;
-  unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
+  subscribe(message: SubscribeMessage): SubscribedMessage | StatusMessage;
+  unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage | StatusMessage;
   // Closing the connection clears all active subscriptions tied to that connection.
   disconnect(user: UserParams): void;
 }

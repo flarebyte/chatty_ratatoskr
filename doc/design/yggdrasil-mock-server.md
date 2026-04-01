@@ -950,6 +950,7 @@ import type {
   ClientMessage,
   EventMessage,
   ServerMessage,
+  StatusMessage,
   SubscribeMessage,
   SubscribedMessage,
   UnsubscribeMessage,
@@ -982,10 +983,10 @@ export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
   // Repeated subscribe messages extend the active root-key set for the connection.
   // Root subscriptions are predefined and apply to the full readable descendant subtree.
-  // A subscribe request for a non-allowed root should return invalid.
+  // A subscribe request for a non-allowed root should return a status message with invalid.
   // Duplicate root keys are normalized and the most recent entry wins.
-  subscribe(message: SubscribeMessage): SubscribedMessage;
-  unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
+  subscribe(message: SubscribeMessage): SubscribedMessage | StatusMessage;
+  unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage | StatusMessage;
   // Closing the connection clears all active subscriptions tied to that connection.
   disconnect(user: UserParams): void;
 }
@@ -1037,6 +1038,7 @@ export interface SnapshotEventStoreApi {
 #### WebSocket Messages
 
 ```ts
+import type { OperationStatus } from './common';
 import type { EventEnvelope } from './event-envelope';
 
 export type SubscribeMessage = {
@@ -1076,6 +1078,13 @@ export type EventMessage = {
   event: EventEnvelope;
 };
 
+export type StatusMessage = {
+  kind: 'status';
+  id?: string;
+  status: OperationStatus;
+  message?: string;
+};
+
 export type PongMessage = {
   kind: 'pong';
 };
@@ -1084,6 +1093,7 @@ export type ServerMessage =
   | SubscribedMessage
   | UnsubscribedMessage
   | EventMessage
+  | StatusMessage
   | PongMessage;
 ```
 
@@ -1093,7 +1103,7 @@ export type ServerMessage =
 | --- | --- | --- | --- |
 | client | Open the WebSocket connection to the optional `/events` endpoint. | open-connection | websocket |
 | client | Send a `subscribe` message with one or more allowed root keys to watch. | subscribe-root-keys | websocket |
-| server | Return `invalid` for subscriptions that target arbitrary subtrees or root keys outside the predefined subscribable set. | validate-roots | internal |
+| server | Return a `status` message with `invalid` for subscriptions that target arbitrary subtrees or root keys outside the predefined subscribable set. | validate-roots | internal |
 | server | Apply each accepted root subscription to that root and all readable descendants. | expand-to-descendants | internal |
 | client | Send another `subscribe` message later to add more root keys without reopening the connection. | extend-subscription | websocket |
 | server | Normalize duplicate root keys without error and keep the most recent subscription entry. | deduplicate-subscription | internal |
@@ -1112,6 +1122,7 @@ export type ServerMessage =
 | The list of subscribable root keys should be predefined by configuration rather than accepted as arbitrary subtree keys. | roots-predefined | configuration |
 | Clients should be able to subscribe to a document root but not to an arbitrary section or nested subtree inside that root. | subtree-subscriptions-not-allowed | subscription |
 | Subscribing to a root key outside the predefined allowed set should return `invalid`. | non-allowed-root-invalid | subscription |
+| When a client WebSocket command cannot be accepted, the server should return a `status` message with the relevant `OperationStatus` and optional `message`. | status-message-for-command-errors | connection |
 | Configured subscribable roots should not overlap. This should be treated as a configuration warning or validation error rather than a runtime merge rule. | overlapping-roots-disallowed | configuration |
 | Repeated `subscribe` messages extend the active root-key set for the same connection. | subscribe-extends-set | connection |
 | Duplicate root keys are normalized without error. | duplicate-root-keys-normalized | connection |
