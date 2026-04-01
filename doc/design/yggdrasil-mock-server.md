@@ -364,7 +364,6 @@ Known draft mismatches that should be resolved before implementation hardens.
 The draft material is now closer to a coherent protocol, but a few design questions remain open:
 
 - The project intent is now clear: Yggdrasil is a hierarchical key/value and snapshot protocol. The remaining question is whether the current names such as `TextNode` are specific enough or should be generalized to a broader Yggdrasil node vocabulary.
-- The WebSocket draft now defines `/events` as the connection path, but the exact message envelope for subscribe, unsubscribe, heartbeat, and event delivery is still only implied by the TypeScript examples rather than defined as a strict protocol contract.
 - The examples describe both snapshots and event stores, but retention, overwrite semantics, archive behaviour, and snapshot rehydration rules are still under-specified.
 - Security is only sketched through `secureKeyId` and constrained event identifiers. Authentication, authorization, and trust boundaries are still intentionally unresolved in this draft.
 
@@ -730,6 +729,7 @@ export interface EventApi {
 
 export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
+  // Repeated subscribe messages extend the active root-key set for the connection.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
 }
@@ -785,6 +785,8 @@ import type { EventEnvelope } from './event-envelope';
 
 export type SubscribeMessage = {
   kind: 'subscribe';
+  // A client may send subscribe more than once to add further root keys
+  // without reopening the WebSocket connection.
   rootKeys: string[];
 };
 
@@ -834,6 +836,7 @@ export type ServerMessage =
 | --- | --- | --- | --- |
 | client | Open the WebSocket connection to the optional `/events` endpoint. | open-connection | websocket |
 | client | Send a `subscribe` message with the root keys to watch. | subscribe-root-keys | websocket |
+| client | Send another `subscribe` message later to add more root keys without reopening the connection. | extend-subscription | websocket |
 | server | Reply with `subscribed` to confirm the active root-key subscriptions. | confirm-subscription | websocket |
 | server | Send an `event` message containing the `EventEnvelope`. | receive-event | websocket |
 | client-and-server | Use `ping` and `pong` messages to keep the connection alive. | ping-pong | websocket |

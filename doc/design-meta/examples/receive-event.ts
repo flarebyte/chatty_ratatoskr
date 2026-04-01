@@ -32,6 +32,7 @@ export interface EventApi {
 
 export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
+  // Repeated subscribe messages extend the active root-key set for the connection.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
 }
