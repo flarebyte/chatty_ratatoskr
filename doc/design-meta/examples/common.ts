@@ -38,6 +38,9 @@ export type KeyParams = {
   // In the mock server it may also be used to force a non-ok response.
   secureKeyId?: string;
   localKeyId?: string;
+  // The server should derive kind from keyId and treat that derived value as
+  // authoritative. A client may use a temporary kind locally before the server
+  // responds, but any mismatch must be corrected by the server-derived value.
   kind?: KeyKind;
   // Used by clients and servers for optimistic sync checks so writes are based
   // on the latest known state rather than an older version.

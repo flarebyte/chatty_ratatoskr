@@ -206,6 +206,8 @@ schema: {
 	}
 
 	// Key hierarchy rules define which kinds may appear at each level.
+	// In normal operation, keyId is the source of truth and kind is derived from
+	// the key schema with unique identifiers removed.
 	keyKind: {
 		rootWithId: ['dashboard']
 		rootWithoutId: ['profile']
@@ -213,6 +215,11 @@ schema: {
 		childrenWithoutId: ["text", "user"]
 		maxLevels: 20
 	}
+
+	// The server should treat derived kind information as authoritative and
+	// reject or correct any attempt to send corrupted kind data that conflicts
+	// with keyId. This protects filtering logic and avoids security issues that
+	// could arise from trusting client-supplied kind blindly.
 
 	// The protocol standardizes key meaning, not one storage encoding.
 	keyEncoding: {
@@ -302,7 +309,7 @@ Current entity and field definitions used by the draft protocol.
 | core | String | ValueNode | Logical stream or grouping identifier (for example, a project or topic path). | keyId | Key ID | string | true | string |
 | core | String | ValueNode | Mandatory integrity field derived from `keyId`. Production servers should verify it using a signed or JWT-style check; the mock server may also use it as a test hook to force a configured non-ok status. | secureKeyId | Secure Key ID | string | true | string |
 | core | List<String>? | ValueNode | Optional metadata flags (for example '--pinned', '--archived', '--sensitive'). | options | Options | []string | false | string[] |
-| core | String | ValueNode | Logical type of the value node (for example 'note'), set by the client. | kind | Kind | string | false | string |
+| core | String | ValueNode | Server-derived schema for the value node, inferred from `keyId` with unique identifiers removed. A client may use a temporary local hint, but the authoritative kind comes from the server-derived interpretation of `keyId`. | kind | Kind | string | false | string |
 | core | String? | ValueNode | Optional ISO language code for the value content. | language | Language | *string | false | string |
 | core | String | ValueNode | Protocol-level string payload. Higher-level formats such as free text, numbers, booleans, dates, or encoded JSON are still serialized as strings. | value | Value | string | true | string |
 | core | String | ValueNode | Server-generated version used for optimistic sync checks so clients and servers can reject writes based on an older state. | version | Version | string | true | string |
@@ -571,6 +578,9 @@ export type KeyParams = {
   // In the mock server it may also be used to force a non-ok response.
   secureKeyId?: string;
   localKeyId?: string;
+  // The server should derive kind from keyId and treat that derived value as
+  // authoritative. A client may use a temporary kind locally before the server
+  // responds, but any mismatch must be corrected by the server-derived value.
   kind?: KeyKind;
   // Used by clients and servers for optimistic sync checks so writes are based
   // on the latest known state rather than an older version.

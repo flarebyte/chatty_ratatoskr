@@ -89,6 +89,8 @@ schema: {
 	}
 
 	// Key hierarchy rules define which kinds may appear at each level.
+	// In normal operation, keyId is the source of truth and kind is derived from
+	// the key schema with unique identifiers removed.
 	keyKind: {
 		rootWithId: ['dashboard']
 		rootWithoutId: ['profile']
@@ -96,6 +98,11 @@ schema: {
 		childrenWithoutId: ["text", "user"]
 		maxLevels: 20
 	}
+
+	// The server should treat derived kind information as authoritative and
+	// reject or correct any attempt to send corrupted kind data that conflicts
+	// with keyId. This protects filtering logic and avoids security issues that
+	// could arise from trusting client-supplied kind blindly.
 
 	// The protocol standardizes key meaning, not one storage encoding.
 	keyEncoding: {
