@@ -11,6 +11,17 @@ websocket: {
 	pingIntervalSeconds: 60
 	pongWaitSeconds:     10
 	maxMessageSizeKB:    4
+	// Subscriptions are allowed only for predefined document-level roots.
+	// A root subscription covers that root and all readable descendants.
+	subscription: {
+		predefinedRootsOnly: true
+		includeDescendants:  true
+		allowSubtreeRoots:   false
+		// Overlapping configured roots should not exist in practice. The mock
+		// server may warn, while stricter production validation may reject them.
+		warnOnOverlappingRoots: true
+		allowedRoots:          ["dashboard", "profile"]
+	}
 }
 
 // Sync is based on authoritative snapshots plus incremental events.
@@ -67,6 +78,9 @@ endpoints: {
 events: {
 	connectionPath: "/events"
 	source:         "server-generated-after-state-change"
+	// Event subscriptions are rooted at predefined top-level documents rather
+	// than arbitrary nested subtrees.
+	rootSubscriptionModel: "predefined-roots-with-descendants"
 }
 
 // Mock-server controls are intentionally outside the Yggdrasil protocol.

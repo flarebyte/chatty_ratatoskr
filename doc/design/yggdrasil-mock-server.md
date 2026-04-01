@@ -135,6 +135,17 @@ websocket: {
 	pingIntervalSeconds: 60
 	pongWaitSeconds:     10
 	maxMessageSizeKB:    4
+	// Subscriptions are allowed only for predefined document-level roots.
+	// A root subscription covers that root and all readable descendants.
+	subscription: {
+		predefinedRootsOnly: true
+		includeDescendants:  true
+		allowSubtreeRoots:   false
+		// Overlapping configured roots should not exist in practice. The mock
+		// server may warn, while stricter production validation may reject them.
+		warnOnOverlappingRoots: true
+		allowedRoots:          ["dashboard", "profile"]
+	}
 }
 
 // Sync is based on authoritative snapshots plus incremental events.
@@ -191,6 +202,9 @@ endpoints: {
 events: {
 	connectionPath: "/events"
 	source:         "server-generated-after-state-change"
+	// Event subscriptions are rooted at predefined top-level documents rather
+	// than arbitrary nested subtrees.
+	rootSubscriptionModel: "predefined-roots-with-descendants"
 }
 
 // Mock-server controls are intentionally outside the Yggdrasil protocol.
@@ -966,6 +980,7 @@ export interface EventApi {
 export interface WebSocketEventApi {
   onClientMessage(message: ClientMessage): ServerMessage | EventMessage;
   // Repeated subscribe messages extend the active root-key set for the connection.
+  // Root subscriptions are predefined and apply to the full readable descendant subtree.
   // Duplicate root keys are normalized and the most recent entry wins.
   subscribe(message: SubscribeMessage): SubscribedMessage;
   unsubscribe(message: UnsubscribeMessage): UnsubscribedMessage;
@@ -1075,7 +1090,9 @@ export type ServerMessage =
 | actor | description | step | transport |
 | --- | --- | --- | --- |
 | client | Open the WebSocket connection to the optional `/events` endpoint. | open-connection | websocket |
-| client | Send a `subscribe` message with the root keys to watch. | subscribe-root-keys | websocket |
+| client | Send a `subscribe` message with one or more allowed root keys to watch. | subscribe-root-keys | websocket |
+| server | Reject or warn on subscriptions that target arbitrary subtrees instead of predefined subscribable roots. | validate-roots | internal |
+| server | Apply each accepted root subscription to that root and all readable descendants. | expand-to-descendants | internal |
 | client | Send another `subscribe` message later to add more root keys without reopening the connection. | extend-subscription | websocket |
 | server | Normalize duplicate root keys without error and keep the most recent subscription entry. | deduplicate-subscription | internal |
 | server | Reply with `subscribed` to confirm the active root-key subscriptions. | confirm-subscription | websocket |
@@ -1088,6 +1105,11 @@ export type ServerMessage =
 
 | description | rule | scope |
 | --- | --- | --- |
+| Subscribing to an allowed root key includes events for that root and all of its readable descendants. | root-scope-includes-descendants | subscription |
+| A subscription only yields descendant events that the user is allowed to read. | read-access-still-applies | subscription |
+| The list of subscribable root keys should be predefined by configuration rather than accepted as arbitrary subtree keys. | roots-predefined | configuration |
+| Clients should be able to subscribe to a document root but not to an arbitrary section or nested subtree inside that root. | subtree-subscriptions-not-allowed | subscription |
+| Configured subscribable roots should not overlap. This should be treated as a configuration warning or validation error rather than a runtime merge rule. | overlapping-roots-disallowed | configuration |
 | Repeated `subscribe` messages extend the active root-key set for the same connection. | subscribe-extends-set | connection |
 | Duplicate root keys are normalized without error. | duplicate-root-keys-normalized | connection |
 | When duplicate root keys are received the most recent subscription entry wins. | most-recent-subscription-wins | connection |
