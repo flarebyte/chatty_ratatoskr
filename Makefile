@@ -38,11 +38,11 @@ contract-snapshots:
 	$(GO) test -run TestContract_ ./internal/stage
 
 gen:
-	$(MAKE) docs-gen
+	$(MAKE) doc-gen
 
-docs-gen:
-	$(FLYB) validate --config docs/design-meta
-	$(FLYB) generate markdown --config docs/design-meta
+doc-gen:
+	$(FLYB) validate --config doc/design-meta
+	$(FLYB) generate markdown --config doc/design-meta
 
 build:
 	$(BUN) run build-go.ts
