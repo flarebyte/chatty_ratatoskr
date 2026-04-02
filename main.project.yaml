@@ -1,2 +1,10 @@
+name: github/flarebyte/chatty-ratatoskr
+role: dev
+description: |-
+   Go CLI project for a lightweight Yggdrasil mock server
+notes: |-
+    Project for dev role
 tags:
-  version: 0.1.0
+    org: flarebyte
+    source: github
+    version: 0.5.0
