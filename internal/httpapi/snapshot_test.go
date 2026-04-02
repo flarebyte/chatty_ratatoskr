@@ -49,7 +49,7 @@ func TestHTTP_SetSnapshot_ReplacesBaseline(t *testing.T) {
 		t.Fatalf("status mismatch: got %d want %d", got, want)
 	}
 
-	const want = "{\"id\":\"req-set-snapshot-001\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\"}}}\n"
+	const want = "{\"id\":\"req-set-snapshot-001\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}}}}\n"
 	if got := rec.Body.String(); got != want {
 		t.Fatalf("response mismatch:\nwant %s\ngot  %s", want, got)
 	}
@@ -162,7 +162,7 @@ func TestHTTP_GetSnapshot_ReturnsDeterministicSnapshot(t *testing.T) {
 		t.Fatalf("status mismatch: got %d want %d", got, want)
 	}
 
-	const want = "{\"id\":\"req-get-snapshot-001\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\"},\"keyValueList\":[{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count\",\"secureKeyId\":\"ok\",\"version\":\"v1\"},\"value\":\"3\"},{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\"},\"value\":\"hello world\"}]}}\n"
+	const want = "{\"id\":\"req-get-snapshot-001\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyValueList\":[{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count\",\"secureKeyId\":\"ok\",\"version\":\"v1\"},\"value\":\"3\"},{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\"},\"value\":\"hello world\"}]}}\n"
 	if got := rec.Body.String(); got != want {
 		t.Fatalf("response mismatch:\nwant %s\ngot  %s", want, got)
 	}
@@ -259,7 +259,7 @@ func TestHTTP_ResponseCorrelationRules(t *testing.T) {
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
 
-		const want = "{\"id\":\"generated-123\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\"},\"keyValueList\":[]}}\n"
+		const want = "{\"id\":\"generated-123\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyValueList\":[]}}\n"
 		if got := rec.Body.String(); got != want {
 			t.Fatalf("generated id response mismatch:\nwant %s\ngot  %s", want, got)
 		}
@@ -285,4 +285,33 @@ func TestHTTP_ResponseCorrelationRules(t *testing.T) {
 			t.Fatalf("expected invalid status, got %s", rec.Body.String())
 		}
 	})
+}
+
+func TestHTTP_SnapshotKindIgnoresClientHint(t *testing.T) {
+	store := snapshot.NewInMemoryStore()
+	api := NewSnapshotAPI(store)
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	req := httptest.NewRequest(http.MethodPut, "/snapshot", strings.NewReader(`{
+  "id":"req-kind-001",
+  "key":{
+    "keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+    "secureKeyId":"ok",
+    "kind":{"hierarchy":["wrong","kind"]}
+  },
+  "keyValueList":[]
+}`))
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if got, want := rec.Code, http.StatusOK; got != want {
+		t.Fatalf("status mismatch: got %d want %d", got, want)
+	}
+	if !strings.Contains(rec.Body.String(), `"kind":{"hierarchy":["dashboard"]}`) {
+		t.Fatalf("expected derived kind in response, got %s", rec.Body.String())
+	}
+	if strings.Contains(rec.Body.String(), `"wrong"`) {
+		t.Fatalf("client kind hint leaked into response: %s", rec.Body.String())
+	}
 }

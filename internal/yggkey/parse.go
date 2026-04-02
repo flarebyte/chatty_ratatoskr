@@ -22,6 +22,10 @@ type Segment struct {
 	Kind  string `json:"kind"`
 }
 
+type DerivedKind struct {
+	Hierarchy []string `json:"hierarchy"`
+}
+
 type parser struct {
 	tokens []string
 	index  int
@@ -147,6 +151,14 @@ func MustJSON(parsed ParsedKey) string {
 		panic(err)
 	}
 	return string(data)
+}
+
+func (p ParsedKey) DerivedKind() DerivedKind {
+	hierarchy := []string{p.Root.Label}
+	for _, segment := range p.Path {
+		hierarchy = append(hierarchy, segment.Label)
+	}
+	return DerivedKind{Hierarchy: hierarchy}
 }
 
 func labelList(parts []Segment) []string {

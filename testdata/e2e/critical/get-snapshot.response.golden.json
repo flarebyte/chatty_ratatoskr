@@ -4,7 +4,10 @@
   "data": {
     "key": {
       "keyId": "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
-      "secureKeyId": "ok"
+      "secureKeyId": "ok",
+      "kind": {
+        "hierarchy": ["dashboard"]
+      }
     },
     "keyValueList": [
       {

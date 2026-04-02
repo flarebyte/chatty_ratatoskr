@@ -1,4 +1,5 @@
 import http from 'node:http';
+import net from 'node:net';
 import path from 'node:path';
 
 import { repoRoot } from './paths';
@@ -8,15 +9,14 @@ export type RunningServer = {
   stop: () => Promise<void>;
 };
 
-let nextPort = 19080;
 let buildOnce: Promise<void> | undefined;
 
 export async function startMockServer(): Promise<RunningServer> {
   await ensureBuiltBinary();
 
-  const listen = `127.0.0.1:${nextPort}`;
-  nextPort += 1;
   const binaryPath = path.join(repoRoot, '.e2e-bin', 'chatty');
+  const port = await getFreePort();
+  const listen = `127.0.0.1:${port}`;
 
   const proc = Bun.spawn([binaryPath, 'serve', '--listen', listen], {
     cwd: repoRoot,
@@ -90,6 +90,28 @@ async function pingServer(listen: string): Promise<boolean> {
 
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getFreePort(): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    const server = net.createServer();
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        reject(new Error('failed to allocate port'));
+        return;
+      }
+      const { port } = address;
+      server.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(port);
+      });
+    });
+    server.on('error', reject);
+  });
 }
 
 async function ensureBuiltBinary(): Promise<void> {

@@ -111,3 +111,53 @@ func TestKeyParser_DeterministicMarshal(t *testing.T) {
 		t.Fatalf("marshal mismatch:\nfirst=%s\nsecond=%s", gotFirst, gotSecond)
 	}
 }
+
+func TestKey_DerivedKind(t *testing.T) {
+	cases := []struct {
+		name string
+		key  string
+		want []string
+	}{
+		{
+			name: "root only",
+			key:  "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+			want: []string{"dashboard"},
+		},
+		{
+			name: "note text",
+			key:  "tenant:t8f3a1c2:group:g4b7d9e1:user:u42c91ab:dashboard:d1e52f07:note:n7c401c2:text",
+			want: []string{"dashboard", "note", "text"},
+		},
+		{
+			name: "like count",
+			key:  "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count",
+			want: []string{"dashboard", "note", "like", "count"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			parsed, err := Parse(tc.key)
+			if err != nil {
+				t.Fatalf("Parse(%q) error = %v", tc.key, err)
+			}
+			got := parsed.DerivedKind()
+			if len(got.Hierarchy) != len(tc.want) {
+				t.Fatalf("Hierarchy length mismatch: got %v want %v", got.Hierarchy, tc.want)
+			}
+			for i, want := range tc.want {
+				if got.Hierarchy[i] != want {
+					t.Fatalf("Hierarchy[%d] mismatch: got %q want %q", i, got.Hierarchy[i], want)
+				}
+			}
+		})
+	}
+}
+
+func TestKey_AcceptanceExamples(t *testing.T) {
+	TestKeyParser_AcceptsCriticalFixtures(t)
+}
+
+func TestKey_RejectionExamples(t *testing.T) {
+	TestKeyParser_RejectsMalformedExamples(t)
+}

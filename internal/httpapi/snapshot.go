@@ -18,10 +18,16 @@ type SnapshotAPI struct {
 	generateID func() string
 }
 
+type kindParams struct {
+	Hierarchy []string `json:"hierarchy,omitempty"`
+	Language  string   `json:"language,omitempty"`
+}
+
 type keyParams struct {
-	KeyID       string `json:"keyId"`
-	SecureKeyID string `json:"secureKeyId,omitempty"`
-	Version     string `json:"version,omitempty"`
+	KeyID       string      `json:"keyId"`
+	SecureKeyID string      `json:"secureKeyId,omitempty"`
+	Version     string      `json:"version,omitempty"`
+	Kind        *kindParams `json:"kind,omitempty"`
 }
 
 type keyValueParams struct {
@@ -130,7 +136,12 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 		ID:     api.responseID(req.ID),
 		Status: "ok",
 		Data: setSnapshotResponseData{
-			Key: req.Key,
+			Key: keyParams{
+				KeyID:       req.Key.KeyID,
+				SecureKeyID: req.Key.SecureKeyID,
+				Version:     req.Key.Version,
+				Kind:        derivedKindParams(rootParsed),
+			},
 		},
 	})
 }
@@ -142,7 +153,8 @@ func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if _, err := yggkey.Parse(req.Key.KeyID); err != nil {
+	rootParsed, err := yggkey.Parse(req.Key.KeyID)
+	if err != nil {
 		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, err.Error()))
 		return
 	}
@@ -170,10 +182,20 @@ func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request
 		ID:     api.responseID(req.ID),
 		Status: "ok",
 		Data: getSnapshotResponseData{
-			Key:          req.Key,
+			Key: keyParams{
+				KeyID:       req.Key.KeyID,
+				SecureKeyID: req.Key.SecureKeyID,
+				Version:     req.Key.Version,
+				Kind:        derivedKindParams(rootParsed),
+			},
 			KeyValueList: keyValueList,
 		},
 	})
+}
+
+func derivedKindParams(parsed yggkey.ParsedKey) *kindParams {
+	kind := parsed.DerivedKind()
+	return &kindParams{Hierarchy: kind.Hierarchy}
 }
 
 func decodeJSON(r *http.Request, out any) error {
