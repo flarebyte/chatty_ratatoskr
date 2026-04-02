@@ -4,6 +4,8 @@
 
 The product binary is `chatty`.
 
+![Ratatoskr climbing Yggdrasil's mighty trunk](./chatty-ratatoskr-hero.png)
+
 The goal is to provide a cheap local and CI-friendly server that simulates a production Yggdrasil backend over HTTP and, later, optional WebSocket. The design is spec-first and currently lives under [doc/design/yggdrasil-mock-server.md](/Users/olivier/Documents/github/chatty-ratatoskr/doc/design/yggdrasil-mock-server.md) and [doc/design-meta](/Users/olivier/Documents/github/chatty-ratatoskr/doc/design-meta).
 
 ## What It Is For
