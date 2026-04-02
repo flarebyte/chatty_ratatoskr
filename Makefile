@@ -1,41 +1,55 @@
 ## Makefile: thin wrappers for local/dev/release commands.
 ## Keep target behavior explicit and deterministic.
+## Human reviewers should periodically run `make review`.
+## Agents should run at least `make format` before handing work back.
 ## Build artifacts are produced under ./build by build-go.ts.
 ## Release publishing is handled by release-go.ts.
 
-.PHONY: lint format test test-race gen docs-gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check
+.PHONY: lint format test test-race gen docs-gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check complexity sec dup review thoth-meta-go thoth-meta-go-test thoth-meta-ts-e2e thoth-lint-go thoth-meta-merge
 
-BIOME := npx @biomejs/biome
+BIOME := ./node_modules/.bin/biome
 BUN := bun
 GO := go
 GOLINT := golangci-lint
 FLYB := flyb
+THOTH := thoth
+BIN := chatty
+GO_CACHE_ENV := GOCACHE=$(PWD)/.gocache GOMODCACHE=$(PWD)/.gomodcache
+GOLANGCI_LINT_CACHE := $(PWD)/.golangci-lint-cache
 
 lint:
-	$(BIOME) check
-	$(GO) vet ./...
-	$(GOLINT) run
+	@if [ -x "$(BIOME)" ]; then \
+		$(BIOME) check; \
+	else \
+		printf '%s\n' 'Skipping Biome check: @biomejs/biome is not installed locally.'; \
+	fi
+	$(GO_CACHE_ENV) $(GO) vet ./...
+	GOLANGCI_LINT_CACHE=$(GOLANGCI_LINT_CACHE) $(GO_CACHE_ENV) $(GOLINT) run
 
 format:
 	gofmt -w .
-	$(BIOME) format --write .
-	$(BIOME) check --unsafe --write
+	@if [ -x "$(BIOME)" ]; then \
+		$(BIOME) format --write .; \
+		$(BIOME) check --unsafe --write; \
+	else \
+		printf '%s\n' 'Skipping Biome format/check: @biomejs/biome is not installed locally.'; \
+	fi
 
 test: gen
-	$(GO) test -coverprofile=coverage.out ./...
-	$(GO) tool cover -func=coverage.out
+	$(GO_CACHE_ENV) $(GO) test -coverprofile=coverage.out ./...
+	$(GO_CACHE_ENV) $(GO) tool cover -func=coverage.out
 
 test-race: gen
-	$(GO) test -race ./...
+	$(GO_CACHE_ENV) $(GO) test -race ./...
 
 bench:
-	$(GO) test -bench=. -run=^$$ ./...
+	$(GO_CACHE_ENV) $(GO) test -bench=. -run=^$$ ./...
 
 perf-smoke:
-	$(GO) test -run TestPerfSmoke_ ./...
+	$(GO_CACHE_ENV) $(GO) test ./... -run TestPerfSmoke_
 
 contract-snapshots:
-	$(GO) test -run TestContract_ ./internal/stage
+	$(GO_CACHE_ENV) $(GO) test ./... -run TestContract_
 
 gen:
 	$(MAKE) doc-gen
@@ -49,7 +63,7 @@ build:
 
 build-dev:
 	mkdir -p .e2e-bin
-	GOCACHE=$(PWD)/.gocache GOMODCACHE=$(PWD)/.gomodcache CGO_ENABLED=0 $(GO) build -o .e2e-bin/thoth ./cmd/thoth
+	$(GO_CACHE_ENV) CGO_ENABLED=0 $(GO) build -o .e2e-bin/$(BIN) ./cmd/$(BIN)
 
 e2e:
 	cd script/e2e && $(BUN) test
@@ -57,10 +71,10 @@ e2e:
 release: release-check
 	$(BUN) run release-go.ts
 
-release-check: lint test contract-snapshots
+release-check: lint test e2e contract-snapshots
 
 clean:
-	rm -rf build
+	rm -rf build .e2e-bin coverage.out temp thoth-meta .gocache .gomodcache .golangci-lint-cache
 
 complexity:
 	scc --sort complexity --by-file -i go . | head -n 15
@@ -75,39 +89,45 @@ dup:
 review: format test e2e lint
 
 thoth-meta-go:
-	./.e2e-bin/thoth run --config ./pipeline-go-maat.thoth.cue
+	$(THOTH) run --config ./pipeline-go-maat.thoth.cue
 
 thoth-meta-go-test:
-	./.e2e-bin/thoth run --config ./pipeline-go-test-maat.thoth.cue
+	$(THOTH) run --config ./pipeline-go-test-maat.thoth.cue
 
 thoth-meta-ts-e2e:
-	./.e2e-bin/thoth run --config ./pipeline-ts-e2e-maat.thoth.cue 
+	$(THOTH) run --config ./pipeline-ts-e2e-maat.thoth.cue 
 
 thoth-lint-go:
-	./.e2e-bin/thoth run --config ./pipeline-go-function-thresholds.thoth.cue
+	$(THOTH) run --config ./pipeline-go-function-thresholds.thoth.cue
 	cat temp/pipeline-go-function-thresholds.json | jq '.meta.reduced.worstOffenders'
 
 thoth-meta-merge:
-	./.e2e-bin/thoth run --config ./pipeline-thoth-meta-aggregate.thoth.cue
+	$(THOTH) run --config ./pipeline-thoth-meta-aggregate.thoth.cue
 	
 help:
 	@printf "Targets:\n"
-	@printf "  (requires: go, bun, golangci-lint, biome)\n"
+	@printf "  (core tools: go, bun, golangci-lint, flyb, thoth, biome)\n"
 	@printf "  lint               Run linters (Biome + go vet + golangci-lint).\n"
-	@printf "  format             Apply formatting (gofmt + Biome).\n"
+	@printf "  format             Apply formatting (gofmt + Biome when locally installed).\n"
 	@printf "  test               Run Go tests + coverage summary.\n"
 	@printf "  test-race          Run Go tests with race detector.\n"
 	@printf "  bench              Run Go benchmarks.\n"
 	@printf "  perf-smoke         Run performance smoke tests.\n"
 	@printf "  contract-snapshots Run contract snapshot tests.\n"
-	@printf "  release-check      Run lint + tests + contract snapshots.\n"
+	@printf "  release-check      Run lint + tests + e2e + contract snapshots.\n"
 	@printf "  gen                Generate repo artifacts.\n"
 	@printf "  docs-gen           Generate design docs from flyb config.\n"
-	@printf "  build              Build release binaries into ./build.\n"
-	@printf "  build-dev          Build local dev binary into .e2e-bin/.\n"
+	@printf "  build              Build release binaries for chatty into ./build.\n"
+	@printf "  build-dev          Build the local chatty binary into .e2e-bin/.\n"
 	@printf "  e2e                Run Bun-powered end-to-end tests.\n"
 	@printf "  release            Run release checks, build artifacts, publish GitHub release.\n"
 	@printf "  clean              Remove build artifacts.\n"
 	@printf "  complexity         Show top file complexity (Go/TS).\n"
 	@printf "  sec                Run security scan (semgrep).\n"
 	@printf "  dup                Run duplication scans (go/typescript).\n"
+	@printf "  review             Human reviewer command: format + test + e2e + lint.\n"
+	@printf "  thoth-meta-go      Collect metadata for non-test Go files via thoth.\n"
+	@printf "  thoth-meta-go-test Collect metadata for Go test files via thoth.\n"
+	@printf "  thoth-meta-ts-e2e  Collect metadata for TypeScript e2e tests via thoth.\n"
+	@printf "  thoth-lint-go      Report large/complex Go functions via thoth.\n"
+	@printf "  thoth-meta-merge   Aggregate persisted thoth metadata.\n"
