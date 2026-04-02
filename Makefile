@@ -27,7 +27,11 @@ lint:
 	GOLANGCI_LINT_CACHE=$(GOLANGCI_LINT_CACHE) $(GO_CACHE_ENV) $(GOLINT) run
 
 format:
-	gofmt -w .
+	find . -name '*.go' \
+		-not -path './.git/*' \
+		-not -path './.gocache/*' \
+		-not -path './.gomodcache/*' \
+		-exec gofmt -w {} +
 	@if [ -x "$(BIOME)" ]; then \
 		$(BIOME) format --write .; \
 		$(BIOME) check --unsafe --write; \
