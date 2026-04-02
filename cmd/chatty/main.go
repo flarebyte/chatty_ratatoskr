@@ -15,6 +15,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/flarebyte/chatty-ratatoskr/internal/httpapi"
+	"github.com/flarebyte/chatty-ratatoskr/internal/snapshot"
 	"github.com/spf13/cobra"
 )
 
@@ -187,7 +189,7 @@ func runServeWithOptions(ctx context.Context, stdout io.Writer, cfg serveConfig,
 	}()
 
 	server := &http.Server{
-		Handler: http.NewServeMux(),
+		Handler: newServerMux(),
 		BaseContext: func(net.Listener) context.Context {
 			return ctx
 		},
@@ -219,6 +221,12 @@ func runServeWithOptions(ctx context.Context, stdout io.Writer, cfg serveConfig,
 
 func versionString() string {
 	return fmt.Sprintf("chatty version=%s commit=%s date=%s\n", Version, Commit, Date)
+}
+
+func newServerMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	httpapi.NewSnapshotAPI(snapshot.NewInMemoryStore()).Register(mux)
+	return mux
 }
 
 func mustWrite(w io.Writer, s string) {

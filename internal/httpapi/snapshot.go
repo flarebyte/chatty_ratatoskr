@@ -1,0 +1,157 @@
+package httpapi
+
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"strings"
+
+	"github.com/flarebyte/chatty-ratatoskr/internal/snapshot"
+	"github.com/flarebyte/chatty-ratatoskr/internal/yggkey"
+)
+
+const generatedResponseID = "generated"
+
+type SnapshotAPI struct {
+	store snapshot.Store
+}
+
+type keyParams struct {
+	KeyID       string `json:"keyId"`
+	SecureKeyID string `json:"secureKeyId,omitempty"`
+	Version     string `json:"version,omitempty"`
+}
+
+type keyValueParams struct {
+	Key   keyParams `json:"key"`
+	Value string    `json:"value,omitempty"`
+}
+
+type setSnapshotRequest struct {
+	ID           string           `json:"id,omitempty"`
+	Key          keyParams        `json:"key"`
+	KeyValueList []keyValueParams `json:"keyValueList"`
+}
+
+type responseEnvelope[T any] struct {
+	ID      string `json:"id"`
+	Status  string `json:"status"`
+	Message string `json:"message,omitempty"`
+	Data    T      `json:"data"`
+}
+
+type setSnapshotResponseData struct {
+	Key keyParams `json:"key"`
+}
+
+func NewSnapshotAPI(store snapshot.Store) *SnapshotAPI {
+	return &SnapshotAPI{store: store}
+}
+
+func (api *SnapshotAPI) Register(mux *http.ServeMux) {
+	mux.HandleFunc("/snapshot", api.handleSnapshot)
+}
+
+func (api *SnapshotAPI) handleSnapshot(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPut:
+		api.handleSetSnapshot(w, r)
+	default:
+		http.NotFound(w, r)
+	}
+}
+
+func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request) {
+	var req setSnapshotRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, "invalid JSON payload"))
+		return
+	}
+
+	rootParsed, err := yggkey.Parse(req.Key.KeyID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, err.Error()))
+		return
+	}
+
+	entries := make([]snapshot.KeyValue, 0, len(req.KeyValueList))
+	for _, item := range req.KeyValueList {
+		if _, err := yggkey.Parse(item.Key.KeyID); err != nil {
+			writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, err.Error()))
+			return
+		}
+		if !isDescendant(rootParsed.Canonical, item.Key.KeyID) {
+			writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, "invalid key: snapshot entry must be a descendant of the requested root"))
+			return
+		}
+		entries = append(entries, snapshot.KeyValue{
+			Key: snapshot.Key{
+				KeyID:       item.Key.KeyID,
+				SecureKeyID: item.Key.SecureKeyID,
+				Version:     item.Key.Version,
+			},
+			Value: item.Value,
+		})
+	}
+
+	root := snapshot.Key{
+		KeyID:       req.Key.KeyID,
+		SecureKeyID: req.Key.SecureKeyID,
+		Version:     req.Key.Version,
+	}
+	api.store.Replace(root, entries)
+
+	writeJSON(w, http.StatusOK, responseEnvelope[setSnapshotResponseData]{
+		ID:     responseID(req.ID),
+		Status: "ok",
+		Data: setSnapshotResponseData{
+			Key: req.Key,
+		},
+	})
+}
+
+func decodeJSON(r *http.Request, out any) error {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(out); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+
+func responseID(requestID string) string {
+	if requestID != "" {
+		return requestID
+	}
+	return generatedResponseID
+}
+
+func invalidEnvelope(requestID, message string) responseEnvelope[map[string]any] {
+	return responseEnvelope[map[string]any]{
+		ID:      responseID(requestID),
+		Status:  "invalid",
+		Message: message,
+		Data:    map[string]any{},
+	}
+}
+
+func writeJSON(w http.ResponseWriter, status int, value any) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(value); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_, _ = w.Write(buf.Bytes())
+}
+
+func isDescendant(rootKey, childKey string) bool {
+	return strings.HasPrefix(childKey, rootKey+":")
+}
