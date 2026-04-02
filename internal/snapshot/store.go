@@ -1,0 +1,88 @@
+package snapshot
+
+import (
+	"encoding/json"
+	"sort"
+	"sync"
+)
+
+type Store interface {
+	Replace(rootKey Key, entries []KeyValue)
+	Get(rootKey Key) Snapshot
+}
+
+type Key struct {
+	KeyID       string `json:"keyId"`
+	SecureKeyID string `json:"secureKeyId,omitempty"`
+	Version     string `json:"version,omitempty"`
+}
+
+type KeyValue struct {
+	Key   Key    `json:"key"`
+	Value string `json:"value,omitempty"`
+}
+
+type Snapshot struct {
+	Key          Key        `json:"key"`
+	KeyValueList []KeyValue `json:"keyValueList"`
+}
+
+type InMemoryStore struct {
+	mu        sync.RWMutex
+	snapshots map[string]Snapshot
+}
+
+func NewInMemoryStore() *InMemoryStore {
+	return &InMemoryStore{
+		snapshots: make(map[string]Snapshot),
+	}
+}
+
+func (s *InMemoryStore) Replace(rootKey Key, entries []KeyValue) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.snapshots[rootKey.KeyID] = Snapshot{
+		Key:          rootKey,
+		KeyValueList: sortedEntries(entries),
+	}
+}
+
+func (s *InMemoryStore) Get(rootKey Key) Snapshot {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	snapshot, ok := s.snapshots[rootKey.KeyID]
+	if !ok {
+		return Snapshot{
+			Key:          rootKey,
+			KeyValueList: []KeyValue{},
+		}
+	}
+	return Snapshot{
+		Key:          snapshot.Key,
+		KeyValueList: append([]KeyValue(nil), snapshot.KeyValueList...),
+	}
+}
+
+func MustJSON(snapshot Snapshot) string {
+	data, err := json.Marshal(snapshot)
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
+}
+
+func sortedEntries(entries []KeyValue) []KeyValue {
+	out := append([]KeyValue(nil), entries...)
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Key.KeyID != out[j].Key.KeyID {
+			return out[i].Key.KeyID < out[j].Key.KeyID
+		}
+		if out[i].Key.Version != out[j].Key.Version {
+			return out[i].Key.Version < out[j].Key.Version
+		}
+		return out[i].Value < out[j].Value
+	})
+	return out
+}
