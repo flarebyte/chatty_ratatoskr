@@ -34,6 +34,11 @@ type setSnapshotRequest struct {
 	KeyValueList []keyValueParams `json:"keyValueList"`
 }
 
+type getSnapshotRequest struct {
+	ID  string    `json:"id,omitempty"`
+	Key keyParams `json:"key"`
+}
+
 type responseEnvelope[T any] struct {
 	ID      string `json:"id"`
 	Status  string `json:"status"`
@@ -43,6 +48,11 @@ type responseEnvelope[T any] struct {
 
 type setSnapshotResponseData struct {
 	Key keyParams `json:"key"`
+}
+
+type getSnapshotResponseData struct {
+	Key          keyParams        `json:"key"`
+	KeyValueList []keyValueParams `json:"keyValueList"`
 }
 
 func NewSnapshotAPI(store snapshot.Store) *SnapshotAPI {
@@ -55,6 +65,8 @@ func (api *SnapshotAPI) Register(mux *http.ServeMux) {
 
 func (api *SnapshotAPI) handleSnapshot(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
+	case http.MethodGet:
+		api.handleGetSnapshot(w, r)
 	case http.MethodPut:
 		api.handleSetSnapshot(w, r)
 	default:
@@ -107,6 +119,47 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 		Status: "ok",
 		Data: setSnapshotResponseData{
 			Key: req.Key,
+		},
+	})
+}
+
+func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request) {
+	var req getSnapshotRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, "invalid JSON payload"))
+		return
+	}
+
+	if _, err := yggkey.Parse(req.Key.KeyID); err != nil {
+		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, err.Error()))
+		return
+	}
+
+	root := snapshot.Key{
+		KeyID:       req.Key.KeyID,
+		SecureKeyID: req.Key.SecureKeyID,
+		Version:     req.Key.Version,
+	}
+	got := api.store.Get(root)
+
+	keyValueList := make([]keyValueParams, 0, len(got.KeyValueList))
+	for _, item := range got.KeyValueList {
+		keyValueList = append(keyValueList, keyValueParams{
+			Key: keyParams{
+				KeyID:       item.Key.KeyID,
+				SecureKeyID: item.Key.SecureKeyID,
+				Version:     item.Key.Version,
+			},
+			Value: item.Value,
+		})
+	}
+
+	writeJSON(w, http.StatusOK, responseEnvelope[getSnapshotResponseData]{
+		ID:     responseID(req.ID),
+		Status: "ok",
+		Data: getSnapshotResponseData{
+			Key:          req.Key,
+			KeyValueList: keyValueList,
 		},
 	})
 }
