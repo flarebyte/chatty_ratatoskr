@@ -226,3 +226,63 @@ func TestHTTP_GetSnapshot_Deterministic(t *testing.T) {
 		t.Fatalf("deterministic response mismatch:\nfirst=%s\nsecond=%s", first, second)
 	}
 }
+
+func TestHTTP_ResponseCorrelationRules(t *testing.T) {
+	t.Run("echo request id on put", func(t *testing.T) {
+		store := snapshot.NewInMemoryStore()
+		api := NewSnapshotAPIWithGenerator(store, func() string { return "generated-001" })
+		mux := http.NewServeMux()
+		api.Register(mux)
+
+		req := httptest.NewRequest(http.MethodPut, "/snapshot", strings.NewReader(`{
+  "id":"req-explicit-001",
+  "key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
+  "keyValueList":[]
+}`))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		if !strings.Contains(rec.Body.String(), `"id":"req-explicit-001"`) {
+			t.Fatalf("expected explicit id in response, got %s", rec.Body.String())
+		}
+	})
+
+	t.Run("generate id on get when request id missing", func(t *testing.T) {
+		store := snapshot.NewInMemoryStore()
+		api := NewSnapshotAPIWithGenerator(store, func() string { return "generated-123" })
+		mux := http.NewServeMux()
+		api.Register(mux)
+
+		req := httptest.NewRequest(http.MethodGet, "/snapshot", strings.NewReader(`{
+  "key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"}
+}`))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		const want = "{\"id\":\"generated-123\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\"},\"keyValueList\":[]}}\n"
+		if got := rec.Body.String(); got != want {
+			t.Fatalf("generated id response mismatch:\nwant %s\ngot  %s", want, got)
+		}
+	})
+
+	t.Run("generate id on invalid request when request id missing", func(t *testing.T) {
+		store := snapshot.NewInMemoryStore()
+		api := NewSnapshotAPIWithGenerator(store, func() string { return "generated-invalid-001" })
+		mux := http.NewServeMux()
+		api.Register(mux)
+
+		req := httptest.NewRequest(http.MethodPut, "/snapshot", strings.NewReader(`{"key":{"keyId":123}}`))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		if got, want := rec.Code, http.StatusBadRequest; got != want {
+			t.Fatalf("status mismatch: got %d want %d", got, want)
+		}
+		if !strings.Contains(rec.Body.String(), `"id":"generated-invalid-001"`) {
+			t.Fatalf("expected generated invalid id, got %s", rec.Body.String())
+		}
+		if !strings.Contains(rec.Body.String(), `"status":"invalid"`) {
+			t.Fatalf("expected invalid status, got %s", rec.Body.String())
+		}
+	})
+}

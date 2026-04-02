@@ -11,10 +11,11 @@ import (
 	"github.com/flarebyte/chatty-ratatoskr/internal/yggkey"
 )
 
-const generatedResponseID = "generated"
+const defaultGeneratedResponseID = "generated"
 
 type SnapshotAPI struct {
-	store snapshot.Store
+	store      snapshot.Store
+	generateID func() string
 }
 
 type keyParams struct {
@@ -56,7 +57,18 @@ type getSnapshotResponseData struct {
 }
 
 func NewSnapshotAPI(store snapshot.Store) *SnapshotAPI {
-	return &SnapshotAPI{store: store}
+	return &SnapshotAPI{
+		store:      store,
+		generateID: func() string { return defaultGeneratedResponseID },
+	}
+}
+
+func NewSnapshotAPIWithGenerator(store snapshot.Store, generateID func() string) *SnapshotAPI {
+	api := NewSnapshotAPI(store)
+	if generateID != nil {
+		api.generateID = generateID
+	}
+	return api
 }
 
 func (api *SnapshotAPI) Register(mux *http.ServeMux) {
@@ -77,24 +89,24 @@ func (api *SnapshotAPI) handleSnapshot(w http.ResponseWriter, r *http.Request) {
 func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request) {
 	var req setSnapshotRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, "invalid JSON payload"))
+		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, "invalid JSON payload"))
 		return
 	}
 
 	rootParsed, err := yggkey.Parse(req.Key.KeyID)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, err.Error()))
+		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, err.Error()))
 		return
 	}
 
 	entries := make([]snapshot.KeyValue, 0, len(req.KeyValueList))
 	for _, item := range req.KeyValueList {
 		if _, err := yggkey.Parse(item.Key.KeyID); err != nil {
-			writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, err.Error()))
+			writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, err.Error()))
 			return
 		}
 		if !isDescendant(rootParsed.Canonical, item.Key.KeyID) {
-			writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, "invalid key: snapshot entry must be a descendant of the requested root"))
+			writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, "invalid key: snapshot entry must be a descendant of the requested root"))
 			return
 		}
 		entries = append(entries, snapshot.KeyValue{
@@ -115,7 +127,7 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 	api.store.Replace(root, entries)
 
 	writeJSON(w, http.StatusOK, responseEnvelope[setSnapshotResponseData]{
-		ID:     responseID(req.ID),
+		ID:     api.responseID(req.ID),
 		Status: "ok",
 		Data: setSnapshotResponseData{
 			Key: req.Key,
@@ -126,12 +138,12 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request) {
 	var req getSnapshotRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, "invalid JSON payload"))
+		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, "invalid JSON payload"))
 		return
 	}
 
 	if _, err := yggkey.Parse(req.Key.KeyID); err != nil {
-		writeJSON(w, http.StatusBadRequest, invalidEnvelope(req.ID, err.Error()))
+		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, err.Error()))
 		return
 	}
 
@@ -155,7 +167,7 @@ func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, http.StatusOK, responseEnvelope[getSnapshotResponseData]{
-		ID:     responseID(req.ID),
+		ID:     api.responseID(req.ID),
 		Status: "ok",
 		Data: getSnapshotResponseData{
 			Key:          req.Key,
@@ -176,16 +188,16 @@ func decodeJSON(r *http.Request, out any) error {
 	return nil
 }
 
-func responseID(requestID string) string {
+func (api *SnapshotAPI) responseID(requestID string) string {
 	if requestID != "" {
 		return requestID
 	}
-	return generatedResponseID
+	return api.generateID()
 }
 
-func invalidEnvelope(requestID, message string) responseEnvelope[map[string]any] {
+func (api *SnapshotAPI) invalidEnvelope(requestID, message string) responseEnvelope[map[string]any] {
 	return responseEnvelope[map[string]any]{
-		ID:      responseID(requestID),
+		ID:      api.responseID(requestID),
 		Status:  "invalid",
 		Message: message,
 		Data:    map[string]any{},
