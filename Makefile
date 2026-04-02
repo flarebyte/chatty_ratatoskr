@@ -31,6 +31,8 @@ format:
 		-not -path './.git/*' \
 		-not -path './.gocache/*' \
 		-not -path './.gomodcache/*' \
+		-not -path '*/.gocache/*' \
+		-not -path '*/.gomodcache/*' \
 		-exec gofmt -w {} +
 	@if [ -x "$(BIOME)" ]; then \
 		$(BIOME) format --write .; \

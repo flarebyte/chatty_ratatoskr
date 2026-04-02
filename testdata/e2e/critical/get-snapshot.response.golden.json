@@ -1,0 +1,28 @@
+{
+  "id": "req-get-snapshot-001",
+  "status": "ok",
+  "data": {
+    "key": {
+      "keyId": "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+      "secureKeyId": "ok"
+    },
+    "keyValueList": [
+      {
+        "key": {
+          "keyId": "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count",
+          "secureKeyId": "ok",
+          "version": "v1"
+        },
+        "value": "3"
+      },
+      {
+        "key": {
+          "keyId": "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text",
+          "secureKeyId": "ok",
+          "version": "v1"
+        },
+        "value": "hello world"
+      }
+    ]
+  }
+}
