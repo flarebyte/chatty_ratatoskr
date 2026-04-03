@@ -70,6 +70,13 @@
     "current_shipped_status": "working"
   },
   {
+    "promise": "Produce deterministic output across repeated runs and concurrency-equivalent workflows.",
+    "source_section": "Step 7 - Determinism Is Important, But Not Enough",
+    "planned_phase": "Phase 4",
+    "acceptance_test": "go test ./... -run 'TestDeterminism_HTTPSnapshotTranscript|TestDeterminism_WebSocketSetTranscript|TestDeterminism_WorkersComparison'",
+    "current_shipped_status": "working"
+  },
+  {
     "promise": "Run a lightweight Go mock server suitable for local dev and CI.",
     "source_section": "Overview / Lightweight Go Mock Server",
     "planned_phase": "Phase 1",
