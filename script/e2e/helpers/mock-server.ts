@@ -9,16 +9,26 @@ export type RunningServer = {
   stop: () => Promise<void>;
 };
 
+export type StartMockServerOptions = {
+  configPath?: string;
+};
+
 let buildOnce: Promise<void> | undefined;
 
-export async function startMockServer(): Promise<RunningServer> {
+export async function startMockServer(
+  options: StartMockServerOptions = {},
+): Promise<RunningServer> {
   await ensureBuiltBinary();
 
   const binaryPath = path.join(repoRoot, '.e2e-bin', 'chatty');
   const port = await getFreePort();
   const listen = `127.0.0.1:${port}`;
+  const args = [binaryPath, 'serve', '--listen', listen];
+  if (options.configPath) {
+    args.push('--config', options.configPath);
+  }
 
-  const proc = Bun.spawn([binaryPath, 'serve', '--listen', listen], {
+  const proc = Bun.spawn(args, {
     cwd: repoRoot,
     env: {
       ...process.env,

@@ -1,8 +1,10 @@
 import { expect, test } from 'bun:test';
+import path from 'node:path';
 
 import { readCriticalFixture } from './helpers/fixtures';
 import { jsonRequest } from './helpers/http';
 import { startMockServer } from './helpers/mock-server';
+import { repoRoot } from './helpers/paths';
 
 test('admin clear-state resets snapshot data', async () => {
   const setSnapshotRequest = await readCriticalFixture(
@@ -12,7 +14,9 @@ test('admin clear-state resets snapshot data', async () => {
     'get-snapshot.request.json',
   );
 
-  const server = await startMockServer();
+  const server = await startMockServer({
+    configPath: path.join(repoRoot, 'testdata', 'config', 'basic.cue'),
+  });
   try {
     await jsonRequest('PUT', `${server.baseURL}/snapshot`, setSnapshotRequest);
 
