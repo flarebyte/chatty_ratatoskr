@@ -12,6 +12,7 @@ import (
 type NodeAPI struct {
 	store      snapshot.Store
 	generateID func() string
+	events     *EventsAPI
 }
 
 type setKeyValueRequest struct {
@@ -53,6 +54,12 @@ func NewNodeAPI(store snapshot.Store) *NodeAPI {
 		store:      store,
 		generateID: func() string { return defaultGeneratedResponseID },
 	}
+}
+
+func NewNodeAPIWithEvents(store snapshot.Store, events *EventsAPI) *NodeAPI {
+	api := NewNodeAPI(store)
+	api.events = events
+	return api
 }
 
 func (api *NodeAPI) Register(mux *http.ServeMux) {
@@ -150,6 +157,20 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 			},
 			Value: item.Value,
 		})
+		if api.events != nil {
+			api.events.EmitSet(
+				keyParams{
+					KeyID:       req.RootKey.KeyID,
+					SecureKeyID: req.RootKey.SecureKeyID,
+					Version:     req.RootKey.Version,
+					Kind:        derivedKindParams(rootParsed),
+				},
+				keyValueParams{
+					Key:   result.Key,
+					Value: item.Value,
+				},
+			)
+		}
 		keyList = append(keyList, result)
 	}
 

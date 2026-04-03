@@ -16,6 +16,7 @@ const defaultGeneratedResponseID = "generated"
 type SnapshotAPI struct {
 	store      snapshot.Store
 	generateID func() string
+	events     *EventsAPI
 }
 
 type kindParams struct {
@@ -68,6 +69,12 @@ func NewSnapshotAPI(store snapshot.Store) *SnapshotAPI {
 		store:      store,
 		generateID: func() string { return defaultGeneratedResponseID },
 	}
+}
+
+func NewSnapshotAPIWithEvents(store snapshot.Store, events *EventsAPI) *SnapshotAPI {
+	api := NewSnapshotAPI(store)
+	api.events = events
+	return api
 }
 
 func NewSnapshotAPIWithGenerator(store snapshot.Store, generateID func() string) *SnapshotAPI {
@@ -132,6 +139,14 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 		Version:     req.Key.Version,
 	}
 	api.store.Replace(root, entries)
+	if api.events != nil {
+		api.events.EmitSnapshotReplaced(keyParams{
+			KeyID:       req.Key.KeyID,
+			SecureKeyID: req.Key.SecureKeyID,
+			Version:     req.Key.Version,
+			Kind:        derivedKindParams(rootParsed),
+		}, "snapshot-v1")
+	}
 
 	writeJSON(w, http.StatusOK, responseEnvelope[setSnapshotResponseData]{
 		ID:     api.responseID(req.ID),

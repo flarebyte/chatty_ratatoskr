@@ -182,15 +182,17 @@ func versionString() string {
 func newServerMux(cfg runtimeconfig.ServeConfig) *http.ServeMux {
 	mux := http.NewServeMux()
 	store := snapshot.NewInMemoryStore()
-	httpapi.NewSnapshotAPI(store).Register(mux)
-	httpapi.NewNodeAPI(store).Register(mux)
+	var eventsAPI *httpapi.EventsAPI
+	if cfg.WebSocketEnabled {
+		eventsAPI = httpapi.NewEventsAPI([]string{
+			"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+		})
+		eventsAPI.Register(mux)
+	}
+	httpapi.NewSnapshotAPIWithEvents(store, eventsAPI).Register(mux)
+	httpapi.NewNodeAPIWithEvents(store, eventsAPI).Register(mux)
 	httpapi.NewCreateAPI().Register(mux)
 	httpapi.NewAdminAPI(store).Register(mux)
-	if cfg.WebSocketEnabled {
-		httpapi.NewEventsAPI([]string{
-			"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
-		}).Register(mux)
-	}
 	return mux
 }
 

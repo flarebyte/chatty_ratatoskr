@@ -6,12 +6,17 @@ import (
 	"net/http"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/coder/websocket"
 )
 
 type EventsAPI struct {
 	allowedRoots map[string]struct{}
+	generateID   func() string
+	now          func() string
+	mu           sync.Mutex
+	subscribers  map[*subscriber]struct{}
 }
 
 type clientMessage struct {
@@ -21,11 +26,12 @@ type clientMessage struct {
 }
 
 type serverMessage struct {
-	ID       string   `json:"id,omitempty"`
-	Kind     string   `json:"kind"`
-	RootKeys []string `json:"rootKeys,omitempty"`
-	Status   string   `json:"status,omitempty"`
-	Message  string   `json:"message,omitempty"`
+	ID       string         `json:"id,omitempty"`
+	Kind     string         `json:"kind"`
+	RootKeys []string       `json:"rootKeys,omitempty"`
+	Status   string         `json:"status,omitempty"`
+	Message  string         `json:"message,omitempty"`
+	Event    *eventEnvelope `json:"event,omitempty"`
 }
 
 type connectionState struct {
@@ -33,12 +39,43 @@ type connectionState struct {
 	roots map[string]struct{}
 }
 
+type subscriber struct {
+	conn  *websocket.Conn
+	state *connectionState
+}
+
+type eventEnvelope struct {
+	EventID         string          `json:"eventId"`
+	RootKey         keyParams       `json:"rootKey"`
+	Operation       string          `json:"operation"`
+	Created         string          `json:"created"`
+	Key             *keyParams      `json:"key,omitempty"`
+	KeyValue        *keyValueParams `json:"keyValue,omitempty"`
+	SnapshotVersion string          `json:"snapshotVersion,omitempty"`
+}
+
 func NewEventsAPI(allowedRoots []string) *EventsAPI {
 	set := make(map[string]struct{}, len(allowedRoots))
 	for _, root := range allowedRoots {
 		set[root] = struct{}{}
 	}
-	return &EventsAPI{allowedRoots: set}
+	return &EventsAPI{
+		allowedRoots: set,
+		generateID:   func() string { return "event-generated" },
+		now:          func() string { return time.Now().UTC().Format(time.RFC3339) },
+		subscribers:  map[*subscriber]struct{}{},
+	}
+}
+
+func NewEventsAPIWithOptions(allowedRoots []string, generateID func() string, now func() string) *EventsAPI {
+	api := NewEventsAPI(allowedRoots)
+	if generateID != nil {
+		api.generateID = generateID
+	}
+	if now != nil {
+		api.now = now
+	}
+	return api
 }
 
 func (api *EventsAPI) Register(mux *http.ServeMux) {
@@ -55,6 +92,9 @@ func (api *EventsAPI) handleEvents(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	state := &connectionState{roots: map[string]struct{}{}}
+	sub := &subscriber{conn: conn, state: state}
+	api.addSubscriber(sub)
+	defer api.removeSubscriber(sub)
 	ctx := r.Context()
 
 	for {
@@ -78,6 +118,29 @@ func (api *EventsAPI) handleEvents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func (api *EventsAPI) EmitSet(rootKey keyParams, keyValue keyValueParams) {
+	keyCopy := keyValue.Key
+	keyValueCopy := keyValue
+	api.emit(eventEnvelope{
+		EventID:   api.generateID(),
+		RootKey:   rootKey,
+		Operation: "set",
+		Created:   api.now(),
+		Key:       &keyCopy,
+		KeyValue:  &keyValueCopy,
+	})
+}
+
+func (api *EventsAPI) EmitSnapshotReplaced(rootKey keyParams, snapshotVersion string) {
+	api.emit(eventEnvelope{
+		EventID:         api.generateID(),
+		RootKey:         rootKey,
+		Operation:       "snapshot-replaced",
+		Created:         api.now(),
+		SnapshotVersion: snapshotVersion,
+	})
 }
 
 func (api *EventsAPI) handleMessage(state *connectionState, msg clientMessage) serverMessage {
@@ -150,4 +213,44 @@ func writeWS(ctx context.Context, conn *websocket.Conn, msg serverMessage) error
 		return err
 	}
 	return conn.Write(ctx, websocket.MessageText, data)
+}
+
+func (api *EventsAPI) emit(event eventEnvelope) {
+	subscribers := api.matchingSubscribers(event.RootKey.KeyID)
+	for _, sub := range subscribers {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		_ = writeWS(ctx, sub.conn, serverMessage{
+			Kind:  "event",
+			Event: &event,
+		})
+		cancel()
+	}
+}
+
+func (api *EventsAPI) matchingSubscribers(rootKeyID string) []*subscriber {
+	api.mu.Lock()
+	defer api.mu.Unlock()
+
+	out := make([]*subscriber, 0, len(api.subscribers))
+	for sub := range api.subscribers {
+		sub.state.mu.Lock()
+		_, ok := sub.state.roots[rootKeyID]
+		sub.state.mu.Unlock()
+		if ok {
+			out = append(out, sub)
+		}
+	}
+	return out
+}
+
+func (api *EventsAPI) addSubscriber(sub *subscriber) {
+	api.mu.Lock()
+	defer api.mu.Unlock()
+	api.subscribers[sub] = struct{}{}
+}
+
+func (api *EventsAPI) removeSubscriber(sub *subscriber) {
+	api.mu.Lock()
+	defer api.mu.Unlock()
+	delete(api.subscribers, sub)
 }

@@ -87,8 +87,8 @@
     "promise": "Support incremental sync via emitted events after state changes.",
     "source_section": "Use Cases / `incremental-sync`",
     "planned_phase": "Phase 3",
-    "acceptance_test": "set write emits websocket `event` with expected envelope",
-    "current_shipped_status": "not started"
+    "acceptance_test": "go test ./... -run 'TestWebSocket_SetEventFlow|TestWebSocket_SnapshotReplacedFlow'",
+    "current_shipped_status": "working"
   },
   {
     "promise": "Support optimistic write conflict rejection via version checks.",
