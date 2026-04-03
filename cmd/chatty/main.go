@@ -184,9 +184,9 @@ func newServerMux(cfg runtimeconfig.ServeConfig) *http.ServeMux {
 	store := snapshot.NewInMemoryStore()
 	var eventsAPI *httpapi.EventsAPI
 	if cfg.WebSocketEnabled {
-		eventsAPI = httpapi.NewEventsAPI([]string{
+		eventsAPI = httpapi.NewEventsAPIWithRuntimeOptions([]string{
 			"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
-		})
+		}, nil, nil, cfg.WebSocketMessageLimitBytes, 30*time.Second, 5*time.Second)
 		eventsAPI.Register(mux)
 	}
 	snapshotAPI := httpapi.NewSnapshotAPIWithOptions(store, eventsAPI, cfg.HTTPPayloadLimitBytes)

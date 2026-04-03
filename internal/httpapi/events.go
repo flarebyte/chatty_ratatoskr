@@ -12,11 +12,14 @@ import (
 )
 
 type EventsAPI struct {
-	allowedRoots map[string]struct{}
-	generateID   func() string
-	now          func() string
-	mu           sync.Mutex
-	subscribers  map[*subscriber]struct{}
+	allowedRoots      map[string]struct{}
+	generateID        func() string
+	now               func() string
+	readLimitBytes    int64
+	heartbeatInterval time.Duration
+	heartbeatTimeout  time.Duration
+	mu                sync.Mutex
+	subscribers       map[*subscriber]struct{}
 }
 
 type clientMessage struct {
@@ -60,10 +63,13 @@ func NewEventsAPI(allowedRoots []string) *EventsAPI {
 		set[root] = struct{}{}
 	}
 	return &EventsAPI{
-		allowedRoots: set,
-		generateID:   func() string { return "event-generated" },
-		now:          func() string { return time.Now().UTC().Format(time.RFC3339) },
-		subscribers:  map[*subscriber]struct{}{},
+		allowedRoots:      set,
+		generateID:        func() string { return "event-generated" },
+		now:               func() string { return time.Now().UTC().Format(time.RFC3339) },
+		readLimitBytes:    32768,
+		heartbeatInterval: 30 * time.Second,
+		heartbeatTimeout:  5 * time.Second,
+		subscribers:       map[*subscriber]struct{}{},
 	}
 }
 
@@ -78,6 +84,20 @@ func NewEventsAPIWithOptions(allowedRoots []string, generateID func() string, no
 	return api
 }
 
+func NewEventsAPIWithRuntimeOptions(allowedRoots []string, generateID func() string, now func() string, readLimitBytes int64, heartbeatInterval, heartbeatTimeout time.Duration) *EventsAPI {
+	api := NewEventsAPIWithOptions(allowedRoots, generateID, now)
+	if readLimitBytes > 0 {
+		api.readLimitBytes = readLimitBytes
+	}
+	if heartbeatInterval > 0 {
+		api.heartbeatInterval = heartbeatInterval
+	}
+	if heartbeatTimeout > 0 {
+		api.heartbeatTimeout = heartbeatTimeout
+	}
+	return api
+}
+
 func (api *EventsAPI) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/events", api.handleEvents)
 }
@@ -87,6 +107,7 @@ func (api *EventsAPI) handleEvents(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	conn.SetReadLimit(api.readLimitBytes)
 	defer func() {
 		_ = conn.CloseNow()
 	}()
@@ -96,6 +117,7 @@ func (api *EventsAPI) handleEvents(w http.ResponseWriter, r *http.Request) {
 	api.addSubscriber(sub)
 	defer api.removeSubscriber(sub)
 	ctx := r.Context()
+	go api.runHeartbeat(ctx, conn)
 
 	for {
 		_, data, err := conn.Read(ctx)
@@ -116,6 +138,26 @@ func (api *EventsAPI) handleEvents(w http.ResponseWriter, r *http.Request) {
 		reply := api.handleMessage(state, msg)
 		if err := writeWS(ctx, conn, reply); err != nil {
 			return
+		}
+	}
+}
+
+func (api *EventsAPI) runHeartbeat(ctx context.Context, conn *websocket.Conn) {
+	ticker := time.NewTicker(api.heartbeatInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			pingCtx, cancel := context.WithTimeout(context.Background(), api.heartbeatTimeout)
+			err := conn.Ping(pingCtx)
+			cancel()
+			if err != nil {
+				_ = conn.Close(websocket.StatusPolicyViolation, "heartbeat failed")
+				return
+			}
 		}
 	}
 }
@@ -253,4 +295,10 @@ func (api *EventsAPI) removeSubscriber(sub *subscriber) {
 	api.mu.Lock()
 	defer api.mu.Unlock()
 	delete(api.subscribers, sub)
+}
+
+func (api *EventsAPI) subscriberCount() int {
+	api.mu.Lock()
+	defer api.mu.Unlock()
+	return len(api.subscribers)
 }

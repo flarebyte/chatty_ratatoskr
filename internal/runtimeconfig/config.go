@@ -11,10 +11,11 @@ import (
 )
 
 type ServeConfig struct {
-	Listen                string
-	WebSocketEnabled      bool
-	AdminEnabled          bool
-	HTTPPayloadLimitBytes int64
+	Listen                     string
+	WebSocketEnabled           bool
+	WebSocketMessageLimitBytes int64
+	AdminEnabled               bool
+	HTTPPayloadLimitBytes      int64
 }
 
 type cueExport struct {
@@ -23,17 +24,19 @@ type cueExport struct {
 		LimitBytes int64 `json:"limitBytes"`
 	} `json:"http"`
 	WebSocket struct {
-		Supported bool `json:"supported"`
+		Supported  bool  `json:"supported"`
+		LimitBytes int64 `json:"limitBytes"`
 	} `json:"websocket"`
 	Admin any `json:"admin"`
 }
 
 func DefaultServeConfig() ServeConfig {
 	return ServeConfig{
-		Listen:                "127.0.0.1:8080",
-		WebSocketEnabled:      false,
-		AdminEnabled:          false,
-		HTTPPayloadLimitBytes: 1 << 20,
+		Listen:                     "127.0.0.1:8080",
+		WebSocketEnabled:           false,
+		WebSocketMessageLimitBytes: 32768,
+		AdminEnabled:               false,
+		HTTPPayloadLimitBytes:      1 << 20,
 	}
 }
 
@@ -57,6 +60,9 @@ func ValidateServeConfig(cfg ServeConfig) error {
 	}
 	if cfg.HTTPPayloadLimitBytes <= 0 {
 		return fmt.Errorf("invalid config: http payload limit must be greater than zero")
+	}
+	if cfg.WebSocketMessageLimitBytes <= 0 {
+		return fmt.Errorf("invalid config: websocket message limit must be greater than zero")
 	}
 	return nil
 }
@@ -92,9 +98,13 @@ func loadCueConfig(ctx context.Context, path string) (ServeConfig, error) {
 	}
 
 	cfg := ServeConfig{
-		Listen:           fmt.Sprintf("127.0.0.1:%d", raw.HTTP.Port),
-		WebSocketEnabled: raw.WebSocket.Supported,
-		AdminEnabled:     raw.Admin != nil,
+		Listen:                     fmt.Sprintf("127.0.0.1:%d", raw.HTTP.Port),
+		WebSocketEnabled:           raw.WebSocket.Supported,
+		WebSocketMessageLimitBytes: DefaultServeConfig().WebSocketMessageLimitBytes,
+		AdminEnabled:               raw.Admin != nil,
+	}
+	if raw.WebSocket.LimitBytes > 0 {
+		cfg.WebSocketMessageLimitBytes = raw.WebSocket.LimitBytes
 	}
 	if raw.HTTP.LimitBytes > 0 {
 		cfg.HTTPPayloadLimitBytes = raw.HTTP.LimitBytes

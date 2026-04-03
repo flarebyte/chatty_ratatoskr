@@ -24,8 +24,8 @@
     "promise": "Enforce payload and websocket size limits.",
     "source_section": "Config Draft / HTTP and WebSocket limits",
     "planned_phase": "Phase 4",
-    "acceptance_test": "go test ./... -run TestHTTP_PayloadLimitEnforced",
-    "current_shipped_status": "partial"
+    "acceptance_test": "go test ./... -run 'TestHTTP_PayloadLimitEnforced|TestWebSocket_MessageSizeLimit'",
+    "current_shipped_status": "working"
   },
   {
     "promise": "Force mock statuses through test-oriented hooks.",
