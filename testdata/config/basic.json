@@ -1,0 +1,5 @@
+{
+  "listen": "127.0.0.1:18081",
+  "websocketEnabled": false,
+  "adminEnabled": false
+}

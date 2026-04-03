@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +14,7 @@ import (
 	"time"
 
 	"github.com/flarebyte/chatty-ratatoskr/internal/httpapi"
+	"github.com/flarebyte/chatty-ratatoskr/internal/runtimeconfig"
 	"github.com/flarebyte/chatty-ratatoskr/internal/snapshot"
 	"github.com/spf13/cobra"
 )
@@ -27,12 +26,6 @@ var (
 	Commit  = "unknown"
 	Date    = "unknown"
 )
-
-type serveConfig struct {
-	Listen           string `json:"listen"`
-	WebSocketEnabled bool   `json:"websocketEnabled"`
-	AdminEnabled     bool   `json:"adminEnabled"`
-}
 
 type cliOptions struct {
 	serveReady func(string)
@@ -117,7 +110,7 @@ func newServeCmd(ctx context.Context, stdout io.Writer, options cliOptions) *cob
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := loadServeConfig(configPath)
+			cfg, err := runtimeconfig.LoadServeConfig(ctx, configPath)
 			if err != nil {
 				return err
 			}
@@ -133,45 +126,8 @@ func newServeCmd(ctx context.Context, stdout io.Writer, options cliOptions) *cob
 	return cmd
 }
 
-func loadServeConfig(path string) (serveConfig, error) {
-	cfg := defaultServeConfig()
-	if path == "" {
-		return cfg, nil
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return serveConfig{}, fmt.Errorf("read config %q: %w", path, err)
-	}
-
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&cfg); err != nil {
-		return serveConfig{}, fmt.Errorf("decode config %q: %w", path, err)
-	}
-	if err := validateServeConfig(cfg); err != nil {
-		return serveConfig{}, err
-	}
-	return cfg, nil
-}
-
-func validateServeConfig(cfg serveConfig) error {
-	if cfg.Listen == "" {
-		return errors.New("invalid config: listen must not be empty")
-	}
-	return nil
-}
-
-func defaultServeConfig() serveConfig {
-	return serveConfig{
-		Listen:           "127.0.0.1:8080",
-		WebSocketEnabled: false,
-		AdminEnabled:     false,
-	}
-}
-
-func runServeWithOptions(ctx context.Context, stdout io.Writer, cfg serveConfig, options cliOptions) error {
-	if err := validateServeConfig(cfg); err != nil {
+func runServeWithOptions(ctx context.Context, stdout io.Writer, cfg runtimeconfig.ServeConfig, options cliOptions) error {
+	if err := runtimeconfig.ValidateServeConfig(cfg); err != nil {
 		return err
 	}
 
