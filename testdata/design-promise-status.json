@@ -1,0 +1,142 @@
+[
+  {
+    "promise": "Build docs that do not over-claim shipped behavior.",
+    "source_section": "Meta requirement from this planning task",
+    "planned_phase": "Phase 2",
+    "acceptance_test": "go test ./... -run TestDesignPromiseStatus_MatchesPromptMatrix",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Constrain websocket subscriptions to predefined roots.",
+    "source_section": "Config Draft / WebSocket Rules",
+    "planned_phase": "Phase 3",
+    "acceptance_test": "subscribe to non-allowed root returns `status invalid`",
+    "current_shipped_status": "intentionally deferred"
+  },
+  {
+    "promise": "Derive authoritative kind from `keyId`, not client hints.",
+    "source_section": "Use Cases / `server-derived-kind`",
+    "planned_phase": "Phase 2",
+    "acceptance_test": "go test ./... -run TestHTTP_SnapshotKindIgnoresClientHint",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Enforce payload and websocket size limits.",
+    "source_section": "Config Draft / HTTP and WebSocket limits",
+    "planned_phase": "Phase 4",
+    "acceptance_test": "oversize payload tests return expected status",
+    "current_shipped_status": "not started"
+  },
+  {
+    "promise": "Force mock statuses through test-oriented hooks.",
+    "source_section": "Use Cases / `mock-status-forcing`",
+    "planned_phase": "Phase 4",
+    "acceptance_test": "secureKeyId forcing tests for `invalid`, `unauthorised`, `outdated`",
+    "current_shipped_status": "not started"
+  },
+  {
+    "promise": "Heartbeat ping/pong keeps websocket alive.",
+    "source_section": "Use Cases / `websocket-heartbeats`",
+    "planned_phase": "Phase 4",
+    "acceptance_test": "ping with id returns pong with same id",
+    "current_shipped_status": "intentionally deferred"
+  },
+  {
+    "promise": "HTTP is the primary transport.",
+    "source_section": "Overview / HTTP Is The Primary Transport",
+    "planned_phase": "Phase 1",
+    "acceptance_test": "script/e2e/critical-snapshot-bootstrap.test.ts exercises snapshot round-trip over real HTTP",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Keep admin controls outside the protocol-facing surface.",
+    "source_section": "Mock Server Administration",
+    "planned_phase": "Phase 2",
+    "acceptance_test": "script/e2e/admin-clear-state.test.ts proves /admin/commands works without changing protocol handlers",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Keep archive as record state rather than delete semantics.",
+    "source_section": "Archive Retention / Event Rules",
+    "planned_phase": "Phase 3",
+    "acceptance_test": "archived node remains in snapshot and `set` event",
+    "current_shipped_status": "not started"
+  },
+  {
+    "promise": "Preserve request order and per-item statuses for collection writes.",
+    "source_section": "Batch Write Rules / Partial Success Rules",
+    "planned_phase": "Phase 2",
+    "acceptance_test": "TestHTTP_SetKeyValueList_RequestOrderAndItemStatus",
+    "current_shipped_status": "not started"
+  },
+  {
+    "promise": "Run a lightweight Go mock server suitable for local dev and CI.",
+    "source_section": "Overview / Lightweight Go Mock Server",
+    "planned_phase": "Phase 1",
+    "acceptance_test": "script/e2e/critical-snapshot-bootstrap.test.ts starts a real server process",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Support hierarchical logical keys with schema-aware parsing.",
+    "source_section": "Config Draft / `schema.keyPart`",
+    "planned_phase": "Phase 1",
+    "acceptance_test": "go test ./... -run 'TestKeyParser_(AcceptsCriticalFixtures|RejectsMalformedExamples)'",
+    "current_shipped_status": "partial"
+  },
+  {
+    "promise": "Support incremental sync via emitted events after state changes.",
+    "source_section": "Use Cases / `incremental-sync`",
+    "planned_phase": "Phase 3",
+    "acceptance_test": "set write emits websocket `event` with expected envelope",
+    "current_shipped_status": "not started"
+  },
+  {
+    "promise": "Support optimistic write conflict rejection via version checks.",
+    "source_section": "Use Cases / `optimistic-write-conflict`",
+    "planned_phase": "Phase 3",
+    "acceptance_test": "stale write returns HTTP 409 and status `outdated`",
+    "current_shipped_status": "not started"
+  },
+  {
+    "promise": "Support snapshot bootstrap for a root key.",
+    "source_section": "Use Cases / `snapshot-bootstrap`",
+    "planned_phase": "Phase 1",
+    "acceptance_test": "script/e2e/critical-snapshot-bootstrap.test.ts",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Use CUE as the configuration source of truth.",
+    "source_section": "Implementation Constraints / `cue-source-of-truth`",
+    "planned_phase": "Phase 2",
+    "acceptance_test": "go test ./... -run TestConfig_LoadAndValidate",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Use in-memory state rather than production persistence.",
+    "source_section": "Implementation Constraints / `in-memory-mock-state`",
+    "planned_phase": "Phase 1",
+    "acceptance_test": "script/e2e/critical-snapshot-bootstrap.test.ts plus restart-scoped store wiring in `cmd/chatty/main.go`",
+    "current_shipped_status": "partial"
+  },
+  {
+    "promise": "Use JSON request and response payloads with shallow envelopes.",
+    "source_section": "Implementation Constraints / HTTP Response Shape",
+    "planned_phase": "Phase 1",
+    "acceptance_test": "script/e2e/critical-snapshot-bootstrap.test.ts matches `testdata/e2e/critical/get-snapshot.response.golden.json`",
+    "current_shipped_status": "working"
+  },
+  {
+    "promise": "Use strict request correlation echo-or-generate behavior.",
+    "source_section": "Request Correlation / WebSocket Correlation",
+    "planned_phase": "Phase 2",
+    "acceptance_test": "go test ./... -run TestHTTP_ResponseCorrelationRules",
+    "current_shipped_status": "partial"
+  },
+  {
+    "promise": "WebSocket support is optional, not mandatory for usefulness.",
+    "source_section": "Overview / WebSocket Support Is Optional",
+    "planned_phase": "Phase 3",
+    "acceptance_test": "TestE2E_WebSocket_SubscribeAndReceiveSetEvent with websocket enabled",
+    "current_shipped_status": "intentionally deferred"
+  }
+]
