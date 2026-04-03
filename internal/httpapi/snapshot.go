@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -12,11 +13,15 @@ import (
 )
 
 const defaultGeneratedResponseID = "generated"
+const defaultHTTPPayloadLimitBytes int64 = 1 << 20
+
+var errPayloadTooLarge = errors.New("payload too large")
 
 type SnapshotAPI struct {
-	store      snapshot.Store
-	generateID func() string
-	events     *EventsAPI
+	store             snapshot.Store
+	generateID        func() string
+	events            *EventsAPI
+	payloadLimitBytes int64
 }
 
 type kindParams struct {
@@ -66,8 +71,9 @@ type getSnapshotResponseData struct {
 
 func NewSnapshotAPI(store snapshot.Store) *SnapshotAPI {
 	return &SnapshotAPI{
-		store:      store,
-		generateID: func() string { return defaultGeneratedResponseID },
+		store:             store,
+		generateID:        func() string { return defaultGeneratedResponseID },
+		payloadLimitBytes: defaultHTTPPayloadLimitBytes,
 	}
 }
 
@@ -77,10 +83,27 @@ func NewSnapshotAPIWithEvents(store snapshot.Store, events *EventsAPI) *Snapshot
 	return api
 }
 
+func NewSnapshotAPIWithOptions(store snapshot.Store, events *EventsAPI, payloadLimitBytes int64) *SnapshotAPI {
+	api := NewSnapshotAPI(store)
+	api.events = events
+	if payloadLimitBytes > 0 {
+		api.payloadLimitBytes = payloadLimitBytes
+	}
+	return api
+}
+
 func NewSnapshotAPIWithGenerator(store snapshot.Store, generateID func() string) *SnapshotAPI {
 	api := NewSnapshotAPI(store)
 	if generateID != nil {
 		api.generateID = generateID
+	}
+	return api
+}
+
+func NewSnapshotAPIWithLimit(store snapshot.Store, payloadLimitBytes int64) *SnapshotAPI {
+	api := NewSnapshotAPI(store)
+	if payloadLimitBytes > 0 {
+		api.payloadLimitBytes = payloadLimitBytes
 	}
 	return api
 }
@@ -102,8 +125,8 @@ func (api *SnapshotAPI) handleSnapshot(w http.ResponseWriter, r *http.Request) {
 
 func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request) {
 	var req setSnapshotRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, "invalid JSON payload"))
+	if err := decodeJSONWithLimit(r, &req, api.payloadLimitBytes); err != nil {
+		writeJSON(w, statusForDecodeError(err), api.invalidEnvelope(req.ID, messageForDecodeError(err)))
 		return
 	}
 
@@ -164,8 +187,8 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 
 func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request) {
 	var req getSnapshotRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, "invalid JSON payload"))
+	if err := decodeJSONWithLimit(r, &req, api.payloadLimitBytes); err != nil {
+		writeJSON(w, statusForDecodeError(err), api.invalidEnvelope(req.ID, messageForDecodeError(err)))
 		return
 	}
 
@@ -214,10 +237,24 @@ func derivedKindParams(parsed yggkey.ParsedKey) *kindParams {
 	return &kindParams{Hierarchy: kind.Hierarchy}
 }
 
-func decodeJSON(r *http.Request, out any) error {
-	decoder := json.NewDecoder(r.Body)
+func decodeJSONWithLimit(r *http.Request, out any, limitBytes int64) error {
+	var reader io.Reader = r.Body
+	if limitBytes > 0 {
+		data, err := io.ReadAll(io.LimitReader(r.Body, limitBytes+1))
+		if err != nil {
+			return err
+		}
+		if int64(len(data)) > limitBytes {
+			return errPayloadTooLarge
+		}
+		reader = bytes.NewReader(data)
+	}
+	decoder := json.NewDecoder(reader)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(out); err != nil {
+		if errors.Is(err, io.EOF) {
+			return err
+		}
 		return err
 	}
 	if err := decoder.Decode(&struct{}{}); err != io.EOF {
@@ -237,6 +274,29 @@ func (api *SnapshotAPI) invalidEnvelope(requestID, message string) responseEnvel
 		Message: message,
 		Data:    map[string]any{},
 	}
+}
+
+func invalidEnvelopeWithID(requestID string, generateID func() string, message string) responseEnvelope[map[string]any] {
+	return responseEnvelope[map[string]any]{
+		ID:      responseIDWithGenerator(requestID, generateID),
+		Status:  "invalid",
+		Message: message,
+		Data:    map[string]any{},
+	}
+}
+
+func statusForDecodeError(err error) int {
+	if errors.Is(err, errPayloadTooLarge) {
+		return http.StatusRequestEntityTooLarge
+	}
+	return http.StatusBadRequest
+}
+
+func messageForDecodeError(err error) string {
+	if errors.Is(err, errPayloadTooLarge) {
+		return "payload too large"
+	}
+	return "invalid JSON payload"
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

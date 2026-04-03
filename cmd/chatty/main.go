@@ -189,10 +189,14 @@ func newServerMux(cfg runtimeconfig.ServeConfig) *http.ServeMux {
 		})
 		eventsAPI.Register(mux)
 	}
-	httpapi.NewSnapshotAPIWithEvents(store, eventsAPI).Register(mux)
-	httpapi.NewNodeAPIWithEvents(store, eventsAPI).Register(mux)
-	httpapi.NewCreateAPI().Register(mux)
-	httpapi.NewAdminAPI(store).Register(mux)
+	snapshotAPI := httpapi.NewSnapshotAPIWithOptions(store, eventsAPI, cfg.HTTPPayloadLimitBytes)
+	nodeAPI := httpapi.NewNodeAPIWithOptions(store, eventsAPI, cfg.HTTPPayloadLimitBytes)
+	createAPI := httpapi.NewCreateAPIWithOptions(nil, cfg.HTTPPayloadLimitBytes)
+	adminAPI := httpapi.NewAdminAPIWithLimit(store, cfg.HTTPPayloadLimitBytes)
+	snapshotAPI.Register(mux)
+	nodeAPI.Register(mux)
+	createAPI.Register(mux)
+	adminAPI.Register(mux)
 	return mux
 }
 

@@ -7,8 +7,9 @@ import (
 )
 
 type AdminAPI struct {
-	store      snapshot.Store
-	generateID func() string
+	store             snapshot.Store
+	generateID        func() string
+	payloadLimitBytes int64
 }
 
 type commandParams struct {
@@ -34,9 +35,18 @@ type setCommandsResponseData struct {
 
 func NewAdminAPI(store snapshot.Store) *AdminAPI {
 	return &AdminAPI{
-		store:      store,
-		generateID: func() string { return defaultGeneratedResponseID },
+		store:             store,
+		generateID:        func() string { return defaultGeneratedResponseID },
+		payloadLimitBytes: defaultHTTPPayloadLimitBytes,
 	}
+}
+
+func NewAdminAPIWithLimit(store snapshot.Store, payloadLimitBytes int64) *AdminAPI {
+	api := NewAdminAPI(store)
+	if payloadLimitBytes > 0 {
+		api.payloadLimitBytes = payloadLimitBytes
+	}
+	return api
 }
 
 func (api *AdminAPI) Register(mux *http.ServeMux) {
@@ -54,13 +64,8 @@ func (api *AdminAPI) handleCommands(w http.ResponseWriter, r *http.Request) {
 
 func (api *AdminAPI) handleSetCommands(w http.ResponseWriter, r *http.Request) {
 	var req setCommandsRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  "invalid",
-			Message: "invalid JSON payload",
-			Data:    map[string]any{},
-		})
+	if err := decodeJSONWithLimit(r, &req, api.payloadLimitBytes); err != nil {
+		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
 
@@ -74,12 +79,7 @@ func (api *AdminAPI) handleSetCommands(w http.ResponseWriter, r *http.Request) {
 				Status:  "ok",
 			})
 		default:
-			writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-				ID:      responseIDWithGenerator(req.ID, api.generateID),
-				Status:  "invalid",
-				Message: "unknown admin command",
-				Data:    map[string]any{},
-			})
+			writeJSON(w, http.StatusBadRequest, invalidEnvelopeWithID(req.ID, api.generateID, "unknown admin command"))
 			return
 		}
 	}

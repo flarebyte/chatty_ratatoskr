@@ -10,9 +10,10 @@ import (
 )
 
 type NodeAPI struct {
-	store      snapshot.Store
-	generateID func() string
-	events     *EventsAPI
+	store             snapshot.Store
+	generateID        func() string
+	events            *EventsAPI
+	payloadLimitBytes int64
 }
 
 type setKeyValueRequest struct {
@@ -51,14 +52,32 @@ type getKeyValueResponseData struct {
 
 func NewNodeAPI(store snapshot.Store) *NodeAPI {
 	return &NodeAPI{
-		store:      store,
-		generateID: func() string { return defaultGeneratedResponseID },
+		store:             store,
+		generateID:        func() string { return defaultGeneratedResponseID },
+		payloadLimitBytes: defaultHTTPPayloadLimitBytes,
 	}
 }
 
 func NewNodeAPIWithEvents(store snapshot.Store, events *EventsAPI) *NodeAPI {
 	api := NewNodeAPI(store)
 	api.events = events
+	return api
+}
+
+func NewNodeAPIWithOptions(store snapshot.Store, events *EventsAPI, payloadLimitBytes int64) *NodeAPI {
+	api := NewNodeAPI(store)
+	api.events = events
+	if payloadLimitBytes > 0 {
+		api.payloadLimitBytes = payloadLimitBytes
+	}
+	return api
+}
+
+func NewNodeAPIWithLimit(store snapshot.Store, payloadLimitBytes int64) *NodeAPI {
+	api := NewNodeAPI(store)
+	if payloadLimitBytes > 0 {
+		api.payloadLimitBytes = payloadLimitBytes
+	}
 	return api
 }
 
@@ -79,13 +98,8 @@ func (api *NodeAPI) handleNode(w http.ResponseWriter, r *http.Request) {
 
 func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request) {
 	var req setKeyValueRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  "invalid",
-			Message: "invalid JSON payload",
-			Data:    map[string]any{},
-		})
+	if err := decodeJSONWithLimit(r, &req, api.payloadLimitBytes); err != nil {
+		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
 
@@ -212,13 +226,8 @@ func bumpVersion(current string) string {
 
 func (api *NodeAPI) handleGetKeyValueList(w http.ResponseWriter, r *http.Request) {
 	var req getKeyValueRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  "invalid",
-			Message: "invalid JSON payload",
-			Data:    map[string]any{},
-		})
+	if err := decodeJSONWithLimit(r, &req, api.payloadLimitBytes); err != nil {
+		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
 

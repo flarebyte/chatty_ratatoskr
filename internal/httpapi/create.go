@@ -8,7 +8,8 @@ import (
 )
 
 type CreateAPI struct {
-	generateID func() string
+	generateID        func() string
+	payloadLimitBytes int64
 }
 
 type childParam struct {
@@ -48,7 +49,8 @@ type newKeysResponseData struct {
 
 func NewCreateAPI() *CreateAPI {
 	return &CreateAPI{
-		generateID: func() string { return "generated" },
+		generateID:        func() string { return "generated" },
+		payloadLimitBytes: defaultHTTPPayloadLimitBytes,
 	}
 }
 
@@ -56,6 +58,17 @@ func NewCreateAPIWithGenerator(generateID func() string) *CreateAPI {
 	api := NewCreateAPI()
 	if generateID != nil {
 		api.generateID = generateID
+	}
+	return api
+}
+
+func NewCreateAPIWithOptions(generateID func() string, payloadLimitBytes int64) *CreateAPI {
+	api := NewCreateAPI()
+	if generateID != nil {
+		api.generateID = generateID
+	}
+	if payloadLimitBytes > 0 {
+		api.payloadLimitBytes = payloadLimitBytes
 	}
 	return api
 }
@@ -71,13 +84,8 @@ func (api *CreateAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req newKeysRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  "invalid",
-			Message: "invalid JSON payload",
-			Data:    map[string]any{},
-		})
+	if err := decodeJSONWithLimit(r, &req, api.payloadLimitBytes); err != nil {
+		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
 
