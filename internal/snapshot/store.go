@@ -10,6 +10,7 @@ type Store interface {
 	Replace(rootKey Key, entries []KeyValue)
 	Upsert(rootKey Key, entry KeyValue)
 	Get(rootKey Key) Snapshot
+	Find(rootKey Key, keyID string) (KeyValue, bool)
 	Clear()
 }
 
@@ -97,6 +98,22 @@ func (s *InMemoryStore) Get(rootKey Key) Snapshot {
 		Key:          snapshot.Key,
 		KeyValueList: append([]KeyValue(nil), snapshot.KeyValueList...),
 	}
+}
+
+func (s *InMemoryStore) Find(rootKey Key, keyID string) (KeyValue, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	snapshot, ok := s.snapshots[rootKey.KeyID]
+	if !ok {
+		return KeyValue{}, false
+	}
+	for _, entry := range snapshot.KeyValueList {
+		if entry.Key.KeyID == keyID {
+			return entry, true
+		}
+	}
+	return KeyValue{}, false
 }
 
 func (s *InMemoryStore) Clear() {

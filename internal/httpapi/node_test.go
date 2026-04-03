@@ -96,3 +96,106 @@ func TestHTTP_SetKeyValueList_PartialSuccessTopLevelOK(t *testing.T) {
 		t.Fatalf("expected item-level invalid, got %s", rec.Body.String())
 	}
 }
+
+func TestHTTP_GetKeyValueList_ReturnsRequestedValues(t *testing.T) {
+	store := snapshot.NewInMemoryStore()
+	root := snapshot.Key{
+		KeyID:       "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+		SecureKeyID: "ok",
+	}
+	store.Upsert(root, snapshot.KeyValue{
+		Key: snapshot.Key{
+			KeyID:       root.KeyID + ":note:n7c401c2:like:count",
+			SecureKeyID: "ok",
+			Version:     "v2",
+		},
+		Value: "3",
+	})
+	store.Upsert(root, snapshot.KeyValue{
+		Key: snapshot.Key{
+			KeyID:       root.KeyID + ":note:n7c401c2:text",
+			SecureKeyID: "ok",
+			Version:     "v1",
+		},
+		Value: "hello world",
+	})
+
+	api := NewNodeAPI(store)
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	reqBody := `{
+  "id":"req-get-node-001",
+  "rootKey":{
+    "keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+    "secureKeyId":"ok"
+  },
+  "keyList":[
+    {
+      "keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text",
+      "secureKeyId":"ok"
+    },
+    {
+      "keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:missing:text",
+      "secureKeyId":"ok"
+    },
+    {
+      "keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count",
+      "secureKeyId":"ok"
+    }
+  ]
+}`
+
+	req := httptest.NewRequest(http.MethodGet, "/node", strings.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if got, want := rec.Code, http.StatusOK; got != want {
+		t.Fatalf("status mismatch: got %d want %d", got, want)
+	}
+
+	const want = "{\"id\":\"req-get-node-001\",\"status\":\"ok\",\"data\":{\"rootKey\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyValueList\":[{\"keyValue\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\",\"kind\":{\"hierarchy\":[\"dashboard\",\"note\",\"text\"]}},\"value\":\"hello world\"},\"status\":\"ok\"},{\"keyValue\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:missing:text\",\"secureKeyId\":\"ok\"}},\"status\":\"invalid\",\"message\":\"invalid key: unsupported label \\\"missing\\\"\"},{\"keyValue\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count\",\"secureKeyId\":\"ok\",\"version\":\"v2\",\"kind\":{\"hierarchy\":[\"dashboard\",\"note\",\"like\",\"count\"]}},\"value\":\"3\"},\"status\":\"ok\"}]}}\n"
+	if got := rec.Body.String(); got != want {
+		t.Fatalf("response mismatch:\nwant %s\ngot  %s", want, got)
+	}
+}
+
+func TestHTTP_GetKeyValueList_DeterministicRequestOrder(t *testing.T) {
+	store := snapshot.NewInMemoryStore()
+	root := snapshot.Key{
+		KeyID:       "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+		SecureKeyID: "ok",
+	}
+	store.Upsert(root, snapshot.KeyValue{
+		Key: snapshot.Key{
+			KeyID:       root.KeyID + ":note:n7c401c2:text",
+			SecureKeyID: "ok",
+			Version:     "v1",
+		},
+		Value: "hello world",
+	})
+
+	api := NewNodeAPI(store)
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	run := func() string {
+		req := httptest.NewRequest(http.MethodGet, "/node", strings.NewReader(`{
+  "id":"req-get-node-002",
+  "rootKey":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
+  "keyList":[
+    {"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text","secureKeyId":"ok"},
+    {"keyId":"bad-rootless-key","secureKeyId":"ok"}
+  ]
+}`))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		return rec.Body.String()
+	}
+
+	first := run()
+	second := run()
+	if first != second {
+		t.Fatalf("deterministic response mismatch:\nfirst=%s\nsecond=%s", first, second)
+	}
+}

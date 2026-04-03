@@ -18,6 +18,12 @@ type setKeyValueRequest struct {
 	KeyValueList []keyValueParams `json:"keyValueList"`
 }
 
+type getKeyValueRequest struct {
+	ID      string      `json:"id,omitempty"`
+	RootKey keyParams   `json:"rootKey"`
+	KeyList []keyParams `json:"keyList"`
+}
+
 type keyStatusResult struct {
 	Key     keyParams `json:"key"`
 	Status  string    `json:"status"`
@@ -27,6 +33,17 @@ type keyStatusResult struct {
 type setKeyValueResponseData struct {
 	RootKey keyParams         `json:"rootKey"`
 	KeyList []keyStatusResult `json:"keyList"`
+}
+
+type keyValueStatusResult struct {
+	KeyValue keyValueParams `json:"keyValue"`
+	Status   string         `json:"status"`
+	Message  string         `json:"message,omitempty"`
+}
+
+type getKeyValueResponseData struct {
+	RootKey      keyParams              `json:"rootKey"`
+	KeyValueList []keyValueStatusResult `json:"keyValueList"`
 }
 
 func NewNodeAPI(store snapshot.Store) *NodeAPI {
@@ -42,6 +59,8 @@ func (api *NodeAPI) Register(mux *http.ServeMux) {
 
 func (api *NodeAPI) handleNode(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
+	case http.MethodGet:
+		api.handleGetKeyValueList(w, r)
 	case http.MethodPut:
 		api.handleSetKeyValueList(w, r)
 	default:
@@ -128,6 +147,94 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 				Kind:        derivedKindParams(rootParsed),
 			},
 			KeyList: keyList,
+		},
+	})
+}
+
+func (api *NodeAPI) handleGetKeyValueList(w http.ResponseWriter, r *http.Request) {
+	var req getKeyValueRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
+			ID:      responseIDWithGenerator(req.ID, api.generateID),
+			Status:  "invalid",
+			Message: "invalid JSON payload",
+			Data:    map[string]any{},
+		})
+		return
+	}
+
+	rootParsed, err := yggkey.Parse(req.RootKey.KeyID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
+			ID:      responseIDWithGenerator(req.ID, api.generateID),
+			Status:  "invalid",
+			Message: err.Error(),
+			Data:    map[string]any{},
+		})
+		return
+	}
+
+	root := snapshot.Key{
+		KeyID:       req.RootKey.KeyID,
+		SecureKeyID: req.RootKey.SecureKeyID,
+		Version:     req.RootKey.Version,
+	}
+
+	keyValueList := make([]keyValueStatusResult, 0, len(req.KeyList))
+	for _, key := range req.KeyList {
+		result := keyValueStatusResult{
+			KeyValue: keyValueParams{
+				Key: keyParams{
+					KeyID:       key.KeyID,
+					SecureKeyID: key.SecureKeyID,
+					Version:     key.Version,
+				},
+			},
+			Status: "ok",
+		}
+
+		parsed, parseErr := yggkey.Parse(key.KeyID)
+		if parseErr != nil {
+			result.Status = "invalid"
+			result.Message = parseErr.Error()
+			keyValueList = append(keyValueList, result)
+			continue
+		}
+
+		result.KeyValue.Key.Kind = derivedKindParams(parsed)
+
+		if !isDescendant(rootParsed.Canonical, key.KeyID) {
+			result.Status = "invalid"
+			result.Message = "invalid key: requested node must be a descendant of the requested root"
+			keyValueList = append(keyValueList, result)
+			continue
+		}
+
+		stored, ok := api.store.Find(root, key.KeyID)
+		if !ok {
+			result.Status = "invalid"
+			result.Message = "missing key: requested node is not present under the requested root"
+			keyValueList = append(keyValueList, result)
+			continue
+		}
+
+		result.KeyValue.Key.SecureKeyID = stored.Key.SecureKeyID
+		result.KeyValue.Key.Version = stored.Key.Version
+		result.KeyValue.Value = stored.Value
+		keyValueList = append(keyValueList, result)
+	}
+
+	writeJSON(w, http.StatusOK, responseEnvelope[getKeyValueResponseData]{
+		ID:     responseIDWithGenerator(req.ID, api.generateID),
+		Status: "ok",
+		Data: getKeyValueResponseData{
+			RootKey: keyParams{
+				KeyID:       req.RootKey.KeyID,
+				SecureKeyID: req.RootKey.SecureKeyID,
+				Version:     req.RootKey.Version,
+				Kind:        derivedKindParams(rootParsed),
+			},
+			KeyValueList: keyValueList,
 		},
 	})
 }
