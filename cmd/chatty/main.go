@@ -145,7 +145,7 @@ func runServeWithOptions(ctx context.Context, stdout io.Writer, cfg runtimeconfi
 	}()
 
 	server := &http.Server{
-		Handler: newServerMux(),
+		Handler: newServerMux(cfg),
 		BaseContext: func(net.Listener) context.Context {
 			return ctx
 		},
@@ -179,13 +179,18 @@ func versionString() string {
 	return fmt.Sprintf("chatty version=%s commit=%s date=%s\n", Version, Commit, Date)
 }
 
-func newServerMux() *http.ServeMux {
+func newServerMux(cfg runtimeconfig.ServeConfig) *http.ServeMux {
 	mux := http.NewServeMux()
 	store := snapshot.NewInMemoryStore()
 	httpapi.NewSnapshotAPI(store).Register(mux)
 	httpapi.NewNodeAPI(store).Register(mux)
 	httpapi.NewCreateAPI().Register(mux)
 	httpapi.NewAdminAPI(store).Register(mux)
+	if cfg.WebSocketEnabled {
+		httpapi.NewEventsAPI([]string{
+			"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+		}).Register(mux)
+	}
 	return mux
 }
 

@@ -10,8 +10,8 @@
     "promise": "Constrain websocket subscriptions to predefined roots.",
     "source_section": "Config Draft / WebSocket Rules",
     "planned_phase": "Phase 3",
-    "acceptance_test": "subscribe to non-allowed root returns `status invalid`",
-    "current_shipped_status": "intentionally deferred"
+    "acceptance_test": "go test ./... -run TestWebSocket_SubscribeValidateRoots",
+    "current_shipped_status": "working"
   },
   {
     "promise": "Derive authoritative kind from `keyId`, not client hints.",
@@ -38,8 +38,8 @@
     "promise": "Heartbeat ping/pong keeps websocket alive.",
     "source_section": "Use Cases / `websocket-heartbeats`",
     "planned_phase": "Phase 4",
-    "acceptance_test": "ping with id returns pong with same id",
-    "current_shipped_status": "intentionally deferred"
+    "acceptance_test": "go test ./... -run TestWebSocket_PingPongCorrelation",
+    "current_shipped_status": "working"
   },
   {
     "promise": "HTTP is the primary transport.",
@@ -129,8 +129,8 @@
     "promise": "Use strict request correlation echo-or-generate behavior.",
     "source_section": "Request Correlation / WebSocket Correlation",
     "planned_phase": "Phase 2",
-    "acceptance_test": "go test ./... -run TestHTTP_ResponseCorrelationRules",
-    "current_shipped_status": "partial"
+    "acceptance_test": "go test ./... -run 'TestHTTP_ResponseCorrelationRules|TestWebSocket_PingPongCorrelation|TestWebSocket_SubscribeValidateRoots|TestWebSocket_UnsubscribeNoop'",
+    "current_shipped_status": "working"
   },
   {
     "promise": "WebSocket support is optional, not mandatory for usefulness.",
