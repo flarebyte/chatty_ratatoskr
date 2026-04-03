@@ -94,8 +94,8 @@
     "promise": "Support optimistic write conflict rejection via version checks.",
     "source_section": "Use Cases / `optimistic-write-conflict`",
     "planned_phase": "Phase 3",
-    "acceptance_test": "stale write returns HTTP 409 and status `outdated`",
-    "current_shipped_status": "not started"
+    "acceptance_test": "go test ./... -run TestHTTP_SetKeyValueList_RejectsStaleWrite",
+    "current_shipped_status": "working"
   },
   {
     "promise": "Support snapshot bootstrap for a root key.",

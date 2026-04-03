@@ -2,6 +2,8 @@ package httpapi
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/flarebyte/chatty-ratatoskr/internal/snapshot"
 	"github.com/flarebyte/chatty-ratatoskr/internal/yggkey"
@@ -98,6 +100,7 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 	}
 
 	keyList := make([]keyStatusResult, 0, len(req.KeyValueList))
+	hasOutdated := false
 	for _, item := range req.KeyValueList {
 		result := keyStatusResult{
 			Key: keyParams{
@@ -125,20 +128,41 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 			continue
 		}
 
+		existing, exists := api.store.Find(root, item.Key.KeyID)
+		nextVersion := "v1"
+		if exists {
+			if item.Key.Version != existing.Key.Version {
+				result.Status = "outdated"
+				result.Message = "outdated version: write is not based on the latest stored version"
+				hasOutdated = true
+				keyList = append(keyList, result)
+				continue
+			}
+			nextVersion = bumpVersion(existing.Key.Version)
+		}
+
+		result.Key.Version = nextVersion
 		api.store.Upsert(root, snapshot.KeyValue{
 			Key: snapshot.Key{
 				KeyID:       item.Key.KeyID,
 				SecureKeyID: item.Key.SecureKeyID,
-				Version:     item.Key.Version,
+				Version:     nextVersion,
 			},
 			Value: item.Value,
 		})
 		keyList = append(keyList, result)
 	}
 
-	writeJSON(w, http.StatusOK, responseEnvelope[setKeyValueResponseData]{
+	statusCode := http.StatusOK
+	statusText := "ok"
+	if hasOutdated {
+		statusCode = http.StatusConflict
+		statusText = "outdated"
+	}
+
+	writeJSON(w, statusCode, responseEnvelope[setKeyValueResponseData]{
 		ID:     responseIDWithGenerator(req.ID, api.generateID),
-		Status: "ok",
+		Status: statusText,
 		Data: setKeyValueResponseData{
 			RootKey: keyParams{
 				KeyID:       req.RootKey.KeyID,
@@ -149,6 +173,20 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 			KeyList: keyList,
 		},
 	})
+}
+
+func bumpVersion(current string) string {
+	if !strings.HasPrefix(current, "v") {
+		if current == "" {
+			return "v1"
+		}
+		return current + ".next"
+	}
+	number, err := strconv.Atoi(strings.TrimPrefix(current, "v"))
+	if err != nil {
+		return current + ".next"
+	}
+	return "v" + strconv.Itoa(number+1)
 }
 
 func (api *NodeAPI) handleGetKeyValueList(w http.ResponseWriter, r *http.Request) {

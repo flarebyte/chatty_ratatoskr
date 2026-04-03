@@ -97,6 +97,98 @@ func TestHTTP_SetKeyValueList_PartialSuccessTopLevelOK(t *testing.T) {
 	}
 }
 
+func TestHTTP_SetKeyValueList_RejectsStaleWrite(t *testing.T) {
+	store := snapshot.NewInMemoryStore()
+	root := snapshot.Key{
+		KeyID:       "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+		SecureKeyID: "ok",
+	}
+	store.Upsert(root, snapshot.KeyValue{
+		Key: snapshot.Key{
+			KeyID:       root.KeyID + ":note:n7c401c2:text",
+			SecureKeyID: "ok",
+			Version:     "v2",
+		},
+		Value: "latest",
+	})
+
+	api := NewNodeAPI(store)
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	req := httptest.NewRequest(http.MethodPut, "/node", strings.NewReader(`{
+  "id":"req-set-node-stale-001",
+  "rootKey":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
+  "keyValueList":[
+    {"key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text","secureKeyId":"ok","version":"v1"},"value":"stale update"}
+  ]
+}`))
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if got, want := rec.Code, http.StatusConflict; got != want {
+		t.Fatalf("status mismatch: got %d want %d", got, want)
+	}
+
+	const want = "{\"id\":\"req-set-node-stale-001\",\"status\":\"outdated\",\"data\":{\"rootKey\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyList\":[{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\",\"kind\":{\"hierarchy\":[\"dashboard\",\"note\",\"text\"]}},\"status\":\"outdated\",\"message\":\"outdated version: write is not based on the latest stored version\"}]}}\n"
+	if got := rec.Body.String(); got != want {
+		t.Fatalf("response mismatch:\nwant %s\ngot  %s", want, got)
+	}
+
+	stored, ok := store.Find(root, root.KeyID+":note:n7c401c2:text")
+	if !ok {
+		t.Fatal("expected stored node to remain present")
+	}
+	if stored.Key.Version != "v2" || stored.Value != "latest" {
+		t.Fatalf("stale write should not replace stored value, got version=%s value=%s", stored.Key.Version, stored.Value)
+	}
+}
+
+func TestHTTP_SetKeyValueList_BumpsVersionOnSuccess(t *testing.T) {
+	store := snapshot.NewInMemoryStore()
+	root := snapshot.Key{
+		KeyID:       "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
+		SecureKeyID: "ok",
+	}
+	store.Upsert(root, snapshot.KeyValue{
+		Key: snapshot.Key{
+			KeyID:       root.KeyID + ":note:n7c401c2:text",
+			SecureKeyID: "ok",
+			Version:     "v1",
+		},
+		Value: "before",
+	})
+
+	api := NewNodeAPI(store)
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	req := httptest.NewRequest(http.MethodPut, "/node", strings.NewReader(`{
+  "id":"req-set-node-bump-001",
+  "rootKey":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
+  "keyValueList":[
+    {"key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text","secureKeyId":"ok","version":"v1"},"value":"after"}
+  ]
+}`))
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if got, want := rec.Code, http.StatusOK; got != want {
+		t.Fatalf("status mismatch: got %d want %d", got, want)
+	}
+	if !strings.Contains(rec.Body.String(), `"version":"v2"`) {
+		t.Fatalf("expected bumped version in response, got %s", rec.Body.String())
+	}
+
+	stored, ok := store.Find(root, root.KeyID+":note:n7c401c2:text")
+	if !ok {
+		t.Fatal("expected stored node after successful write")
+	}
+	if stored.Key.Version != "v2" || stored.Value != "after" {
+		t.Fatalf("successful write should bump to v2 and update value, got version=%s value=%s", stored.Key.Version, stored.Value)
+	}
+}
+
 func TestHTTP_GetKeyValueList_ReturnsRequestedValues(t *testing.T) {
 	store := snapshot.NewInMemoryStore()
 	root := snapshot.Key{
