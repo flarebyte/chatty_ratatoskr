@@ -211,10 +211,7 @@ func decodeJSON(r *http.Request, out any) error {
 }
 
 func (api *SnapshotAPI) responseID(requestID string) string {
-	if requestID != "" {
-		return requestID
-	}
-	return api.generateID()
+	return responseIDWithGenerator(requestID, api.generateID)
 }
 
 func (api *SnapshotAPI) invalidEnvelope(requestID, message string) responseEnvelope[map[string]any] {
@@ -241,4 +238,11 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 
 func isDescendant(rootKey, childKey string) bool {
 	return strings.HasPrefix(childKey, rootKey+":")
+}
+
+func responseIDWithGenerator(requestID string, generate func() string) string {
+	if requestID != "" {
+		return requestID
+	}
+	return generate()
 }

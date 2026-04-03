@@ -181,7 +181,9 @@ func versionString() string {
 
 func newServerMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	httpapi.NewSnapshotAPI(snapshot.NewInMemoryStore()).Register(mux)
+	store := snapshot.NewInMemoryStore()
+	httpapi.NewSnapshotAPI(store).Register(mux)
+	httpapi.NewAdminAPI(store).Register(mux)
 	return mux
 }
 

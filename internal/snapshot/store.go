@@ -9,6 +9,7 @@ import (
 type Store interface {
 	Replace(rootKey Key, entries []KeyValue)
 	Get(rootKey Key) Snapshot
+	Clear()
 }
 
 type Key struct {
@@ -63,6 +64,13 @@ func (s *InMemoryStore) Get(rootKey Key) Snapshot {
 		Key:          snapshot.Key,
 		KeyValueList: append([]KeyValue(nil), snapshot.KeyValueList...),
 	}
+}
+
+func (s *InMemoryStore) Clear() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.snapshots = make(map[string]Snapshot)
 }
 
 func MustJSON(snapshot Snapshot) string {
