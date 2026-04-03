@@ -24,6 +24,7 @@ type kindParams struct {
 }
 
 type keyParams struct {
+	LocalKeyID  string      `json:"localKeyId,omitempty"`
 	KeyID       string      `json:"keyId"`
 	SecureKeyID string      `json:"secureKeyId,omitempty"`
 	Version     string      `json:"version,omitempty"`
