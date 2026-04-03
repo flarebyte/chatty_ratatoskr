@@ -8,6 +8,7 @@ import (
 
 type Store interface {
 	Replace(rootKey Key, entries []KeyValue)
+	Upsert(rootKey Key, entry KeyValue)
 	Get(rootKey Key) Snapshot
 	Clear()
 }
@@ -46,6 +47,38 @@ func (s *InMemoryStore) Replace(rootKey Key, entries []KeyValue) {
 	s.snapshots[rootKey.KeyID] = Snapshot{
 		Key:          rootKey,
 		KeyValueList: sortedEntries(entries),
+	}
+}
+
+func (s *InMemoryStore) Upsert(rootKey Key, entry KeyValue) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	current, ok := s.snapshots[rootKey.KeyID]
+	if !ok {
+		s.snapshots[rootKey.KeyID] = Snapshot{
+			Key:          rootKey,
+			KeyValueList: []KeyValue{entry},
+		}
+		return
+	}
+
+	next := append([]KeyValue(nil), current.KeyValueList...)
+	replaced := false
+	for i := range next {
+		if next[i].Key.KeyID == entry.Key.KeyID {
+			next[i] = entry
+			replaced = true
+			break
+		}
+	}
+	if !replaced {
+		next = append(next, entry)
+	}
+
+	s.snapshots[rootKey.KeyID] = Snapshot{
+		Key:          rootKey,
+		KeyValueList: sortedEntries(next),
 	}
 }
 

@@ -66,8 +66,8 @@
     "promise": "Preserve request order and per-item statuses for collection writes.",
     "source_section": "Batch Write Rules / Partial Success Rules",
     "planned_phase": "Phase 2",
-    "acceptance_test": "TestHTTP_SetKeyValueList_RequestOrderAndItemStatus",
-    "current_shipped_status": "not started"
+    "acceptance_test": "go test ./... -run TestHTTP_SetKeyValueList_RequestOrderAndItemStatus",
+    "current_shipped_status": "working"
   },
   {
     "promise": "Run a lightweight Go mock server suitable for local dev and CI.",

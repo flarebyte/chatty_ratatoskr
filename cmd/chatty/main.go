@@ -183,6 +183,7 @@ func newServerMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	store := snapshot.NewInMemoryStore()
 	httpapi.NewSnapshotAPI(store).Register(mux)
+	httpapi.NewNodeAPI(store).Register(mux)
 	httpapi.NewAdminAPI(store).Register(mux)
 	return mux
 }
