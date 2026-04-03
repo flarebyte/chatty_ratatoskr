@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type ServeConfig struct {
@@ -15,6 +17,7 @@ type ServeConfig struct {
 	WebSocketEnabled           bool
 	WebSocketMessageLimitBytes int64
 	AdminEnabled               bool
+	AllowUnsafeAdminExposure   bool
 	HTTPPayloadLimitBytes      int64
 }
 
@@ -27,7 +30,9 @@ type cueExport struct {
 		Supported  bool  `json:"supported"`
 		LimitBytes int64 `json:"limitBytes"`
 	} `json:"websocket"`
-	Admin any `json:"admin"`
+	Admin *struct {
+		UnsafeExposure bool `json:"unsafeExposure"`
+	} `json:"admin"`
 }
 
 func DefaultServeConfig() ServeConfig {
@@ -36,6 +41,7 @@ func DefaultServeConfig() ServeConfig {
 		WebSocketEnabled:           false,
 		WebSocketMessageLimitBytes: 32768,
 		AdminEnabled:               false,
+		AllowUnsafeAdminExposure:   false,
 		HTTPPayloadLimitBytes:      1 << 20,
 	}
 }
@@ -63,6 +69,12 @@ func ValidateServeConfig(cfg ServeConfig) error {
 	}
 	if cfg.WebSocketMessageLimitBytes <= 0 {
 		return fmt.Errorf("invalid config: websocket message limit must be greater than zero")
+	}
+	if cfg.AllowUnsafeAdminExposure && !cfg.AdminEnabled {
+		return fmt.Errorf("invalid config: allowUnsafeAdminExposure requires adminEnabled")
+	}
+	if cfg.AdminEnabled && !cfg.AllowUnsafeAdminExposure && !isLoopbackListenAddress(cfg.Listen) {
+		return fmt.Errorf("invalid config: adminEnabled requires loopback listen address unless allowUnsafeAdminExposure is true")
 	}
 	return nil
 }
@@ -103,6 +115,9 @@ func loadCueConfig(ctx context.Context, path string) (ServeConfig, error) {
 		WebSocketMessageLimitBytes: DefaultServeConfig().WebSocketMessageLimitBytes,
 		AdminEnabled:               raw.Admin != nil,
 	}
+	if raw.Admin != nil {
+		cfg.AllowUnsafeAdminExposure = raw.Admin.UnsafeExposure
+	}
 	if raw.WebSocket.LimitBytes > 0 {
 		cfg.WebSocketMessageLimitBytes = raw.WebSocket.LimitBytes
 	}
@@ -115,4 +130,19 @@ func loadCueConfig(ctx context.Context, path string) (ServeConfig, error) {
 		return ServeConfig{}, err
 	}
 	return cfg, nil
+}
+
+func isLoopbackListenAddress(address string) bool {
+	host, _, err := net.SplitHostPort(address)
+	if err != nil {
+		return false
+	}
+	if host == "" {
+		return false
+	}
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }

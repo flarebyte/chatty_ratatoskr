@@ -61,4 +61,35 @@ func TestConfig_LoadAndValidate(t *testing.T) {
 			t.Fatalf("unexpected validation error: %v", err)
 		}
 	})
+
+	t.Run("admin exposure requires loopback", func(t *testing.T) {
+		err := ValidateServeConfig(ServeConfig{
+			Listen:                     "0.0.0.0:8080",
+			AdminEnabled:               true,
+			WebSocketMessageLimitBytes: 32768,
+			HTTPPayloadLimitBytes:      1024,
+		})
+		if err == nil {
+			t.Fatal("expected admin exposure validation error")
+		}
+		if !strings.Contains(err.Error(), "loopback listen address") {
+			t.Fatalf("unexpected admin exposure error: %v", err)
+		}
+	})
+
+	t.Run("unsafe admin exposure requires opt-in", func(t *testing.T) {
+		err := ValidateServeConfig(ServeConfig{
+			Listen:                     "127.0.0.1:8080",
+			AdminEnabled:               false,
+			AllowUnsafeAdminExposure:   true,
+			WebSocketMessageLimitBytes: 32768,
+			HTTPPayloadLimitBytes:      1024,
+		})
+		if err == nil {
+			t.Fatal("expected unsafe exposure validation error")
+		}
+		if !strings.Contains(err.Error(), "requires adminEnabled") {
+			t.Fatalf("unexpected unsafe exposure error: %v", err)
+		}
+	})
 }

@@ -4,12 +4,16 @@ import (
 	"bytes"
 	"context"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/flarebyte/chatty-ratatoskr/internal/runtimeconfig"
 )
 
 func TestCLI_HelpAndVersion(t *testing.T) {
@@ -132,6 +136,66 @@ func TestCLI_ServeStartsAndStops(t *testing.T) {
 			t.Fatal("expected invalid config content error")
 		}
 		assertContains(t, err.Error(), "decode config")
+	})
+
+	t.Run("admin disabled omits route", func(t *testing.T) {
+		cfg := writeTempConfig(t, `{"listen":"127.0.0.1:0","websocketEnabled":false,"adminEnabled":false}`)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		ready := make(chan string, 1)
+		errCh := make(chan error, 1)
+		listener := newBlockingListener("127.0.0.1:0")
+		go func() {
+			_, _, err := runCLI(t, ctx, []string{"serve", "--config", cfg}, cliOptions{
+				serveReady: func(addr string) {
+					ready <- addr
+				},
+				listen: func(network, address string) (net.Listener, error) {
+					return listener, nil
+				},
+			})
+			errCh <- err
+		}()
+
+		select {
+		case <-ready:
+		case err := <-errCh:
+			t.Fatalf("serve returned early: %v", err)
+		case <-time.After(2 * time.Second):
+			t.Fatal("serve command did not become ready")
+		}
+
+		mux := newServerMux(runtimeconfig.ServeConfig{
+			Listen:                     "127.0.0.1:0",
+			AdminEnabled:               false,
+			WebSocketMessageLimitBytes: 32768,
+			HTTPPayloadLimitBytes:      1 << 20,
+		})
+		req := httptest.NewRequest(http.MethodPut, "/admin/commands", strings.NewReader(`{"id":"req-admin","commands":[{"id":"clear-state"}]}`))
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		if got, want := rec.Code, http.StatusNotFound; got != want {
+			t.Fatalf("expected admin route to be absent: got %d want %d body=%s", got, want, rec.Body.String())
+		}
+
+		cancel()
+		select {
+		case err := <-errCh:
+			if err != nil {
+				t.Fatalf("serve returned error: %v", err)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("serve command did not stop after context cancellation")
+		}
+	})
+
+	t.Run("unsafe admin exposure rejected on non-loopback", func(t *testing.T) {
+		_, _, err := runCLI(t, context.Background(), []string{"serve", "--config", writeTempConfig(t, `{"listen":"0.0.0.0:18082","websocketEnabled":false,"adminEnabled":true}`)}, cliOptions{})
+		if err == nil {
+			t.Fatal("expected unsafe admin exposure error")
+		}
+		assertContains(t, err.Error(), "loopback listen address")
 	})
 }
 
