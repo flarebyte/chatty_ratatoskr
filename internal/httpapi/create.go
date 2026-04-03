@@ -88,6 +88,15 @@ func (api *CreateAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
+	if forced, ok := forcedStatusFromSecureKeyID(req.RootKey.SecureKeyID); ok {
+		writeJSON(w, forced.httpStatus, responseEnvelope[map[string]any]{
+			ID:      responseIDWithGenerator(req.ID, api.generateID),
+			Status:  forced.status,
+			Message: forced.message,
+			Data:    map[string]any{},
+		})
+		return
+	}
 
 	rootParsed, err := yggkey.Parse(req.RootKey.KeyID)
 	if err != nil {

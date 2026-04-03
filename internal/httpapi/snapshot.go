@@ -17,6 +17,12 @@ const defaultHTTPPayloadLimitBytes int64 = 1 << 20
 
 var errPayloadTooLarge = errors.New("payload too large")
 
+type forcedStatus struct {
+	httpStatus int
+	status     string
+	message    string
+}
+
 type SnapshotAPI struct {
 	store             snapshot.Store
 	generateID        func() string
@@ -129,6 +135,15 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 		writeJSON(w, statusForDecodeError(err), api.invalidEnvelope(req.ID, messageForDecodeError(err)))
 		return
 	}
+	if forced, ok := forcedStatusFromSecureKeyID(req.Key.SecureKeyID); ok {
+		writeJSON(w, forced.httpStatus, responseEnvelope[map[string]any]{
+			ID:      api.responseID(req.ID),
+			Status:  forced.status,
+			Message: forced.message,
+			Data:    map[string]any{},
+		})
+		return
+	}
 
 	rootParsed, err := yggkey.Parse(req.Key.KeyID)
 	if err != nil {
@@ -189,6 +204,15 @@ func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request
 	var req getSnapshotRequest
 	if err := decodeJSONWithLimit(r, &req, api.payloadLimitBytes); err != nil {
 		writeJSON(w, statusForDecodeError(err), api.invalidEnvelope(req.ID, messageForDecodeError(err)))
+		return
+	}
+	if forced, ok := forcedStatusFromSecureKeyID(req.Key.SecureKeyID); ok {
+		writeJSON(w, forced.httpStatus, responseEnvelope[map[string]any]{
+			ID:      api.responseID(req.ID),
+			Status:  forced.status,
+			Message: forced.message,
+			Data:    map[string]any{},
+		})
 		return
 	}
 
@@ -297,6 +321,32 @@ func messageForDecodeError(err error) string {
 		return "payload too large"
 	}
 	return "invalid JSON payload"
+}
+
+// Mock-only forcing hook. Production integrity verification is intentionally out of scope here.
+func forcedStatusFromSecureKeyID(secureKeyID string) (forcedStatus, bool) {
+	switch secureKeyID {
+	case "invalid":
+		return forcedStatus{
+			httpStatus: http.StatusBadRequest,
+			status:     "invalid",
+			message:    "forced by mock secureKeyId",
+		}, true
+	case "unauthorised":
+		return forcedStatus{
+			httpStatus: http.StatusUnauthorized,
+			status:     "unauthorised",
+			message:    "forced by mock secureKeyId",
+		}, true
+	case "outdated":
+		return forcedStatus{
+			httpStatus: http.StatusConflict,
+			status:     "outdated",
+			message:    "forced by mock secureKeyId",
+		}, true
+	default:
+		return forcedStatus{}, false
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

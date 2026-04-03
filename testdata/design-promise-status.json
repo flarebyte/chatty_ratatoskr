@@ -31,8 +31,8 @@
     "promise": "Force mock statuses through test-oriented hooks.",
     "source_section": "Use Cases / `mock-status-forcing`",
     "planned_phase": "Phase 4",
-    "acceptance_test": "secureKeyId forcing tests for `invalid`, `unauthorised`, `outdated`",
-    "current_shipped_status": "not started"
+    "acceptance_test": "go test ./... -run TestMockStatusForcing_SecureKeyID",
+    "current_shipped_status": "working"
   },
   {
     "promise": "Heartbeat ping/pong keeps websocket alive.",

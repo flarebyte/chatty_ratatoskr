@@ -131,6 +131,15 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 			},
 			Status: "ok",
 		}
+		if forced, ok := forcedStatusFromSecureKeyID(item.Key.SecureKeyID); ok {
+			result.Status = forced.status
+			result.Message = forced.message
+			if forced.status == "outdated" {
+				hasOutdated = true
+			}
+			keyList = append(keyList, result)
+			continue
+		}
 
 		parsed, parseErr := yggkey.Parse(item.Key.KeyID)
 		if parseErr != nil {
@@ -259,6 +268,12 @@ func (api *NodeAPI) handleGetKeyValueList(w http.ResponseWriter, r *http.Request
 				},
 			},
 			Status: "ok",
+		}
+		if forced, ok := forcedStatusFromSecureKeyID(key.SecureKeyID); ok {
+			result.Status = forced.status
+			result.Message = forced.message
+			keyValueList = append(keyValueList, result)
+			continue
 		}
 
 		parsed, parseErr := yggkey.Parse(key.KeyID)
