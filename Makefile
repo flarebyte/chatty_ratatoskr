@@ -113,7 +113,10 @@ thoth-meta-go-test:
 	$(THOTH) run --config ./pipeline-go-test-maat.thoth.cue
 
 thoth-meta-ts-e2e:
-	$(THOTH) run --config ./pipeline-ts-e2e-maat.thoth.cue 
+	$(THOTH) run --config ./pipeline-ts-e2e-maat.thoth.cue
+
+view-thoth-meta-ts-e2e:
+	find thoth-meta/ts-e2e/script/e2e/*.thoth.yaml -exec yq '.meta.testcase_titles_list' {} \;
 
 thoth-lint-go:
 	$(THOTH) run --config ./pipeline-go-function-thresholds.thoth.cue
