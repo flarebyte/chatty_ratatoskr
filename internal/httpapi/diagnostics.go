@@ -10,6 +10,10 @@
 package httpapi
 
 import (
+	"bufio"
+	"errors"
+	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -87,6 +91,29 @@ type statusCapturingResponseWriter struct {
 func (w *statusCapturingResponseWriter) WriteHeader(status int) {
 	w.status = status
 	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *statusCapturingResponseWriter) Flush() {
+	flusher, ok := w.ResponseWriter.(http.Flusher)
+	if ok {
+		flusher.Flush()
+	}
+}
+
+func (w *statusCapturingResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := w.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, errors.New("wrapped response writer does not implement http.Hijacker")
+	}
+	return hijacker.Hijack()
+}
+
+func (w *statusCapturingResponseWriter) ReadFrom(reader io.Reader) (int64, error) {
+	readFrom, ok := w.ResponseWriter.(io.ReaderFrom)
+	if !ok {
+		return io.Copy(w.ResponseWriter, reader)
+	}
+	return readFrom.ReadFrom(reader)
 }
 
 func (w *statusCapturingResponseWriter) statusToWrite() int {

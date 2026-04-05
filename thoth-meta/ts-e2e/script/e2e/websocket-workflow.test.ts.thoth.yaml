@@ -1,0 +1,13 @@
+locator: script/e2e/websocket-workflow.test.ts
+meta:
+  import_files_list:
+    - ./helpers/http
+    - ./helpers/mock-server
+    - ./helpers/paths
+    - ./helpers/websocket
+    - bun:test
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - websocket event delivery works for node writes and snapshot replacement
+    - websocket subscribe, ping, and unsubscribe work end to end

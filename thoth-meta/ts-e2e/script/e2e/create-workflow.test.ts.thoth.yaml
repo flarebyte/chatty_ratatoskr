@@ -1,0 +1,9 @@
+locator: script/e2e/create-workflow.test.ts
+meta:
+  import_files_list:
+    - ./helpers/http
+    - ./helpers/mock-server
+    - bun:test
+  language: typescript
+  testcase_titles_list:
+    - create workflow preserves local keys and reports invalid kinds
