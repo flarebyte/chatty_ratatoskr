@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -11,9 +10,7 @@ import (
 
 func TestHTTP_SetKeyValueList_RequestOrderAndItemStatus(t *testing.T) {
 	store := snapshot.NewInMemoryStore()
-	api := NewNodeAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newNodeTestMux(store)
 
 	reqBody := `{
   "id":"req-set-node-001",
@@ -41,13 +38,8 @@ func TestHTTP_SetKeyValueList_RequestOrderAndItemStatus(t *testing.T) {
   ]
 }`
 
-	req := httptest.NewRequest(http.MethodPut, "/node", strings.NewReader(reqBody))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+	rec := serveJSONRequest(mux, http.MethodPut, "/node", reqBody)
+	requireHTTPStatus(t, rec, http.StatusOK)
 
 	const want = "{\"id\":\"req-set-node-001\",\"status\":\"ok\",\"data\":{\"rootKey\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyList\":[{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"version\":\"v1\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"status\":\"invalid\",\"message\":\"invalid key: node entry must be a descendant of the requested root\"},{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\",\"kind\":{\"hierarchy\":[\"dashboard\",\"note\",\"text\"]}},\"status\":\"ok\"}]}}\n"
 	if got := rec.Body.String(); got != want {
@@ -68,11 +60,9 @@ func TestHTTP_SetKeyValueList_RequestOrderAndItemStatus(t *testing.T) {
 
 func TestHTTP_SetKeyValueList_PartialSuccessTopLevelOK(t *testing.T) {
 	store := snapshot.NewInMemoryStore()
-	api := NewNodeAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newNodeTestMux(store)
 
-	req := httptest.NewRequest(http.MethodPut, "/node", strings.NewReader(`{
+	rec := serveJSONRequest(mux, http.MethodPut, "/node", `{
   "id":"req-set-node-002",
   "rootKey":{
     "keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
@@ -82,13 +72,8 @@ func TestHTTP_SetKeyValueList_PartialSuccessTopLevelOK(t *testing.T) {
     {"key":{"keyId":"bad-rootless-key","secureKeyId":"ok"},"value":"x"},
     {"key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count","secureKeyId":"ok"},"value":"3"}
   ]
-}`))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+}`)
+	requireHTTPStatus(t, rec, http.StatusOK)
 	if !strings.Contains(rec.Body.String(), `"status":"ok"`) {
 		t.Fatalf("expected top-level ok, got %s", rec.Body.String())
 	}
@@ -98,37 +83,18 @@ func TestHTTP_SetKeyValueList_PartialSuccessTopLevelOK(t *testing.T) {
 }
 
 func TestHTTP_SetKeyValueList_RejectsStaleWrite(t *testing.T) {
-	store := snapshot.NewInMemoryStore()
-	root := snapshot.Key{
-		KeyID:       "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
-		SecureKeyID: "ok",
-	}
-	store.Upsert(root, snapshot.KeyValue{
-		Key: snapshot.Key{
-			KeyID:       root.KeyID + ":note:n7c401c2:text",
-			SecureKeyID: "ok",
-			Version:     "v2",
-		},
-		Value: "latest",
-	})
+	store, root := seededNodeStore("v2", "latest")
 
-	api := NewNodeAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newNodeTestMux(store)
 
-	req := httptest.NewRequest(http.MethodPut, "/node", strings.NewReader(`{
+	rec := serveJSONRequest(mux, http.MethodPut, "/node", `{
   "id":"req-set-node-stale-001",
   "rootKey":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
   "keyValueList":[
     {"key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text","secureKeyId":"ok","version":"v1"},"value":"stale update"}
   ]
-}`))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusConflict; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+}`)
+	requireHTTPStatus(t, rec, http.StatusConflict)
 
 	const want = "{\"id\":\"req-set-node-stale-001\",\"status\":\"outdated\",\"data\":{\"rootKey\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyList\":[{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\",\"kind\":{\"hierarchy\":[\"dashboard\",\"note\",\"text\"]}},\"status\":\"outdated\",\"message\":\"outdated version: write is not based on the latest stored version\"}]}}\n"
 	if got := rec.Body.String(); got != want {
@@ -145,37 +111,18 @@ func TestHTTP_SetKeyValueList_RejectsStaleWrite(t *testing.T) {
 }
 
 func TestHTTP_SetKeyValueList_BumpsVersionOnSuccess(t *testing.T) {
-	store := snapshot.NewInMemoryStore()
-	root := snapshot.Key{
-		KeyID:       "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
-		SecureKeyID: "ok",
-	}
-	store.Upsert(root, snapshot.KeyValue{
-		Key: snapshot.Key{
-			KeyID:       root.KeyID + ":note:n7c401c2:text",
-			SecureKeyID: "ok",
-			Version:     "v1",
-		},
-		Value: "before",
-	})
+	store, root := seededNodeStore("v1", "before")
 
-	api := NewNodeAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newNodeTestMux(store)
 
-	req := httptest.NewRequest(http.MethodPut, "/node", strings.NewReader(`{
+	rec := serveJSONRequest(mux, http.MethodPut, "/node", `{
   "id":"req-set-node-bump-001",
   "rootKey":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
   "keyValueList":[
     {"key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text","secureKeyId":"ok","version":"v1"},"value":"after"}
   ]
-}`))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+}`)
+	requireHTTPStatus(t, rec, http.StatusOK)
 	if !strings.Contains(rec.Body.String(), `"version":"v2"`) {
 		t.Fatalf("expected bumped version in response, got %s", rec.Body.String())
 	}
@@ -212,9 +159,7 @@ func TestHTTP_GetKeyValueList_ReturnsRequestedValues(t *testing.T) {
 		Value: "hello world",
 	})
 
-	api := NewNodeAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newNodeTestMux(store)
 
 	reqBody := `{
   "id":"req-get-node-001",
@@ -238,13 +183,8 @@ func TestHTTP_GetKeyValueList_ReturnsRequestedValues(t *testing.T) {
   ]
 }`
 
-	req := httptest.NewRequest(http.MethodGet, "/node", strings.NewReader(reqBody))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+	rec := serveJSONRequest(mux, http.MethodGet, "/node", reqBody)
+	requireHTTPStatus(t, rec, http.StatusOK)
 
 	const want = "{\"id\":\"req-get-node-001\",\"status\":\"ok\",\"data\":{\"rootKey\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyValueList\":[{\"keyValue\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\",\"kind\":{\"hierarchy\":[\"dashboard\",\"note\",\"text\"]}},\"value\":\"hello world\"},\"status\":\"ok\"},{\"keyValue\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:missing:text\",\"secureKeyId\":\"ok\"}},\"status\":\"invalid\",\"message\":\"invalid key: unsupported label \\\"missing\\\"\"},{\"keyValue\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count\",\"secureKeyId\":\"ok\",\"version\":\"v2\",\"kind\":{\"hierarchy\":[\"dashboard\",\"note\",\"like\",\"count\"]}},\"value\":\"3\"},\"status\":\"ok\"}]}}\n"
 	if got := rec.Body.String(); got != want {
@@ -253,6 +193,30 @@ func TestHTTP_GetKeyValueList_ReturnsRequestedValues(t *testing.T) {
 }
 
 func TestHTTP_GetKeyValueList_DeterministicRequestOrder(t *testing.T) {
+	store, _ := seededNodeStore("v1", "hello world")
+
+	mux := newNodeTestMux(store)
+
+	run := func() string {
+		rec := serveJSONRequest(mux, http.MethodGet, "/node", `{
+  "id":"req-get-node-002",
+  "rootKey":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
+  "keyList":[
+    {"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text","secureKeyId":"ok"},
+    {"keyId":"bad-rootless-key","secureKeyId":"ok"}
+  ]
+}`)
+		return rec.Body.String()
+	}
+
+	first := run()
+	second := run()
+	if first != second {
+		t.Fatalf("deterministic response mismatch:\nfirst=%s\nsecond=%s", first, second)
+	}
+}
+
+func seededNodeStore(version, value string) (*snapshot.InMemoryStore, snapshot.Key) {
 	store := snapshot.NewInMemoryStore()
 	root := snapshot.Key{
 		KeyID:       "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07",
@@ -262,32 +226,9 @@ func TestHTTP_GetKeyValueList_DeterministicRequestOrder(t *testing.T) {
 		Key: snapshot.Key{
 			KeyID:       root.KeyID + ":note:n7c401c2:text",
 			SecureKeyID: "ok",
-			Version:     "v1",
+			Version:     version,
 		},
-		Value: "hello world",
+		Value: value,
 	})
-
-	api := NewNodeAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
-
-	run := func() string {
-		req := httptest.NewRequest(http.MethodGet, "/node", strings.NewReader(`{
-  "id":"req-get-node-002",
-  "rootKey":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"},
-  "keyList":[
-    {"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text","secureKeyId":"ok"},
-    {"keyId":"bad-rootless-key","secureKeyId":"ok"}
-  ]
-}`))
-		rec := httptest.NewRecorder()
-		mux.ServeHTTP(rec, req)
-		return rec.Body.String()
-	}
-
-	first := run()
-	second := run()
-	if first != second {
-		t.Fatalf("deterministic response mismatch:\nfirst=%s\nsecond=%s", first, second)
-	}
+	return store, root
 }

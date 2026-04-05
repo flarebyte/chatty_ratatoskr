@@ -76,49 +76,14 @@ func TestCLI_HelpAndVersion(t *testing.T) {
 
 func TestCLI_ServeStartsAndStops(t *testing.T) {
 	t.Run("starts and stops", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
 		configPath := writeTempConfig(t, `{"listen":"127.0.0.1:0","websocketEnabled":false,"adminEnabled":false}`)
-		ready := make(chan string, 1)
-		errCh := make(chan error, 1)
-		listener := newBlockingListener("127.0.0.1:0")
+		serve := startServeProcess(t, configPath)
 
-		go func() {
-			_, _, err := runCLI(t, ctx, []string{"serve", "--config", configPath}, cliOptions{
-				serveReady: func(addr string) {
-					ready <- addr
-				},
-				listen: func(network, address string) (net.Listener, error) {
-					return listener, nil
-				},
-			})
-			errCh <- err
-		}()
-
-		var addr string
-		select {
-		case addr = <-ready:
-		case err := <-errCh:
-			t.Fatalf("serve returned early: %v", err)
-		case <-time.After(2 * time.Second):
-			t.Fatal("serve command did not become ready")
-		}
-
-		if got, want := addr, "127.0.0.1:0"; got != want {
+		if got, want := serve.addr, "127.0.0.1:0"; got != want {
 			t.Fatalf("unexpected ready address: got %q want %q", got, want)
 		}
 
-		cancel()
-
-		select {
-		case err := <-errCh:
-			if err != nil {
-				t.Fatalf("serve returned error: %v", err)
-			}
-		case <-time.After(2 * time.Second):
-			t.Fatal("serve command did not stop after context cancellation")
-		}
+		serve.stop()
 	})
 
 	t.Run("invalid config path", func(t *testing.T) {
@@ -140,31 +105,7 @@ func TestCLI_ServeStartsAndStops(t *testing.T) {
 
 	t.Run("admin disabled omits route", func(t *testing.T) {
 		cfg := writeTempConfig(t, `{"listen":"127.0.0.1:0","websocketEnabled":false,"adminEnabled":false}`)
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		ready := make(chan string, 1)
-		errCh := make(chan error, 1)
-		listener := newBlockingListener("127.0.0.1:0")
-		go func() {
-			_, _, err := runCLI(t, ctx, []string{"serve", "--config", cfg}, cliOptions{
-				serveReady: func(addr string) {
-					ready <- addr
-				},
-				listen: func(network, address string) (net.Listener, error) {
-					return listener, nil
-				},
-			})
-			errCh <- err
-		}()
-
-		select {
-		case <-ready:
-		case err := <-errCh:
-			t.Fatalf("serve returned early: %v", err)
-		case <-time.After(2 * time.Second):
-			t.Fatal("serve command did not become ready")
-		}
+		serve := startServeProcess(t, cfg)
 
 		mux := newServerMux(runtimeconfig.ServeConfig{
 			Listen:                     "127.0.0.1:0",
@@ -179,15 +120,7 @@ func TestCLI_ServeStartsAndStops(t *testing.T) {
 			t.Fatalf("expected admin route to be absent: got %d want %d body=%s", got, want, rec.Body.String())
 		}
 
-		cancel()
-		select {
-		case err := <-errCh:
-			if err != nil {
-				t.Fatalf("serve returned error: %v", err)
-			}
-		case <-time.After(2 * time.Second):
-			t.Fatal("serve command did not stop after context cancellation")
-		}
+		serve.stop()
 	})
 
 	t.Run("unsafe admin exposure rejected on non-loopback", func(t *testing.T) {
@@ -230,6 +163,65 @@ func assertContains(t *testing.T, got, want string) {
 	t.Helper()
 	if !strings.Contains(got, want) {
 		t.Fatalf("expected %q to contain %q", got, want)
+	}
+}
+
+type runningServe struct {
+	addr   string
+	cancel context.CancelFunc
+	errCh  chan error
+	t      *testing.T
+}
+
+func startServeProcess(t *testing.T, configPath string) runningServe {
+	t.Helper()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	ready := make(chan string, 1)
+	errCh := make(chan error, 1)
+	listener := newBlockingListener("127.0.0.1:0")
+
+	go func() {
+		_, _, err := runCLI(t, ctx, []string{"serve", "--config", configPath}, cliOptions{
+			serveReady: func(addr string) {
+				ready <- addr
+			},
+			listen: func(network, address string) (net.Listener, error) {
+				return listener, nil
+			},
+		})
+		errCh <- err
+	}()
+
+	select {
+	case addr := <-ready:
+		return runningServe{
+			addr:   addr,
+			cancel: cancel,
+			errCh:  errCh,
+			t:      t,
+		}
+	case err := <-errCh:
+		cancel()
+		t.Fatalf("serve returned early: %v", err)
+	case <-time.After(2 * time.Second):
+		cancel()
+		t.Fatal("serve command did not become ready")
+	}
+
+	return runningServe{}
+}
+
+func (r runningServe) stop() {
+	r.t.Helper()
+	r.cancel()
+	select {
+	case err := <-r.errCh:
+		if err != nil {
+			r.t.Fatalf("serve returned error: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		r.t.Fatal("serve command did not stop after context cancellation")
 	}
 }
 

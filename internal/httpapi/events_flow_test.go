@@ -1,7 +1,6 @@
 package httpapi
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,13 +13,7 @@ import (
 
 func TestWebSocket_SetEventFlow(t *testing.T) {
 	mux := newEventFlowMux()
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn := mustDialWS(t, ctx, server.URL+"/events")
+	ctx, conn, _ := startEventsSession(t, mux, 5*time.Second)
 	defer func() {
 		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}()
@@ -34,7 +27,7 @@ func TestWebSocket_SetEventFlow(t *testing.T) {
   "keyValueList":[
     {"key":{"keyId":"`+allowedRoot+`:note:n7c401c2:text","secureKeyId":"ok"},"value":"hello world"}
   ]
-}`))
+	}`))
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	if got, want := rec.Code, http.StatusOK; got != want {
@@ -50,13 +43,7 @@ func TestWebSocket_SetEventFlow(t *testing.T) {
 
 func TestWebSocket_SnapshotReplacedFlow(t *testing.T) {
 	mux := newEventFlowMux()
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn := mustDialWS(t, ctx, server.URL+"/events")
+	ctx, conn, _ := startEventsSession(t, mux, 5*time.Second)
 	defer func() {
 		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}()
@@ -70,7 +57,7 @@ func TestWebSocket_SnapshotReplacedFlow(t *testing.T) {
   "keyValueList":[
     {"key":{"keyId":"`+allowedRoot+`:note:n7c401c2:text","secureKeyId":"ok","version":"v1"},"value":"hello world"}
   ]
-}`))
+	}`))
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	if got, want := rec.Code, http.StatusOK; got != want {

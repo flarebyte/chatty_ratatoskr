@@ -189,12 +189,7 @@ func (api *EventsAPI) handleMessage(state *connectionState, msg clientMessage) s
 	switch msg.Kind {
 	case "subscribe":
 		if invalid := api.firstInvalidRoot(msg.RootKeys); invalid != "" {
-			return serverMessage{
-				ID:      msg.ID,
-				Kind:    "status",
-				Status:  "invalid",
-				Message: "invalid rootKey: not in predefined allowed set",
-			}
+			return invalidRootStatusMessage(msg.ID)
 		}
 		state.mu.Lock()
 		for _, root := range msg.RootKeys {
@@ -205,12 +200,7 @@ func (api *EventsAPI) handleMessage(state *connectionState, msg clientMessage) s
 		return serverMessage{ID: msg.ID, Kind: "subscribed", RootKeys: roots}
 	case "unsubscribe":
 		if invalid := api.firstInvalidRoot(msg.RootKeys); invalid != "" {
-			return serverMessage{
-				ID:      msg.ID,
-				Kind:    "status",
-				Status:  "invalid",
-				Message: "invalid rootKey: not in predefined allowed set",
-			}
+			return invalidRootStatusMessage(msg.ID)
 		}
 		state.mu.Lock()
 		for _, root := range msg.RootKeys {
@@ -228,6 +218,15 @@ func (api *EventsAPI) handleMessage(state *connectionState, msg clientMessage) s
 			Status:  "invalid",
 			Message: "invalid command kind",
 		}
+	}
+}
+
+func invalidRootStatusMessage(id string) serverMessage {
+	return serverMessage{
+		ID:      id,
+		Kind:    "status",
+		Status:  "invalid",
+		Message: "invalid rootKey: not in predefined allowed set",
 	}
 }
 

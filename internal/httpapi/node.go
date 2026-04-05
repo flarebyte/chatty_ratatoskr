@@ -102,22 +102,9 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
-
-	rootParsed, err := yggkey.Parse(req.RootKey.KeyID)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  "invalid",
-			Message: err.Error(),
-			Data:    map[string]any{},
-		})
+	rootParsed, root, ok := api.parseNodeRootOrWriteInvalid(w, req.ID, req.RootKey)
+	if !ok {
 		return
-	}
-
-	root := snapshot.Key{
-		KeyID:       req.RootKey.KeyID,
-		SecureKeyID: req.RootKey.SecureKeyID,
-		Version:     req.RootKey.Version,
 	}
 
 	keyList := make([]keyStatusResult, 0, len(req.KeyValueList))
@@ -208,12 +195,7 @@ func (api *NodeAPI) handleSetKeyValueList(w http.ResponseWriter, r *http.Request
 		ID:     responseIDWithGenerator(req.ID, api.generateID),
 		Status: statusText,
 		Data: setKeyValueResponseData{
-			RootKey: keyParams{
-				KeyID:       req.RootKey.KeyID,
-				SecureKeyID: req.RootKey.SecureKeyID,
-				Version:     req.RootKey.Version,
-				Kind:        derivedKindParams(rootParsed),
-			},
+			RootKey: rootKeyResponse(req.RootKey, rootParsed),
 			KeyList: keyList,
 		},
 	})
@@ -239,22 +221,9 @@ func (api *NodeAPI) handleGetKeyValueList(w http.ResponseWriter, r *http.Request
 		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
-
-	rootParsed, err := yggkey.Parse(req.RootKey.KeyID)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  "invalid",
-			Message: err.Error(),
-			Data:    map[string]any{},
-		})
+	rootParsed, root, ok := api.parseNodeRootOrWriteInvalid(w, req.ID, req.RootKey)
+	if !ok {
 		return
-	}
-
-	root := snapshot.Key{
-		KeyID:       req.RootKey.KeyID,
-		SecureKeyID: req.RootKey.SecureKeyID,
-		Version:     req.RootKey.Version,
 	}
 
 	keyValueList := make([]keyValueStatusResult, 0, len(req.KeyList))
@@ -311,13 +280,20 @@ func (api *NodeAPI) handleGetKeyValueList(w http.ResponseWriter, r *http.Request
 		ID:     responseIDWithGenerator(req.ID, api.generateID),
 		Status: "ok",
 		Data: getKeyValueResponseData{
-			RootKey: keyParams{
-				KeyID:       req.RootKey.KeyID,
-				SecureKeyID: req.RootKey.SecureKeyID,
-				Version:     req.RootKey.Version,
-				Kind:        derivedKindParams(rootParsed),
-			},
+			RootKey:      rootKeyResponse(req.RootKey, rootParsed),
 			KeyValueList: keyValueList,
 		},
 	})
+}
+
+func (api *NodeAPI) parseNodeRootOrWriteInvalid(w http.ResponseWriter, requestID string, rootKey keyParams) (yggkey.ParsedKey, snapshot.Key, bool) {
+	parsed, ok := parseRootKeyOrWriteInvalid(w, requestID, api.generateID, rootKey)
+	if !ok {
+		return yggkey.ParsedKey{}, snapshot.Key{}, false
+	}
+	return parsed, snapshot.Key{
+		KeyID:       rootKey.KeyID,
+		SecureKeyID: rootKey.SecureKeyID,
+		Version:     rootKey.Version,
+	}, true
 }

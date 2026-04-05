@@ -11,9 +11,7 @@ import (
 
 func TestHTTP_SetSnapshot_ReplacesBaseline(t *testing.T) {
 	store := snapshot.NewInMemoryStore()
-	api := NewSnapshotAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newSnapshotTestMux(store)
 
 	reqBody := `{
   "id": "req-set-snapshot-001",
@@ -41,13 +39,8 @@ func TestHTTP_SetSnapshot_ReplacesBaseline(t *testing.T) {
   ]
 }`
 
-	req := httptest.NewRequest(http.MethodPut, "/snapshot", strings.NewReader(reqBody))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+	rec := serveJSONRequest(mux, http.MethodPut, "/snapshot", reqBody)
+	requireHTTPStatus(t, rec, http.StatusOK)
 
 	const want = "{\"id\":\"req-set-snapshot-001\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}}}}\n"
 	if got := rec.Body.String(); got != want {
@@ -65,17 +58,10 @@ func TestHTTP_SetSnapshot_ReplacesBaseline(t *testing.T) {
 
 func TestHTTP_SetSnapshot_InvalidPayload(t *testing.T) {
 	store := snapshot.NewInMemoryStore()
-	api := NewSnapshotAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newSnapshotTestMux(store)
 
-	req := httptest.NewRequest(http.MethodPut, "/snapshot", strings.NewReader(`{"key":{"keyId":123}}`))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusBadRequest; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+	rec := serveJSONRequest(mux, http.MethodPut, "/snapshot", `{"key":{"keyId":123}}`)
+	requireHTTPStatus(t, rec, http.StatusBadRequest)
 	if !strings.Contains(rec.Body.String(), `"status":"invalid"`) {
 		t.Fatalf("expected invalid status body, got %s", rec.Body.String())
 	}
@@ -102,12 +88,8 @@ func TestHTTP_SetSnapshot_Deterministic(t *testing.T) {
 
 	run := func() string {
 		store := snapshot.NewInMemoryStore()
-		api := NewSnapshotAPI(store)
-		mux := http.NewServeMux()
-		api.Register(mux)
-		req := httptest.NewRequest(http.MethodPut, "/snapshot", strings.NewReader(requestBody))
-		rec := httptest.NewRecorder()
-		mux.ServeHTTP(rec, req)
+		mux := newSnapshotTestMux(store)
+		rec := serveJSONRequest(mux, http.MethodPut, "/snapshot", requestBody)
 		return rec.Body.String()
 	}
 
@@ -143,9 +125,7 @@ func TestHTTP_GetSnapshot_ReturnsDeterministicSnapshot(t *testing.T) {
 		},
 	})
 
-	api := NewSnapshotAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newSnapshotTestMux(store)
 
 	reqBody := `{
   "id": "req-get-snapshot-001",
@@ -154,13 +134,8 @@ func TestHTTP_GetSnapshot_ReturnsDeterministicSnapshot(t *testing.T) {
     "secureKeyId": "ok"
   }
 }`
-	req := httptest.NewRequest(http.MethodGet, "/snapshot", strings.NewReader(reqBody))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+	rec := serveJSONRequest(mux, http.MethodGet, "/snapshot", reqBody)
+	requireHTTPStatus(t, rec, http.StatusOK)
 
 	const want = "{\"id\":\"req-get-snapshot-001\",\"status\":\"ok\",\"data\":{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07\",\"secureKeyId\":\"ok\",\"kind\":{\"hierarchy\":[\"dashboard\"]}},\"keyValueList\":[{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:like:count\",\"secureKeyId\":\"ok\",\"version\":\"v1\"},\"value\":\"3\"},{\"key\":{\"keyId\":\"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07:note:n7c401c2:text\",\"secureKeyId\":\"ok\",\"version\":\"v1\"},\"value\":\"hello world\"}]}}\n"
 	if got := rec.Body.String(); got != want {
@@ -170,9 +145,7 @@ func TestHTTP_GetSnapshot_ReturnsDeterministicSnapshot(t *testing.T) {
 
 func TestHTTP_GetSnapshot_MissingSnapshotReturnsEmptyList(t *testing.T) {
 	store := snapshot.NewInMemoryStore()
-	api := NewSnapshotAPI(store)
-	mux := http.NewServeMux()
-	api.Register(mux)
+	mux := newSnapshotTestMux(store)
 
 	reqBody := `{
   "id": "req-get-snapshot-001",
@@ -181,13 +154,8 @@ func TestHTTP_GetSnapshot_MissingSnapshotReturnsEmptyList(t *testing.T) {
     "secureKeyId": "ok"
   }
 }`
-	req := httptest.NewRequest(http.MethodGet, "/snapshot", strings.NewReader(reqBody))
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Fatalf("status mismatch: got %d want %d", got, want)
-	}
+	rec := serveJSONRequest(mux, http.MethodGet, "/snapshot", reqBody)
+	requireHTTPStatus(t, rec, http.StatusOK)
 	if !strings.Contains(rec.Body.String(), `"keyValueList":[]`) {
 		t.Fatalf("expected empty keyValueList, got %s", rec.Body.String())
 	}
@@ -211,12 +179,8 @@ func TestHTTP_GetSnapshot_Deterministic(t *testing.T) {
 			},
 		})
 
-		api := NewSnapshotAPI(store)
-		mux := http.NewServeMux()
-		api.Register(mux)
-		req := httptest.NewRequest(http.MethodGet, "/snapshot", strings.NewReader(`{"id":"req-get-snapshot-001","key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"}}`))
-		rec := httptest.NewRecorder()
-		mux.ServeHTTP(rec, req)
+		mux := newSnapshotTestMux(store)
+		rec := serveJSONRequest(mux, http.MethodGet, "/snapshot", `{"id":"req-get-snapshot-001","key":{"keyId":"tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07","secureKeyId":"ok"}}`)
 		return rec.Body.String()
 	}
 

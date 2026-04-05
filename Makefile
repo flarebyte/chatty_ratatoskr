@@ -8,6 +8,7 @@
 .PHONY: lint format test test-race gen docs-gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check complexity sec dup review thoth-meta-go thoth-meta-go-test thoth-meta-ts-e2e thoth-lint-go thoth-meta-merge
 
 BIOME := ./node_modules/.bin/biome
+JSCPD := ./node_modules/.bin/jscpd
 BUN := bun
 GO := go
 GOLINT := golangci-lint
@@ -16,6 +17,7 @@ THOTH := thoth
 BIN := chatty
 GO_CACHE_ENV := GOCACHE=$(PWD)/.gocache GOMODCACHE=$(PWD)/.gomodcache
 GOLANGCI_LINT_CACHE := $(PWD)/.golangci-lint-cache
+JSCPD_IGNORE := .git/**,.gocache/**,.gomodcache/**,script/e2e/.gocache/**,script/e2e/.gomodcache/**,node_modules/**,build/**,.e2e-bin/**,temp/**
 
 lint:
 	@if [ -x "$(BIOME)" ]; then \
@@ -89,8 +91,12 @@ complexity:
 sec:
 	semgrep scan --config auto
 dup:
-	npx jscpd --format go --min-lines 10 --gitignore .
-	npx jscpd --format typescript --min-lines 15 --gitignore .
+	@if [ -x "$(JSCPD)" ]; then \
+		$(JSCPD) --format go --min-lines 10 --gitignore --ignore "$(JSCPD_IGNORE)" .; \
+		$(JSCPD) --format typescript --min-lines 15 --gitignore --ignore "$(JSCPD_IGNORE)" .; \
+	else \
+		printf '%s\n' 'Skipping duplication scan: jscpd is not installed locally.'; \
+	fi
 
 review: format test e2e lint
 
@@ -112,7 +118,7 @@ thoth-meta-merge:
 	
 help:
 	@printf "Targets:\n"
-	@printf "  (core tools: go, bun, golangci-lint, flyb, thoth, biome)\n"
+	@printf "  (core tools: go, bun, golangci-lint, flyb, thoth, biome, jscpd)\n"
 	@printf "  lint               Run linters (Biome + go vet + golangci-lint).\n"
 	@printf "  format             Apply formatting (gofmt + Biome when locally installed).\n"
 	@printf "  test               Run Go tests + coverage summary.\n"
@@ -130,7 +136,7 @@ help:
 	@printf "  clean              Remove build artifacts.\n"
 	@printf "  complexity         Show top file complexity (Go/TS).\n"
 	@printf "  sec                Run security scan (semgrep).\n"
-	@printf "  dup                Run duplication scans (go/typescript).\n"
+	@printf "  dup                Run duplication scans with local jscpd (go/typescript).\n"
 	@printf "  review             Human reviewer command: format + test + e2e + lint.\n"
 	@printf "  thoth-meta-go      Collect metadata for non-test Go files via thoth.\n"
 	@printf "  thoth-meta-go-test Collect metadata for Go test files via thoth.\n"

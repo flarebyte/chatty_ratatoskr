@@ -88,24 +88,11 @@ func (api *CreateAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, statusForDecodeError(err), invalidEnvelopeWithID(req.ID, api.generateID, messageForDecodeError(err)))
 		return
 	}
-	if forced, ok := forcedStatusFromSecureKeyID(req.RootKey.SecureKeyID); ok {
-		writeJSON(w, forced.httpStatus, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  forced.status,
-			Message: forced.message,
-			Data:    map[string]any{},
-		})
+	if writeForcedStatusEnvelope(w, req.ID, api.generateID, req.RootKey.SecureKeyID) {
 		return
 	}
-
-	rootParsed, err := yggkey.Parse(req.RootKey.KeyID)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, responseEnvelope[map[string]any]{
-			ID:      responseIDWithGenerator(req.ID, api.generateID),
-			Status:  "invalid",
-			Message: err.Error(),
-			Data:    map[string]any{},
-		})
+	rootParsed, ok := parseRootKeyOrWriteInvalid(w, req.ID, api.generateID, req.RootKey)
+	if !ok {
 		return
 	}
 
@@ -118,12 +105,7 @@ func (api *CreateAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
 		ID:     responseIDWithGenerator(req.ID, api.generateID),
 		Status: "ok",
 		Data: newKeysResponseData{
-			RootKey: keyParams{
-				KeyID:       req.RootKey.KeyID,
-				SecureKeyID: req.RootKey.SecureKeyID,
-				Version:     req.RootKey.Version,
-				Kind:        derivedKindParams(rootParsed),
-			},
+			RootKey: rootKeyResponse(req.RootKey, rootParsed),
 			NewKeys: items,
 		},
 	})

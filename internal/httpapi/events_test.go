@@ -14,13 +14,7 @@ import (
 const allowedRoot = "tenant:t8f3a1c2:group:g4b7d9e1:dashboard:d1e52f07"
 
 func TestWebSocket_SubscribeValidateRoots(t *testing.T) {
-	server := httptest.NewServer(newEventsTestMux())
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn := mustDialWS(t, ctx, server.URL+"/events")
+	ctx, conn, _ := startEventsSession(t, newEventsTestMux(), 5*time.Second)
 	defer func() {
 		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}()
@@ -34,13 +28,7 @@ func TestWebSocket_SubscribeValidateRoots(t *testing.T) {
 }
 
 func TestWebSocket_UnsubscribeNoop(t *testing.T) {
-	server := httptest.NewServer(newEventsTestMux())
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn := mustDialWS(t, ctx, server.URL+"/events")
+	ctx, conn, _ := startEventsSession(t, newEventsTestMux(), 5*time.Second)
 	defer func() {
 		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}()
@@ -56,13 +44,7 @@ func TestWebSocket_UnsubscribeNoop(t *testing.T) {
 }
 
 func TestWebSocket_PingPongCorrelation(t *testing.T) {
-	server := httptest.NewServer(newEventsTestMux())
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn := mustDialWS(t, ctx, server.URL+"/events")
+	ctx, conn, _ := startEventsSession(t, newEventsTestMux(), 5*time.Second)
 	defer func() {
 		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}()
@@ -131,15 +113,7 @@ func TestWebSocket_Heartbeat(t *testing.T) {
 
 func TestWebSocket_MessageSizeLimit(t *testing.T) {
 	api := NewEventsAPIWithRuntimeOptions([]string{allowedRoot}, nil, nil, 32, time.Hour, time.Second)
-	mux := http.NewServeMux()
-	api.Register(mux)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	conn := mustDialWS(t, ctx, server.URL+"/events")
+	ctx, conn, _ := startEventsSession(t, registerEventsAPI(api), 2*time.Second)
 	defer func() {
 		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}()
@@ -156,15 +130,7 @@ func TestWebSocket_MessageSizeLimit(t *testing.T) {
 
 func TestWebSocket_DisconnectClearsSubscriptions(t *testing.T) {
 	api := NewEventsAPIWithRuntimeOptions([]string{allowedRoot}, nil, nil, 32768, time.Hour, time.Second)
-	mux := http.NewServeMux()
-	api.Register(mux)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	conn := mustDialWS(t, ctx, server.URL+"/events")
+	ctx, conn, _ := startEventsSession(t, registerEventsAPI(api), 2*time.Second)
 	mustWriteClientMessage(t, ctx, conn, `{"kind":"subscribe","rootKeys":["`+allowedRoot+`"]}`)
 	_ = mustReadServerMessage(t, ctx, conn)
 	if got, want := api.subscriberCount(), 1; got != want {
@@ -182,6 +148,25 @@ func TestWebSocket_DisconnectClearsSubscriptions(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	t.Fatalf("expected subscriber count to reach 0 after disconnect, got %d", api.subscriberCount())
+}
+
+func startEventsSession(t *testing.T, mux *http.ServeMux, timeout time.Duration) (context.Context, *websocket.Conn, *httptest.Server) {
+	t.Helper()
+
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	t.Cleanup(cancel)
+
+	conn := mustDialWS(t, ctx, server.URL+"/events")
+	return ctx, conn, server
+}
+
+func registerEventsAPI(api *EventsAPI) *http.ServeMux {
+	mux := http.NewServeMux()
+	api.Register(mux)
+	return mux
 }
 
 func mustDialWS(t *testing.T, ctx context.Context, httpURL string) *websocket.Conn {

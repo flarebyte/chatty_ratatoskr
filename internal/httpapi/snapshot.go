@@ -135,19 +135,8 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 		writeJSON(w, statusForDecodeError(err), api.invalidEnvelope(req.ID, messageForDecodeError(err)))
 		return
 	}
-	if forced, ok := forcedStatusFromSecureKeyID(req.Key.SecureKeyID); ok {
-		writeJSON(w, forced.httpStatus, responseEnvelope[map[string]any]{
-			ID:      api.responseID(req.ID),
-			Status:  forced.status,
-			Message: forced.message,
-			Data:    map[string]any{},
-		})
-		return
-	}
-
-	rootParsed, err := yggkey.Parse(req.Key.KeyID)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, err.Error()))
+	rootParsed, root, ok := api.parseSnapshotRootOrWriteInvalid(w, req.ID, req.Key)
+	if !ok {
 		return
 	}
 
@@ -171,31 +160,16 @@ func (api *SnapshotAPI) handleSetSnapshot(w http.ResponseWriter, r *http.Request
 		})
 	}
 
-	root := snapshot.Key{
-		KeyID:       req.Key.KeyID,
-		SecureKeyID: req.Key.SecureKeyID,
-		Version:     req.Key.Version,
-	}
 	api.store.Replace(root, entries)
 	if api.events != nil {
-		api.events.EmitSnapshotReplaced(keyParams{
-			KeyID:       req.Key.KeyID,
-			SecureKeyID: req.Key.SecureKeyID,
-			Version:     req.Key.Version,
-			Kind:        derivedKindParams(rootParsed),
-		}, "snapshot-v1")
+		api.events.EmitSnapshotReplaced(rootKeyResponse(req.Key, rootParsed), "snapshot-v1")
 	}
 
 	writeJSON(w, http.StatusOK, responseEnvelope[setSnapshotResponseData]{
 		ID:     api.responseID(req.ID),
 		Status: "ok",
 		Data: setSnapshotResponseData{
-			Key: keyParams{
-				KeyID:       req.Key.KeyID,
-				SecureKeyID: req.Key.SecureKeyID,
-				Version:     req.Key.Version,
-				Kind:        derivedKindParams(rootParsed),
-			},
+			Key: rootKeyResponse(req.Key, rootParsed),
 		},
 	})
 }
@@ -206,26 +180,9 @@ func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request
 		writeJSON(w, statusForDecodeError(err), api.invalidEnvelope(req.ID, messageForDecodeError(err)))
 		return
 	}
-	if forced, ok := forcedStatusFromSecureKeyID(req.Key.SecureKeyID); ok {
-		writeJSON(w, forced.httpStatus, responseEnvelope[map[string]any]{
-			ID:      api.responseID(req.ID),
-			Status:  forced.status,
-			Message: forced.message,
-			Data:    map[string]any{},
-		})
+	rootParsed, root, ok := api.parseSnapshotRootOrWriteInvalid(w, req.ID, req.Key)
+	if !ok {
 		return
-	}
-
-	rootParsed, err := yggkey.Parse(req.Key.KeyID)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, api.invalidEnvelope(req.ID, err.Error()))
-		return
-	}
-
-	root := snapshot.Key{
-		KeyID:       req.Key.KeyID,
-		SecureKeyID: req.Key.SecureKeyID,
-		Version:     req.Key.Version,
 	}
 	got := api.store.Get(root)
 
@@ -245,12 +202,7 @@ func (api *SnapshotAPI) handleGetSnapshot(w http.ResponseWriter, r *http.Request
 		ID:     api.responseID(req.ID),
 		Status: "ok",
 		Data: getSnapshotResponseData{
-			Key: keyParams{
-				KeyID:       req.Key.KeyID,
-				SecureKeyID: req.Key.SecureKeyID,
-				Version:     req.Key.Version,
-				Kind:        derivedKindParams(rootParsed),
-			},
+			Key:          rootKeyResponse(req.Key, rootParsed),
 			KeyValueList: keyValueList,
 		},
 	})
@@ -307,6 +259,53 @@ func invalidEnvelopeWithID(requestID string, generateID func() string, message s
 		Message: message,
 		Data:    map[string]any{},
 	}
+}
+
+func (api *SnapshotAPI) parseSnapshotRootOrWriteInvalid(w http.ResponseWriter, requestID string, key keyParams) (yggkey.ParsedKey, snapshot.Key, bool) {
+	if writeForcedStatusEnvelope(w, requestID, api.generateID, key.SecureKeyID) {
+		return yggkey.ParsedKey{}, snapshot.Key{}, false
+	}
+	parsed, ok := parseRootKeyOrWriteInvalid(w, requestID, api.generateID, key)
+	if !ok {
+		return yggkey.ParsedKey{}, snapshot.Key{}, false
+	}
+	return parsed, snapshot.Key{
+		KeyID:       key.KeyID,
+		SecureKeyID: key.SecureKeyID,
+		Version:     key.Version,
+	}, true
+}
+
+func rootKeyResponse(root keyParams, parsed yggkey.ParsedKey) keyParams {
+	return keyParams{
+		KeyID:       root.KeyID,
+		SecureKeyID: root.SecureKeyID,
+		Version:     root.Version,
+		Kind:        derivedKindParams(parsed),
+	}
+}
+
+func parseRootKeyOrWriteInvalid(w http.ResponseWriter, requestID string, generate func() string, root keyParams) (yggkey.ParsedKey, bool) {
+	parsed, err := yggkey.Parse(root.KeyID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, invalidEnvelopeWithID(requestID, generate, err.Error()))
+		return yggkey.ParsedKey{}, false
+	}
+	return parsed, true
+}
+
+func writeForcedStatusEnvelope(w http.ResponseWriter, requestID string, generate func() string, secureKeyID string) bool {
+	forced, ok := forcedStatusFromSecureKeyID(secureKeyID)
+	if !ok {
+		return false
+	}
+	writeJSON(w, forced.httpStatus, responseEnvelope[map[string]any]{
+		ID:      responseIDWithGenerator(requestID, generate),
+		Status:  forced.status,
+		Message: forced.message,
+		Data:    map[string]any{},
+	})
+	return true
 }
 
 func statusForDecodeError(err error) int {

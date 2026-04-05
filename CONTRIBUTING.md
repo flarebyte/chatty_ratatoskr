@@ -31,6 +31,12 @@ For agents:
   - builds `.e2e-bin/chatty`
 - `make build`
   - builds release artifacts into `./build`
+- `make dup`
+  - runs duplication scans with the local `jscpd` binary for Go and TypeScript
+- `make complexity`
+  - shows top complexity hotspots for Go and TypeScript files
+- `make sec`
+  - runs the configured security scan
 - `make release`
   - runs release checks and then the Bun-based release helper
 - `make thoth-meta-go`
@@ -63,6 +69,15 @@ For agents:
   - lightweight JSON inspection for some metadata/reporting targets
 - `Biome`
   - optional local formatter/linter for JS/TS/JSON-style files when installed in `node_modules`
+- `jscpd`
+  - local duplication scanner used by `make dup`
+
+## Maintenance Gates
+
+- `make dup`
+  - ignore cache and generated directories; review only repo-owned files
+  - current accepted duplication is mainly small repeated HTTP handler and test scaffolding under `internal/httpapi`
+  - treat new duplication outside those narrow areas as a cleanup candidate
 
 ## Testing Policy
 
