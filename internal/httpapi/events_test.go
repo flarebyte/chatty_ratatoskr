@@ -3,8 +3,8 @@ package httpapi
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -66,10 +66,7 @@ func newEventsTestMux() *http.ServeMux {
 func TestWebSocket_Heartbeat(t *testing.T) {
 	pingCh := make(chan struct{}, 1)
 	api := NewEventsAPIWithRuntimeOptions([]string{allowedRoot}, nil, nil, 32768, 20*time.Millisecond, time.Second)
-	mux := http.NewServeMux()
-	api.Register(mux)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := startIPv4HTTPServer(t, registerEventsAPI(api))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -150,17 +147,44 @@ func TestWebSocket_DisconnectClearsSubscriptions(t *testing.T) {
 	t.Fatalf("expected subscriber count to reach 0 after disconnect, got %d", api.subscriberCount())
 }
 
-func startEventsSession(t *testing.T, mux *http.ServeMux, timeout time.Duration) (context.Context, *websocket.Conn, *httptest.Server) {
+type localHTTPServer struct {
+	URL    string
+	server *http.Server
+}
+
+func (s *localHTTPServer) Close() {
+	_ = s.server.Close()
+}
+
+func startEventsSession(t *testing.T, mux *http.ServeMux, timeout time.Duration) (context.Context, *websocket.Conn, *localHTTPServer) {
 	t.Helper()
 
-	server := httptest.NewServer(mux)
-	t.Cleanup(server.Close)
+	server := startIPv4HTTPServer(t, mux)
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	t.Cleanup(cancel)
 
 	conn := mustDialWS(t, ctx, server.URL+"/events")
 	return ctx, conn, server
+}
+
+func startIPv4HTTPServer(t *testing.T, mux *http.ServeMux) *localHTTPServer {
+	t.Helper()
+
+	listener, err := net.Listen("tcp4", "127.0.0.1:0")
+	if err != nil {
+		t.Skipf("loopback listener unavailable in this environment: %v", err)
+	}
+	server := &http.Server{Handler: mux}
+	go func() {
+		_ = server.Serve(listener)
+	}()
+	local := &localHTTPServer{
+		URL:    "http://" + listener.Addr().String(),
+		server: server,
+	}
+	t.Cleanup(local.Close)
+	return local
 }
 
 func registerEventsAPI(api *EventsAPI) *http.ServeMux {

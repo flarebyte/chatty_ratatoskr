@@ -55,8 +55,7 @@ func TestDeterminism_HTTPSnapshotTranscript(t *testing.T) {
 func TestDeterminism_WebSocketSetTranscript(t *testing.T) {
 	run := func() string {
 		mux := newEventFlowMux()
-		server := httptest.NewServer(mux)
-		defer server.Close()
+		server := startIPv4HTTPServer(t, mux)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()

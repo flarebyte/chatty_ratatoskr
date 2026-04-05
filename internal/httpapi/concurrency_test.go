@@ -81,8 +81,7 @@ func TestConcurrent_NodeWritesAndSnapshotReads(t *testing.T) {
 
 func TestWebSocket_EventFanoutConcurrentSubscribers(t *testing.T) {
 	mux := newEventFlowMux()
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := startIPv4HTTPServer(t, mux)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

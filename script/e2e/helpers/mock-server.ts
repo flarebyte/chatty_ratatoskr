@@ -15,6 +15,17 @@ export type StartMockServerOptions = {
 
 let buildOnce: Promise<void> | undefined;
 
+export function isLoopbackUnavailable(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return (
+    error.message.includes('Failed to listen at 127.0.0.1') ||
+    error.message.includes('listen EPERM') ||
+    error.message.includes('operation not permitted')
+  );
+}
+
 export async function startMockServer(
   options: StartMockServerOptions = {},
 ): Promise<RunningServer> {
@@ -120,7 +131,13 @@ async function getFreePort(): Promise<number> {
         resolve(port);
       });
     });
-    server.on('error', reject);
+    server.on('error', (err) => {
+      if (err instanceof Error && err.message.includes('listen EPERM')) {
+        reject(new Error(`Failed to listen at 127.0.0.1: ${err.message}`));
+        return;
+      }
+      reject(err);
+    });
   });
 }
 

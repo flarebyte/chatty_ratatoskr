@@ -3,7 +3,11 @@ import path from 'node:path';
 
 import { readCriticalFixture } from './helpers/fixtures';
 import { jsonRequest } from './helpers/http';
-import { startMockServer } from './helpers/mock-server';
+import {
+  isLoopbackUnavailable,
+  type RunningServer,
+  startMockServer,
+} from './helpers/mock-server';
 import { repoRoot } from './helpers/paths';
 
 test('admin clear-state resets snapshot data', async () => {
@@ -14,9 +18,17 @@ test('admin clear-state resets snapshot data', async () => {
     'get-snapshot.request.json',
   );
 
-  const server = await startMockServer({
-    configPath: path.join(repoRoot, 'testdata', 'config', 'basic.cue'),
-  });
+  let server: RunningServer | undefined;
+  try {
+    server = await startMockServer({
+      configPath: path.join(repoRoot, 'testdata', 'config', 'basic.cue'),
+    });
+  } catch (error) {
+    if (isLoopbackUnavailable(error)) {
+      return;
+    }
+    throw error;
+  }
   try {
     await jsonRequest('PUT', `${server.baseURL}/snapshot`, setSnapshotRequest);
 

@@ -1,19 +1,27 @@
 # Contributing
 
-## Repo Workflow
+## Scope
 
-The `Makefile` is a first-class workflow entrypoint for this repository.
+This file is for maintainers and coding agents working inside the repository.
+
+`README.md` is for users of the `chatty` CLI.
+`CHEATSHEET.md` is for quick command usage.
+
+## Main Workflow
+
+The `Makefile` is the first-class workflow entrypoint.
 
 For humans:
 
 - run `make review` periodically
-- treat it as the main signal that format, docs, tests, e2e, and lint are aligned
+- treat it as the main signal that docs, formatting, tests, e2e, and lint still align
 
 For agents:
 
 - run at least `make format` before handing work back
+- prefer the existing `Makefile` targets over ad hoc command sequences when the workflow is recurring
 
-## Important Makefile Targets
+## Important Targets
 
 - `make format`
   - runs `gofmt`
@@ -22,7 +30,7 @@ For agents:
   - runs `flyb` doc generation
   - runs Go unit and package-level tests
 - `make e2e`
-  - runs TypeScript end-to-end tests under `script/e2e` with Bun
+  - runs Bun-powered TypeScript end-to-end tests under `script/e2e`
 - `make lint`
   - runs repo static checks
 - `make review`
@@ -32,24 +40,12 @@ For agents:
 - `make build`
   - builds release artifacts into `./build`
 - `make dup`
-  - runs duplication scans with the local `jscpd` binary for Go and TypeScript
+  - runs duplication scans with the local `jscpd` binary
 - `make complexity`
-  - shows top complexity hotspots for Go and TypeScript files
+  - shows the current complexity hotspots
 - `make sec`
   - runs the configured security scan
   - if `semgrep` cannot start because of a local trust-store problem, treat that as a blocking environment issue rather than a passing scan
-- `make release`
-  - runs release checks and then the Bun-based release helper
-- `make thoth-meta-go`
-  - collects metadata for non-test Go files via `thoth`
-- `make thoth-meta-go-test`
-  - collects metadata for Go test files via `thoth`
-- `make thoth-meta-ts-e2e`
-  - collects metadata for TypeScript e2e tests via `thoth`
-- `make thoth-lint-go`
-  - reports large or complex Go functions via `thoth`
-- `make thoth-meta-merge`
-  - aggregates persisted `thoth` metadata
 
 ## Tool Roles
 
@@ -57,7 +53,6 @@ For agents:
   - product binary under development
 - `thoth`
   - external metadata pipeline CLI used by this repo
-  - operates on `.thoth.cue` pipeline files
 - `flyb`
   - validates and generates design docs from `doc/design-meta`
 - `bun`
@@ -66,48 +61,44 @@ For agents:
   - builds, tests, and vets the Go code
 - `golangci-lint`
   - Go lint aggregation
-- `jq`
-  - lightweight JSON inspection for some metadata/reporting targets
 - `Biome`
-  - optional local formatter/linter for JS/TS/JSON-style files when installed in `node_modules`
+  - local JS/TS/JSON formatter and checker when installed
 - `jscpd`
   - local duplication scanner used by `make dup`
+
+## Testing Policy
+
+- write unit tests in Go
+- write package-level handler and parser tests in Go
+- write end-to-end tests in TypeScript under `script/e2e`
+- keep shared Go test helpers for repeated handler and transport setup
+- keep shared TypeScript e2e helpers for repeated mock-server interactions
+- do not mark a user-visible feature as working without matching acceptance coverage
 
 ## Maintenance Gates
 
 - `make dup`
   - ignore cache and generated directories; review only repo-owned files
-  - current accepted duplication is mainly small repeated HTTP handler and test scaffolding under `internal/httpapi`
-  - treat new duplication outside those narrow areas as a cleanup candidate
+  - current duplication baseline is `0` clones for both Go and TypeScript
 - `make complexity`
-  - review the reported hotspots instead of treating the metric as self-justifying
   - current accepted Go hotspots are `internal/yggkey/parse.go`, `internal/httpapi/events.go`, `internal/httpapi/snapshot.go`, and `internal/httpapi/node.go`
-  - these are accepted for now because they hold the main protocol and parsing contracts; refactor only when readability or change risk justifies it
+  - these remain acceptable because they hold the main parsing and protocol contracts; refactor only when readability or change risk justifies it
+- `make sec`
+  - review the scan result, not just the command exit
+- `make build`
+  - check the artifacts under `build/`, not just the command exit
 
-## Testing Policy
-
-- Write unit tests in Go.
-- Write package-level handler and parser tests in Go.
-- Write end-to-end tests in TypeScript under `script/e2e`.
-- Run end-to-end tests with Bun.
-- Treat the TypeScript e2e suite as the feature ledger for what is actually supported.
-- Do not mark a user-visible feature as fully working without matching acceptance coverage.
-
-## Design And Planning Sources
-
-Primary references:
+## Primary References
 
 - [doc/design/yggdrasil-mock-server.md](/Users/olivier/Documents/github/chatty-ratatoskr/doc/design/yggdrasil-mock-server.md)
 - [doc/design-meta/app.cue](/Users/olivier/Documents/github/chatty-ratatoskr/doc/design-meta/app.cue)
 - [scratch/prompt.md](/Users/olivier/Documents/github/chatty-ratatoskr/scratch/prompt.md)
 
-The implementation plan in `scratch/prompt.md` is intentionally phased so one real workflow works early, e2e coverage becomes the feature ledger, and the repo workflow stays aligned with what humans and agents are expected to run.
-
 ## Repository Layout
 
-- [cmd/chatty](/Users/olivier/Documents/github/chatty-ratatoskr/cmd/chatty): current Go CLI entrypoint
-- [doc/design/yggdrasil-mock-server.md](/Users/olivier/Documents/github/chatty-ratatoskr/doc/design/yggdrasil-mock-server.md): primary product/design spec
-- [doc/design-meta](/Users/olivier/Documents/github/chatty-ratatoskr/doc/design-meta): spec-first design inputs used by `flyb`
-- [script/e2e](/Users/olivier/Documents/github/chatty-ratatoskr/script/e2e): Bun-powered TypeScript e2e tests
-- [scratch/prompt.md](/Users/olivier/Documents/github/chatty-ratatoskr/scratch/prompt.md): architecture and phased implementation plan
-- `pipeline-*.thoth.cue`: metadata/reporting pipelines run by the external `thoth` CLI
+- [cmd/chatty](/Users/olivier/Documents/github/chatty-ratatoskr/cmd/chatty)
+- [internal/httpapi](/Users/olivier/Documents/github/chatty-ratatoskr/internal/httpapi)
+- [internal/runtimeconfig](/Users/olivier/Documents/github/chatty-ratatoskr/internal/runtimeconfig)
+- [script/e2e](/Users/olivier/Documents/github/chatty-ratatoskr/script/e2e)
+- [testdata](/Users/olivier/Documents/github/chatty-ratatoskr/testdata)
+- `pipeline-*.thoth.cue`
