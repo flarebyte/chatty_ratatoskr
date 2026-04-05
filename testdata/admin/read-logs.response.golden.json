@@ -1,0 +1,12 @@
+{
+  "id": "req-read-logs-001",
+  "status": "ok",
+  "data": {
+    "command": {
+      "id": "read-logs",
+      "comment": "Read the logs",
+      "arguments": ["logs"]
+    },
+    "content": "http method=PUT path=/snapshot status=200\nadmin command=clear-state status=ok\nhttp method=PUT path=/admin/commands status=200"
+  }
+}

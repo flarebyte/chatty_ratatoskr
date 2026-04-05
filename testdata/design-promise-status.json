@@ -84,6 +84,13 @@
     "current_shipped_status": "working"
   },
   {
+    "promise": "Support admin log readback for mock-server diagnostics.",
+    "source_section": "Mock Server Administration",
+    "planned_phase": "Phase 5",
+    "acceptance_test": "go test ./... -run TestAdmin_ReadLogs",
+    "current_shipped_status": "working"
+  },
+  {
     "promise": "Support hierarchical logical keys with schema-aware parsing.",
     "source_section": "Config Draft / `schema.keyPart`",
     "planned_phase": "Phase 1",

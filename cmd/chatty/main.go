@@ -144,8 +144,11 @@ func runServeWithOptions(ctx context.Context, stdout io.Writer, cfg runtimeconfi
 		_ = listener.Close()
 	}()
 
+	logs := httpapi.NewLogStore(0)
+	logs.Add(fmt.Sprintf("startup listen=%s adminEnabled=%t websocketEnabled=%t", cfg.Listen, cfg.AdminEnabled, cfg.WebSocketEnabled))
+
 	server := &http.Server{
-		Handler: newServerMux(cfg),
+		Handler: newServerHandler(cfg, logs),
 		BaseContext: func(net.Listener) context.Context {
 			return ctx
 		},
@@ -180,6 +183,14 @@ func versionString() string {
 }
 
 func newServerMux(cfg runtimeconfig.ServeConfig) *http.ServeMux {
+	return newServerMuxWithLogs(cfg, nil)
+}
+
+func newServerHandler(cfg runtimeconfig.ServeConfig, logs *httpapi.LogStore) http.Handler {
+	return httpapi.WithRequestLogging(newServerMuxWithLogs(cfg, logs), logs)
+}
+
+func newServerMuxWithLogs(cfg runtimeconfig.ServeConfig, logs *httpapi.LogStore) *http.ServeMux {
 	mux := http.NewServeMux()
 	store := snapshot.NewInMemoryStore()
 	var eventsAPI *httpapi.EventsAPI
@@ -196,7 +207,7 @@ func newServerMux(cfg runtimeconfig.ServeConfig) *http.ServeMux {
 	nodeAPI.Register(mux)
 	createAPI.Register(mux)
 	if cfg.AdminEnabled {
-		adminAPI := httpapi.NewAdminAPIWithLimit(store, cfg.HTTPPayloadLimitBytes)
+		adminAPI := httpapi.NewAdminAPIWithOptions(store, logs, cfg.HTTPPayloadLimitBytes)
 		adminAPI.Register(mux)
 	}
 	return mux
