@@ -37,6 +37,7 @@ For agents:
   - shows top complexity hotspots for Go and TypeScript files
 - `make sec`
   - runs the configured security scan
+  - if `semgrep` cannot start because of a local trust-store problem, treat that as a blocking environment issue rather than a passing scan
 - `make release`
   - runs release checks and then the Bun-based release helper
 - `make thoth-meta-go`
@@ -78,6 +79,10 @@ For agents:
   - ignore cache and generated directories; review only repo-owned files
   - current accepted duplication is mainly small repeated HTTP handler and test scaffolding under `internal/httpapi`
   - treat new duplication outside those narrow areas as a cleanup candidate
+- `make complexity`
+  - review the reported hotspots instead of treating the metric as self-justifying
+  - current accepted Go hotspots are `internal/yggkey/parse.go`, `internal/httpapi/events.go`, `internal/httpapi/snapshot.go`, and `internal/httpapi/node.go`
+  - these are accepted for now because they hold the main protocol and parsing contracts; refactor only when readability or change risk justifies it
 
 ## Testing Policy
 

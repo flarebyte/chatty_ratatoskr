@@ -89,7 +89,13 @@ complexity:
 	scc --sort complexity --by-file -i ts . | head -n 15
 
 sec:
-	semgrep scan --config auto
+	@if semgrep --version >/dev/null 2>&1; then \
+		semgrep scan --config auto; \
+	else \
+		printf '%s\n' 'Security scan unavailable: semgrep could not start in this environment (local X509 trust store issue).'; \
+		printf '%s\n' 'Fix the local semgrep installation or trust store, then rerun `make sec`.'; \
+		exit 1; \
+	fi
 dup:
 	@if [ -x "$(JSCPD)" ]; then \
 		$(JSCPD) --format go --min-lines 10 --gitignore --ignore "$(JSCPD_IGNORE)" .; \
