@@ -2,42 +2,26 @@
 
 Quick command reference for `chatty`.
 
-## Build
+## Install
 
 ```bash
-make build-dev
-./.e2e-bin/chatty version
+brew install flarebyte/tap/chatty-ratatoskr
+chatty --help
 ```
 
 ## Help
 
 ```bash
-./.e2e-bin/chatty help
-./.e2e-bin/chatty --help
+chatty help
+chatty --help
 ```
 
 ## Serve
 
 ```bash
-./.e2e-bin/chatty serve
-./.e2e-bin/chatty serve --listen 127.0.0.1:19080
-./.e2e-bin/chatty serve --config testdata/config/basic.cue
-```
-
-## Review
-
-```bash
-make review
-make e2e
-make build
-```
-
-## Maintenance Gates
-
-```bash
-make dup
-make complexity
-make sec
+chatty serve
+chatty serve --listen 127.0.0.1:19080
+chatty serve --config testdata/config/basic.cue
 ```
 
 ## Notes
@@ -45,3 +29,4 @@ make sec
 - `README.md` is for CLI users
 - `CONTRIBUTING.md` is for maintainers and agents
 - admin and websocket behavior depend on config
+- source builds and maintainer commands live in `CONTRIBUTING.md`

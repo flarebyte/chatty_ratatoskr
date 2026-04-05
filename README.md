@@ -16,46 +16,54 @@
 
 The server is intended for client integration work and automated tests, not production persistence.
 
-## Build From Source
+## Install
 
-Build the CLI directly from the source tree:
+Install `chatty` with Homebrew:
 
 ```bash
-go build -o ./chatty ./cmd/chatty
+brew install flarebyte/tap/chatty-ratatoskr
 ```
+
+Then check the CLI:
+
+```bash
+chatty --help
+```
+
+For source builds and maintainer workflow commands, see [CONTRIBUTING.md](/Users/olivier/Documents/github/chatty-ratatoskr/CONTRIBUTING.md).
 
 ## CLI Basics
 
 Show help:
 
 ```bash
-./chatty help
-./chatty --help
+chatty help
+chatty --help
 ```
 
 Show version:
 
 ```bash
-./chatty version
-./chatty --version
+chatty version
+chatty --version
 ```
 
 Start the server on the default loopback address:
 
 ```bash
-./chatty serve
+chatty serve
 ```
 
 Start the server on a chosen address:
 
 ```bash
-./chatty serve --listen 127.0.0.1:19080
+chatty serve --listen 127.0.0.1:19080
 ```
 
 Start the server from config:
 
 ```bash
-./chatty serve --config testdata/config/basic.cue
+chatty serve --config testdata/config/basic.cue
 ```
 
 See the config reference for the currently supported `--config` fields:
