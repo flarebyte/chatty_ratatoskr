@@ -1,0 +1,41 @@
+locator: cmd/chatty/main.go
+meta:
+  function_list:
+    - execute
+    - executeWithOptions
+    - main
+    - mustWrite
+    - newRootCmd
+    - newServeCmd
+    - newServerHandler
+    - newServerMux
+    - newServerMuxWithLogs
+    - newVersionCmd
+    - runServeWithOptions
+    - versionString
+  import_files_list:
+    - context
+    - errors
+    - fmt
+    - github.com/flarebyte/chatty-ratatoskr/internal/httpapi
+    - github.com/flarebyte/chatty-ratatoskr/internal/runtimeconfig
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - github.com/spf13/cobra
+    - io
+    - net
+    - net/http
+    - os
+    - os/signal
+    - strings
+    - syscall
+    - time
+  language: go
+  purpose: Wire the chatty CLI entrypoint to the mock-server runtime and expose the product-facing help, version, and serve commands.
+  responsibilities:
+    - Parse CLI arguments and dispatch Cobra commands.
+    - Load runtime config and start the HTTP server with graceful shutdown.
+    - Assemble the top-level HTTP routes and shared stores for the process.
+  architecture_notes:
+    - Keep this file focused on CLI and process wiring; protocol behavior belongs in internal/httpapi.
+    - Version output is driven by injected build metadata so tests and builds stay deterministic.
+    - Server composition happens here so agents can ask this file about process startup, not protocol rules.

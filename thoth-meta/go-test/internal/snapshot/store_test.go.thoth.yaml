@@ -1,0 +1,10 @@
+locator: internal/snapshot/store_test.go
+meta:
+  function_list:
+    - TestSnapshotStore_DeterministicMarshal
+    - TestSnapshotStore_DeterministicOrdering
+    - TestSnapshotStore_MissingSnapshotReturnsEmptyList
+    - TestSnapshotStore_ReplaceAndGet
+  import_files_list:
+    - testing
+  language: go

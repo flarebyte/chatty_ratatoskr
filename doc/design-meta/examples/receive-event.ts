@@ -5,10 +5,10 @@ import type {
   EventMessage,
   ServerMessage,
   StatusMessage,
-  SubscribeMessage,
   SubscribedMessage,
-  UnsubscribeMessage,
+  SubscribeMessage,
   UnsubscribedMessage,
+  UnsubscribeMessage,
 } from './websocket-messages';
 
 type Subscription = {
@@ -24,9 +24,13 @@ type EventResponse = {
 };
 
 export interface EventApi {
-  registerPrincipal(principal: PrincipalParams): [PrincipalParams, OperationStatus];
+  registerPrincipal(
+    principal: PrincipalParams,
+  ): [PrincipalParams, OperationStatus];
   // Unregistering a principal clears all active subscriptions for that principal.
-  unregisterPrincipal(principal: PrincipalParams): [PrincipalParams, OperationStatus];
+  unregisterPrincipal(
+    principal: PrincipalParams,
+  ): [PrincipalParams, OperationStatus];
   subscribe(subscription: Subscription): EventResponse;
   // Unsubscribing a key that is not currently subscribed is a no-op and does not raise an error.
   unsubscribe(subscription: Subscription): EventResponse;
@@ -55,11 +59,13 @@ export type EventHandlingRule = {
 export const eventHandlingRules: EventHandlingRule[] = [
   {
     operation: 'set',
-    clientAction: 'Upsert the record locally. If options include --archived, treat archive as record state rather than a delete operation.',
+    clientAction:
+      'Upsert the record locally. If options include --archived, treat archive as record state rather than a delete operation.',
   },
   {
     operation: 'snapshot-replaced',
-    clientAction: 'This is emitted after setSnapshot. Refetch the authoritative snapshot for the root key and replace the local baseline.',
+    clientAction:
+      'This is emitted after setSnapshot. Refetch the authoritative snapshot for the root key and replace the local baseline.',
   },
 ];
 

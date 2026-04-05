@@ -1,5 +1,9 @@
 import type { KeyParams } from './common';
-import type { KeyValueStatusResult, RequestMetadata, ResponseEnvelope } from './envelope';
+import type {
+  KeyValueStatusResult,
+  RequestMetadata,
+  ResponseEnvelope,
+} from './envelope';
 
 type GetKeyValueRequest = RequestMetadata & {
   rootKey: KeyParams; // required: keyId, secureKeyId

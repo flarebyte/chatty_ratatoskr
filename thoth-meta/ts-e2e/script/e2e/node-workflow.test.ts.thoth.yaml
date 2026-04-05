@@ -1,0 +1,10 @@
+locator: script/e2e/node-workflow.test.ts
+meta:
+  import_files_list:
+    - ./helpers/http
+    - ./helpers/mock-server
+    - bun:test
+  language: typescript
+  testcase_titles_list:
+    - node optimistic conflict rejection works end to end
+    - node write and read workflow works end to end

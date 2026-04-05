@@ -1,0 +1,7 @@
+locator: script/e2e/chatty-smoke.test.ts
+meta:
+  import_files_list:
+    - bun:test
+  language: typescript
+  testcase_titles_list:
+    - chatty project e2e suite is wired into Bun

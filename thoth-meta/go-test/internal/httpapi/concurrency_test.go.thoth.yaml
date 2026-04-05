@@ -1,0 +1,19 @@
+locator: internal/httpapi/concurrency_test.go
+meta:
+  function_list:
+    - TestConcurrent_NodeWritesAndSnapshotReads
+    - TestWebSocket_EventFanoutConcurrentSubscribers
+    - TestWorkersComparison_SnapshotBytesStable
+    - runConcurrentNodeWorkflow
+  import_files_list:
+    - context
+    - fmt
+    - github.com/coder/websocket
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+    - net/http/httptest
+    - strings
+    - sync
+    - testing
+    - time
+  language: go

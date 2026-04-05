@@ -1,0 +1,10 @@
+locator: script/e2e/critical-snapshot-bootstrap.test.ts
+meta:
+  import_files_list:
+    - ./helpers/fixtures
+    - ./helpers/http
+    - ./helpers/mock-server
+    - bun:test
+  language: typescript
+  testcase_titles_list:
+    - critical snapshot bootstrap stays deterministic

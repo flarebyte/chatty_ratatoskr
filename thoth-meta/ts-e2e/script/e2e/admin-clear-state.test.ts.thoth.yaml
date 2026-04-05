@@ -1,0 +1,12 @@
+locator: script/e2e/admin-clear-state.test.ts
+meta:
+  import_files_list:
+    - ./helpers/fixtures
+    - ./helpers/http
+    - ./helpers/mock-server
+    - ./helpers/paths
+    - bun:test
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - admin clear-state resets snapshot data

@@ -1,0 +1,12 @@
+locator: internal/httpapi/create_test.go
+meta:
+  function_list:
+    - TestHTTP_CreateNewKeys_DeterministicGenerator
+    - TestHTTP_CreateNewKeys_PreservesLocalKeyIDAndOrder
+    - sequenceGenerator
+  import_files_list:
+    - net/http
+    - net/http/httptest
+    - strings
+    - testing
+  language: go
