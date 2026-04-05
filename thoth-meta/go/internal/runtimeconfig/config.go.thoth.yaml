@@ -18,3 +18,12 @@ meta:
     - path/filepath
     - strings
   language: go
+  purpose: Load, default, and validate the runtime configuration that controls how chatty exposes HTTP, websocket, and admin behavior.
+  responsibilities:
+    - Define the ServeConfig shape and safe defaults.
+    - Load config from JSON files or CUE export output.
+    - Validate exposure and payload-limit rules before the server starts listening.
+  architecture_notes:
+    - CUE files are consumed through `cue export` so runtime code stays small and does not embed a CUE evaluator.
+    - Validation is strict and startup-blocking because unsafe exposure should fail before any listener opens.
+    - This file is the right place for serve-time config rules, not per-request protocol validation.

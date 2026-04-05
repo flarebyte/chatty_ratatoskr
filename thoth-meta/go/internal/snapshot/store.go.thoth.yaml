@@ -9,3 +9,12 @@ meta:
     - sort
     - sync
   language: go
+  purpose: Provide the deterministic in-memory state store used by snapshot and node workflows throughout the mock server.
+  responsibilities:
+    - Store and replace root snapshots.
+    - Upsert and find individual entries under a root.
+    - Return stable sorted snapshots and clear all state for admin reset flows.
+  architecture_notes:
+    - Ordering is canonicalized here so handlers do not each reimplement sorting rules.
+    - The store is intentionally in-memory and mutex-backed; durability and external databases are out of scope.
+    - Snapshot and node writes share this store to keep the mock server vertical slice practical and small.

@@ -1,3 +1,12 @@
+// purpose: Define the core HTTP envelope helpers and the snapshot bootstrap routes that establish and read authoritative root state.
+// responsibilities:
+// - Decode strict JSON payloads for GET /snapshot and PUT /snapshot.
+// - Validate keys, map decode failures to stable error envelopes, and write canonical JSON responses.
+// - Replace and read full-root snapshots through the shared store and optional event emitter.
+// architecture_notes:
+// - Shared HTTP JSON helpers live here so envelope, error, and correlation behavior stays uniform across handlers.
+// - Snapshot replacement is full-baseline only; partial mutation belongs to /node.
+// - Forced secureKeyId statuses are mock hooks and intentionally sit near the envelope logic that surfaces them.
 package httpapi
 
 import (

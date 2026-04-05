@@ -1,3 +1,12 @@
+// purpose: Expose the separate admin HTTP surface for test-oriented commands that control mock-server state without changing protocol routes.
+// responsibilities:
+// - Decode and validate admin command requests.
+// - Execute clear-state and read-logs commands against shared stores.
+// - Return shallow admin envelopes with stable status semantics.
+// architecture_notes:
+// - Admin commands stay on /admin/commands so protocol handlers remain cleanly separated.
+// - This file owns command dispatch, but shared JSON helpers live in snapshot.go to avoid duplicated envelope rules.
+// - Admin behavior is intentionally narrow and mock-oriented rather than a generic control plane.
 package httpapi
 
 import (

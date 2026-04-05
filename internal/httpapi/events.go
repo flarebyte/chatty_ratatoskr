@@ -1,3 +1,12 @@
+// purpose: Own the optional websocket endpoint for subscriptions, heartbeats, and event fanout after HTTP state changes.
+// responsibilities:
+// - Accept websocket connections and process subscribe, unsubscribe, and ping messages.
+// - Track subscriber root sets and emit matching set and snapshot-replaced events.
+// - Enforce websocket limits, heartbeat timing, and disconnect cleanup.
+// architecture_notes:
+// - Allowed roots are constrained up front so the mock server exposes a small predictable event surface.
+// - Event IDs and timestamps are injectable because transcript determinism matters more than convenience here.
+// - Subscriber management stays local to this file so agents should ask it about websocket lifecycle, not HTTP decoding.
 package httpapi
 
 import (

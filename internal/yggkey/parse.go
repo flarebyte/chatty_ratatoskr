@@ -1,3 +1,12 @@
+// purpose: Parse and normalize the Yggdrasil logical key shapes that the mock server accepts for roots, descendants, and derived leaves.
+// responsibilities:
+// - Tokenize key IDs and validate supported label sequences.
+// - Return normalized parsed key metadata and derived kind information.
+// - Reject malformed or unsupported key shapes with stable error messages.
+// architecture_notes:
+// - The parser is deliberately explicit rather than schema-driven so accepted key rules stay readable and narrow.
+// - Derived kind comes from key structure, not client hints, because the server is the contract authority.
+// - This file should answer questions about key grammar, not transport or storage behavior.
 package yggkey
 
 import (

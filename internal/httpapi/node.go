@@ -1,3 +1,12 @@
+// purpose: Handle targeted node reads and writes on /node for partial state sync under an already-known root key.
+// responsibilities:
+// - Decode node read and write requests and validate their root and item keys.
+// - Apply optimistic version checks and persist successful writes into the shared snapshot store.
+// - Return per-item outcomes in request order and emit set events when enabled.
+// architecture_notes:
+// - Batch operations preserve request order even when individual items fail, because correlation is part of the contract.
+// - Node state is stored through the snapshot store instead of a separate subsystem to keep the mock server small.
+// - Conflict handling is explicit and narrow; this file is not meant to grow into a generic transaction layer.
 package httpapi
 
 import (

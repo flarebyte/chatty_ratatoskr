@@ -12,3 +12,12 @@ meta:
     - github.com/flarebyte/chatty-ratatoskr/internal/yggkey
     - net/http
   language: go
+  purpose: Handle POST /create so clients can trade provisional local keys for server-generated keys without inventing IDs themselves.
+  responsibilities:
+    - Decode create requests and validate root and requested kinds.
+    - Generate stable testable key suggestions for supported container and child kinds.
+    - Return per-item and per-child statuses while preserving request order.
+  architecture_notes:
+    - ID generation is injectable so acceptance tests can compare exact bytes.
+    - This file implements only the narrow create workflow promised by the mock server, not a general schema engine.
+    - Child-key construction stays explicit to prevent hidden rules from drifting away from the spec.

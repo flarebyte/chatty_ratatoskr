@@ -9,3 +9,12 @@ meta:
     - strings
     - sync
   language: go
+  purpose: Provide bounded in-memory diagnostics logging and lightweight request logging for optional admin readback.
+  responsibilities:
+    - Store recent log lines with a fixed cap.
+    - Trim and serialize logs deterministically for read-logs responses.
+    - Wrap HTTP handlers to record request method, path, and status.
+  architecture_notes:
+    - Logs are intentionally simple strings so diagnostics stay non-invasive and easy to diff in tests.
+    - The log store is optional; nil is treated as disabled rather than an error path.
+    - This file is about observability plumbing only, not protocol behavior.
