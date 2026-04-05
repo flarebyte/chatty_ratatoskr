@@ -1,0 +1,23 @@
+locator: internal/designstatus/contract_test.go
+meta:
+  function_list:
+    - TestDesignPromiseStatus_MatchesPromptMatrix
+    - firstTSPath
+    - goTestExists
+    - hasAcceptanceCoverage
+    - isValidStatus
+    - normalizePromiseStatus
+    - normalizeText
+    - readPromptMatrix
+    - readStatusArtifact
+    - splitMarkdownRow
+  import_files_list:
+    - encoding/json
+    - io/fs
+    - os
+    - path/filepath
+    - regexp
+    - slices
+    - strings
+    - testing
+  language: go

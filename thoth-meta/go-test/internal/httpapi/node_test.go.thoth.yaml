@@ -1,0 +1,16 @@
+locator: internal/httpapi/node_test.go
+meta:
+  function_list:
+    - TestHTTP_GetKeyValueList_DeterministicRequestOrder
+    - TestHTTP_GetKeyValueList_ReturnsRequestedValues
+    - TestHTTP_SetKeyValueList_BumpsVersionOnSuccess
+    - TestHTTP_SetKeyValueList_PartialSuccessTopLevelOK
+    - TestHTTP_SetKeyValueList_RejectsStaleWrite
+    - TestHTTP_SetKeyValueList_RequestOrderAndItemStatus
+    - seededNodeStore
+  import_files_list:
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+    - strings
+    - testing
+  language: go

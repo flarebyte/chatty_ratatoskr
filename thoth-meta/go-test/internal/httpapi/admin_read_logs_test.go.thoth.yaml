@@ -1,0 +1,15 @@
+locator: internal/httpapi/admin_read_logs_test.go
+meta:
+  function_list:
+    - TestAdmin_ReadLogs
+    - compactJSON
+  import_files_list:
+    - encoding/json
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+    - net/http/httptest
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

@@ -1,0 +1,11 @@
+locator: internal/httpapi/payload_limit_test.go
+meta:
+  function_list:
+    - TestHTTP_PayloadLimitEnforced
+  import_files_list:
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+    - net/http/httptest
+    - strings
+    - testing
+  language: go

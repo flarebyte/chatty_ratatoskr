@@ -1,0 +1,25 @@
+locator: internal/httpapi/events_test.go
+meta:
+  function_list:
+    - TestWebSocket_DisconnectClearsSubscriptions
+    - TestWebSocket_Heartbeat
+    - TestWebSocket_MessageSizeLimit
+    - TestWebSocket_PingPongCorrelation
+    - TestWebSocket_SubscribeValidateRoots
+    - TestWebSocket_UnsubscribeNoop
+    - mustDialWS
+    - mustReadServerMessage
+    - mustWriteClientMessage
+    - newEventsTestMux
+    - registerEventsAPI
+    - startEventsSession
+    - startIPv4HTTPServer
+  import_files_list:
+    - context
+    - errors
+    - github.com/coder/websocket
+    - net
+    - net/http
+    - testing
+    - time
+  language: go

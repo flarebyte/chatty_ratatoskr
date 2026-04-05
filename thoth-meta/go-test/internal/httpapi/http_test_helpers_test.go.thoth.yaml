@@ -1,0 +1,14 @@
+locator: internal/httpapi/http_test_helpers_test.go
+meta:
+  function_list:
+    - newNodeTestMux
+    - newSnapshotTestMux
+    - requireHTTPStatus
+    - serveJSONRequest
+  import_files_list:
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+    - net/http/httptest
+    - strings
+    - testing
+  language: go

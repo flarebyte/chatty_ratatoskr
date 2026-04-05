@@ -1,0 +1,12 @@
+locator: internal/httpapi/admin_test.go
+meta:
+  function_list:
+    - TestAdmin_ClearState_SeparatesFromProtocolSurface
+    - TestAdmin_UnknownCommandReturnsInvalid
+  import_files_list:
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+    - net/http/httptest
+    - strings
+    - testing
+  language: go

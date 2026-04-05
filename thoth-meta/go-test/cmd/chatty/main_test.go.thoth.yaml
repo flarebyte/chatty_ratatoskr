@@ -1,0 +1,25 @@
+locator: cmd/chatty/main_test.go
+meta:
+  function_list:
+    - TestCLI_HelpAndVersion
+    - TestCLI_ServeStartsAndStops
+    - assertContains
+    - newBlockingListener
+    - runCLI
+    - startServeProcess
+    - stubBuildInfo
+    - writeTempConfig
+  import_files_list:
+    - bytes
+    - context
+    - github.com/flarebyte/chatty-ratatoskr/internal/runtimeconfig
+    - net
+    - net/http
+    - net/http/httptest
+    - os
+    - path/filepath
+    - strings
+    - sync
+    - testing
+    - time
+  language: go

@@ -1,0 +1,18 @@
+locator: internal/httpapi/snapshot_test.go
+meta:
+  function_list:
+    - TestHTTP_GetSnapshot_Deterministic
+    - TestHTTP_GetSnapshot_MissingSnapshotReturnsEmptyList
+    - TestHTTP_GetSnapshot_ReturnsDeterministicSnapshot
+    - TestHTTP_ResponseCorrelationRules
+    - TestHTTP_SetSnapshot_Deterministic
+    - TestHTTP_SetSnapshot_InvalidPayload
+    - TestHTTP_SetSnapshot_ReplacesBaseline
+    - TestHTTP_SnapshotKindIgnoresClientHint
+  import_files_list:
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+    - net/http/httptest
+    - strings
+    - testing
+  language: go

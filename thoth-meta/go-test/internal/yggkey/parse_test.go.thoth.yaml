@@ -1,0 +1,12 @@
+locator: internal/yggkey/parse_test.go
+meta:
+  function_list:
+    - TestKeyParser_AcceptsCriticalFixtures
+    - TestKeyParser_DeterministicMarshal
+    - TestKeyParser_RejectsMalformedExamples
+    - TestKey_AcceptanceExamples
+    - TestKey_DerivedKind
+    - TestKey_RejectionExamples
+  import_files_list:
+    - testing
+  language: go
