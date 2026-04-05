@@ -1,0 +1,20 @@
+locator: internal/runtimeconfig/config.go
+meta:
+  function_list:
+    - DefaultServeConfig
+    - LoadServeConfig
+    - ValidateServeConfig
+    - isLoopbackListenAddress
+    - loadCueConfig
+    - loadJSONConfig
+  import_files_list:
+    - bytes
+    - context
+    - encoding/json
+    - fmt
+    - net
+    - os
+    - os/exec
+    - path/filepath
+    - strings
+  language: go

@@ -1,0 +1,12 @@
+locator: internal/yggkey/parse.go
+meta:
+  function_list:
+    - MustJSON
+    - Parse
+    - contains
+    - labelList
+  import_files_list:
+    - encoding/json
+    - fmt
+    - strings
+  language: go

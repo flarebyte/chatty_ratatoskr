@@ -1,0 +1,11 @@
+locator: internal/httpapi/diagnostics.go
+meta:
+  function_list:
+    - NewLogStore
+    - WithRequestLogging
+  import_files_list:
+    - net/http
+    - strconv
+    - strings
+    - sync
+  language: go

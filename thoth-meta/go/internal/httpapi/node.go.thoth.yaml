@@ -1,0 +1,15 @@
+locator: internal/httpapi/node.go
+meta:
+  function_list:
+    - NewNodeAPI
+    - NewNodeAPIWithEvents
+    - NewNodeAPIWithLimit
+    - NewNodeAPIWithOptions
+    - bumpVersion
+  import_files_list:
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - github.com/flarebyte/chatty-ratatoskr/internal/yggkey
+    - net/http
+    - strconv
+    - strings
+  language: go

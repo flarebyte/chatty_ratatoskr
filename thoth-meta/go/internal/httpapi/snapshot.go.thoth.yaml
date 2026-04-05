@@ -1,0 +1,30 @@
+locator: internal/httpapi/snapshot.go
+meta:
+  function_list:
+    - NewSnapshotAPI
+    - NewSnapshotAPIWithEvents
+    - NewSnapshotAPIWithGenerator
+    - NewSnapshotAPIWithLimit
+    - NewSnapshotAPIWithOptions
+    - decodeJSONWithLimit
+    - derivedKindParams
+    - forcedStatusFromSecureKeyID
+    - invalidEnvelopeWithID
+    - isDescendant
+    - messageForDecodeError
+    - parseRootKeyOrWriteInvalid
+    - responseIDWithGenerator
+    - rootKeyResponse
+    - statusForDecodeError
+    - writeForcedStatusEnvelope
+    - writeJSON
+  import_files_list:
+    - bytes
+    - encoding/json
+    - errors
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - github.com/flarebyte/chatty-ratatoskr/internal/yggkey
+    - io
+    - net/http
+    - strings
+  language: go

@@ -1,0 +1,18 @@
+locator: internal/httpapi/events.go
+meta:
+  function_list:
+    - NewEventsAPI
+    - NewEventsAPIWithOptions
+    - NewEventsAPIWithRuntimeOptions
+    - invalidRootStatusMessage
+    - sortedRoots
+    - writeWS
+  import_files_list:
+    - context
+    - encoding/json
+    - github.com/coder/websocket
+    - net/http
+    - sort
+    - sync
+    - time
+  language: go

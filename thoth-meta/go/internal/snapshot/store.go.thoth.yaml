@@ -1,0 +1,11 @@
+locator: internal/snapshot/store.go
+meta:
+  function_list:
+    - MustJSON
+    - NewInMemoryStore
+    - sortedEntries
+  import_files_list:
+    - encoding/json
+    - sort
+    - sync
+  language: go

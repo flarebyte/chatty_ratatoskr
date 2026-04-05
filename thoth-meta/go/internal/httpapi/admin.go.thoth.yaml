@@ -1,0 +1,10 @@
+locator: internal/httpapi/admin.go
+meta:
+  function_list:
+    - NewAdminAPI
+    - NewAdminAPIWithLimit
+    - NewAdminAPIWithOptions
+  import_files_list:
+    - github.com/flarebyte/chatty-ratatoskr/internal/snapshot
+    - net/http
+  language: go

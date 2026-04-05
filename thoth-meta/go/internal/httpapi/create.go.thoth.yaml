@@ -1,0 +1,14 @@
+locator: internal/httpapi/create.go
+meta:
+  function_list:
+    - NewCreateAPI
+    - NewCreateAPIWithGenerator
+    - NewCreateAPIWithOptions
+    - buildChildKeyID
+    - chooseSecureKeyID
+    - isCreatableContainerKind
+  import_files_list:
+    - fmt
+    - github.com/flarebyte/chatty-ratatoskr/internal/yggkey
+    - net/http
+  language: go
